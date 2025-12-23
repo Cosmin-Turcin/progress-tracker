@@ -6,7 +6,7 @@ const AchievementShowcase = ({ achievements, onCongratulate }) => {
   const [filter, setFilter] = useState('all');
   const [selectedAchievement, setSelectedAchievement] = useState(null);
 
-  const categories = ['all', 'fitness', 'nutrition', 'mindfulness', 'social', 'milestone'];
+  const categories = ['all', 'fitness', 'nutrition', 'mindset', 'social', 'milestone'];
 
   const filteredAchievements = achievements?.filter(achievement => {
     if (filter === 'all') return true;
@@ -17,7 +17,7 @@ const AchievementShowcase = ({ achievements, onCongratulate }) => {
     const icons = {
       fitness: TrendingUp,
       nutrition: Star,
-      mindfulness: Heart,
+      mindset: Heart,
       social: Trophy,
       milestone: Award,
     };
@@ -43,10 +43,9 @@ const AchievementShowcase = ({ achievements, onCongratulate }) => {
           <button
             key={category}
             onClick={() => setFilter(category)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              filter === category
-                ? 'bg-blue-600 text-white' :'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${filter === category
+                ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             {category?.charAt(0)?.toUpperCase() + category?.slice(1)}
           </button>
@@ -57,7 +56,7 @@ const AchievementShowcase = ({ achievements, onCongratulate }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredAchievements?.map((achievement, index) => {
             const CategoryIcon = getCategoryIcon(achievement?.achievements?.achievement_category);
-            
+
             return (
               <div
                 key={index}

@@ -26,6 +26,20 @@ const HabitConsistencyHub = () => {
   const [goals, setGoals] = useState([]);
   const [consistencyMetrics, setConsistencyMetrics] = useState([]);
   const [habitsMatrixData, setHabitsMatrixData] = useState([]);
+  const [habitBreakdownData, setHabitBreakdownData] = useState([]);
+  const [upcomingMilestones, setUpcomingMilestones] = useState([]);
+  const [motivationInsights, setMotivationInsights] = useState([]);
+  const [summaryStats, setSummaryStats] = useState({
+    dailyPoints: 0,
+    weeklyAverage: 0,
+    goalProgress: 0,
+    dailyGoal: 300
+  });
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     if (user?.id) {
@@ -50,6 +64,30 @@ const HabitConsistencyHub = () => {
       // Calculate metrics from real data
       calculateConsistencyMetrics(activitiesData, goalsData);
       generateHabitsMatrix(activitiesData);
+      generateHabitBreakdown(activitiesData);
+      generateMilestonesAndInsights(activitiesData, goalsData);
+
+      // Update summary stats
+      const todayKey = formatDate(new Date());
+      const dailyPoints = activitiesData
+        ?.filter(a => a?.activityDate === todayKey)
+        ?.reduce((sum, a) => sum + a?.points, 0) || 0;
+
+      const weeklyTotal = activitiesData
+        ?.filter(a => {
+          const date = new Date(a?.activityDate);
+          const weekAgo = new Date();
+          weekAgo?.setDate(weekAgo?.getDate() - 7);
+          return date >= weekAgo;
+        })
+        ?.reduce((sum, a) => sum + a?.points, 0) || 0;
+
+      setSummaryStats({
+        dailyPoints,
+        weeklyAverage: Math.round(weeklyTotal / 7),
+        goalProgress: Math.min(Math.round((dailyPoints / 300) * 100), 100),
+        dailyGoal: 300
+      });
 
     } catch (err) {
       console.error('Error loading habit data:', err);
@@ -71,8 +109,8 @@ const HabitConsistencyHub = () => {
       weekAgo?.setDate(weekAgo?.getDate() - 7);
       return activityDate >= weekAgo;
     });
-    const completionRate = lastWeekActivities?.length > 0 
-      ? Math.round((lastWeekActivities?.length / 7) * 100) 
+    const completionRate = lastWeekActivities?.length > 0
+      ? Math.round((lastWeekActivities?.length / 7) * 100)
       : 0;
 
     // Calculate habit stability score (based on consistency over time)
@@ -119,8 +157,8 @@ const HabitConsistencyHub = () => {
 
   const calculateStreaks = (activitiesData) => {
     if (!activitiesData?.length) return [0];
-    
-    const sortedActivities = activitiesData?.sort((a, b) => 
+
+    const sortedActivities = activitiesData?.sort((a, b) =>
       new Date(b?.activityDate) - new Date(a?.activityDate)
     );
 
@@ -145,7 +183,7 @@ const HabitConsistencyHub = () => {
 
   const calculateStabilityScore = (activitiesData) => {
     if (!activitiesData?.length) return 0;
-    
+
     const last30Days = activitiesData?.filter(a => {
       const activityDate = new Date(a?.activityDate);
       const thirtyDaysAgo = new Date();
@@ -178,7 +216,7 @@ const HabitConsistencyHub = () => {
       const totalActivities = activities?.length;
       const last7Days = getLast7Days();
       const weekData = last7Days?.map(date => {
-        const dayActivity = activities?.find(a => 
+        const dayActivity = activities?.find(a =>
           new Date(a?.activityDate)?.toDateString() === new Date(date)?.toDateString()
         );
         return {
@@ -207,6 +245,74 @@ const HabitConsistencyHub = () => {
     setHabitsMatrixData(matrixData || []);
   };
 
+  const generateHabitBreakdown = (activitiesData) => {
+    // Group activities by name
+    const habitGroups = {};
+    activitiesData?.forEach(activity => {
+      const name = activity?.activityName;
+      if (!habitGroups?.[name]) {
+        habitGroups[name] = [];
+      }
+      habitGroups?.[name]?.push(activity);
+    });
+
+    const breakdown = Object.entries(habitGroups)?.map(([name, activities], index) => {
+      const currentStreak = calculateCurrentStreak(activities);
+      const totalActivities = activities?.length;
+      const consistency = Math.min(Math.round((totalActivities / 30) * 100), 100);
+
+      return {
+        id: index + 1,
+        name: name,
+        icon: getCategoryIcon(activities?.[0]?.category),
+        category: activities?.[0]?.category?.charAt(0)?.toUpperCase() + activities?.[0]?.category?.slice(1),
+        consistency: consistency,
+        bestStreak: currentStreak, // Approximate
+        currentStreak: currentStreak,
+        recommendation: consistency > 80 ? 'Excellent! Keep it up.' : 'Try to be more consistent.'
+      };
+    });
+
+    setHabitBreakdownData(breakdown || []);
+  };
+
+  const generateMilestonesAndInsights = (activitiesData, goalsData) => {
+    // Mock milestones for now but based on real data existence
+    if (activitiesData?.length > 0) {
+      setUpcomingMilestones([
+        {
+          id: 1,
+          type: 'streak',
+          title: 'Keep it going!',
+          description: 'You are doing great with your logged habits.',
+          habit: activitiesData?.[0]?.activityName,
+          daysUntil: 2
+        }
+      ]);
+
+      setMotivationInsights([
+        {
+          id: 1,
+          type: 'positive',
+          title: 'Great start!',
+          message: `You have logged ${activitiesData?.length} activities so far.`,
+          action: 'View Details'
+        }
+      ]);
+    } else {
+      setUpcomingMilestones([]);
+      setMotivationInsights([
+        {
+          id: 1,
+          type: 'tip',
+          title: 'Get Started',
+          message: 'Log your first activity to see insights and milestones!',
+          action: 'Log Activity'
+        }
+      ]);
+    }
+  };
+
   const getLast7Days = () => {
     const days = [];
     for (let i = 6; i >= 0; i--) {
@@ -219,8 +325,8 @@ const HabitConsistencyHub = () => {
 
   const calculateCurrentStreak = (activities) => {
     if (!activities?.length) return 0;
-    
-    const sortedActivities = activities?.sort((a, b) => 
+
+    const sortedActivities = activities?.sort((a, b) =>
       new Date(b?.activityDate) - new Date(a?.activityDate)
     );
 
@@ -276,127 +382,6 @@ const HabitConsistencyHub = () => {
     streak: habit?.currentStreak
   }));
 
-  const upcomingMilestones = [
-    {
-      id: 1,
-      type: 'streak',
-      title: '50-Day Streak',
-      description: 'Keep up your morning workout routine',
-      habit: 'Morning Workout',
-      daysUntil: 8
-    },
-    {
-      id: 2,
-      type: 'completion',
-      title: '100% Weekly Completion',
-      description: 'Complete all habits for 7 consecutive days',
-      habit: 'All Habits',
-      daysUntil: 3
-    },
-    {
-      id: 3,
-      type: 'achievement',
-      title: '300 Total Sessions',
-      description: 'Reach 300 meditation sessions',
-      habit: 'Meditation',
-      daysUntil: 12
-    },
-    {
-      id: 4,
-      type: 'streak',
-      title: '30-Day Streak',
-      description: 'Maintain your reading habit',
-      habit: 'Reading',
-      daysUntil: 18
-    }
-  ];
-
-  const motivationInsights = [
-    {
-      id: 1,
-      type: 'positive',
-      title: 'Outstanding Progress!',
-      message: 'Your meditation consistency has improved by 15% this month. Keep up the excellent work!',
-      action: 'View Details'
-    },
-    {
-      id: 2,
-      type: 'warning',
-      title: 'Reading Habit Needs Attention',
-      message: 'You have missed 3 reading sessions this week. Consider setting a specific time for this habit.',
-      action: 'Set Reminder'
-    },
-    {
-      id: 3,
-      type: 'tip',
-      title: 'Streak Protection Available',
-      message: 'Your morning workout streak is at risk. Use a streak freeze to protect your 42-day achievement.',
-      action: 'Use Freeze'
-    }
-  ];
-
-  const habitBreakdownData = [
-    {
-      id: 1,
-      name: 'Morning Workout',
-      icon: 'Dumbbell',
-      category: 'Fitness',
-      consistency: 86,
-      bestStreak: 56,
-      currentStreak: 42,
-      recommendation: 'Maintain current schedule. Consider adding variety to prevent plateaus.'
-    },
-    {
-      id: 2,
-      name: 'Meditation',
-      icon: 'Brain',
-      category: 'Mindfulness',
-      consistency: 92,
-      bestStreak: 45,
-      currentStreak: 28,
-      recommendation: 'Excellent consistency! Try extending session duration for deeper practice.'
-    },
-    {
-      id: 3,
-      name: 'Water Intake',
-      icon: 'Droplet',
-      category: 'Health',
-      consistency: 95,
-      bestStreak: 89,
-      currentStreak: 67,
-      recommendation: 'Outstanding! This habit is well-established. Focus on maintaining quality.'
-    },
-    {
-      id: 4,
-      name: 'Reading',
-      icon: 'BookOpen',
-      category: 'Learning',
-      consistency: 71,
-      bestStreak: 34,
-      currentStreak: 12,
-      recommendation: 'Set a specific reading time each day. Start with just 10 minutes to build momentum.'
-    },
-    {
-      id: 5,
-      name: 'Journaling',
-      icon: 'PenTool',
-      category: 'Reflection',
-      consistency: 78,
-      bestStreak: 29,
-      currentStreak: 18,
-      recommendation: 'Good progress! Try journaling at the same time daily to strengthen the habit.'
-    },
-    {
-      id: 6,
-      name: 'Healthy Meals',
-      icon: 'Apple',
-      category: 'Nutrition',
-      consistency: 83,
-      bestStreak: 42,
-      currentStreak: 23,
-      recommendation: 'Strong consistency. Meal prep on weekends can help maintain this habit.'
-    }
-  ];
 
   const handleActivityLogged = (activity) => {
     // Reload data after new activity is logged
@@ -431,11 +416,11 @@ const HabitConsistencyHub = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <TabNavigation />
-      <PointsSummary 
-        dailyPoints={245}
-        weeklyAverage={238}
-        goalProgress={82}
-        dailyGoal={300}
+      <PointsSummary
+        dailyPoints={summaryStats?.dailyPoints}
+        weeklyAverage={summaryStats?.weeklyAverage}
+        goalProgress={summaryStats?.goalProgress}
+        dailyGoal={summaryStats?.dailyGoal}
       />
       <QuickActionButton onActivityLogged={handleActivityLogged} />
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -470,7 +455,7 @@ const HabitConsistencyHub = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8">
-            <HabitConsistencyMatrix 
+            <HabitConsistencyMatrix
               habits={habitsMatrixData}
               selectedPeriod={consistencyPeriod}
             />

@@ -21,7 +21,7 @@ import Header from '../../components/Header';
 const ProgressAnalytics = () => {
   const { user } = useAuth();
   const [selectedRange, setSelectedRange] = useState('30d');
-  const [selectedCategories, setSelectedCategories] = useState(['fitness', 'mindfulness', 'nutrition', 'learning', 'social']);
+  const [selectedCategories, setSelectedCategories] = useState(['fitness', 'mindset', 'nutrition', 'work', 'social']);
   const [comparisonMode, setComparisonMode] = useState(false);
   const [showMovingAverage, setShowMovingAverage] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -31,6 +31,13 @@ const ProgressAnalytics = () => {
   const [categoryData, setCategoryData] = useState([]);
   const [weeklyPatternData, setWeeklyPatternData] = useState([]);
   const [streakData, setStreakData] = useState([]);
+  const [heatmapData, setHeatmapData] = useState([]);
+  const [summaryStats, setSummaryStats] = useState({
+    dailyPoints: 0,
+    weeklyAverage: 0,
+    goalProgress: 0,
+    dailyGoal: 100
+  });
 
   // Load analytics data
   useEffect(() => {
@@ -79,7 +86,7 @@ const ProgressAnalytics = () => {
 
       // Load KPI data
       const stats = await activityService?.getStatistics(user?.id);
-      
+
       setKpiData([
         {
           title: 'Average Daily Points',
@@ -119,32 +126,42 @@ const ProgressAnalytics = () => {
         }
       ]);
 
-      // Load trend data
+      // Load trend data and heatmap data (90 days for heatmap's 84-day view)
       const endDate = new Date();
       const startDate = new Date();
-      startDate?.setDate(startDate?.getDate() - 30);
-      
+      startDate?.setDate(startDate?.getDate() - 90);
+
       const activities = await activityService?.getByDateRange(user?.id, startDate, endDate);
-      
-      // Calculate daily points
+
+      // Helper for consistent date formatting (YYYY-MM-DD)
+      const formatDate = (date) => {
+        const d = new Date(date);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+
+      // Calculate daily points using UTC-safe local date matching
       const dailyPoints = {};
       activities?.forEach((activity) => {
-        const date = new Date(activity.activityDate)?.toLocaleDateString();
-        dailyPoints[date] = (dailyPoints?.[date] || 0) + activity?.points;
+        // activity.activityDate is already "YYYY-MM-DD" from database
+        const dateKey = activity.activityDate;
+        dailyPoints[dateKey] = (dailyPoints?.[dateKey] || 0) + activity?.points;
       });
 
-      const trend = Object.entries(dailyPoints)?.map(([date, points]) => ({
-        date,
-        points,
-        movingAverage: points
-      }));
+      const trend = Object.entries(dailyPoints)
+        ?.map(([date, points]) => ({
+          date: new Date(date)?.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }),
+          points,
+          movingAverage: points
+        }))
+        ?.sort((a, b) => new Date(a.date) - new Date(b.date))
+        ?.slice(-30); // Show last 30 days in trend chart
 
       setTrendData(trend);
 
       // Load category breakdown
       const categoryBreakdown = {};
       activities?.forEach((activity) => {
-        categoryBreakdown[activity.category] = 
+        categoryBreakdown[activity.category] =
           (categoryBreakdown?.[activity?.category] || 0) + activity?.points;
       });
 
@@ -160,15 +177,18 @@ const ProgressAnalytics = () => {
       // Calculate weekly patterns
       const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const weeklyPoints = {};
-      
+
       activities?.forEach((activity) => {
-        const day = weekDays?.[new Date(activity.activityDate)?.getDay()];
+        if (!activity.activityDate) return;
+        const [y, m, d] = activity.activityDate.split('-').map(Number);
+        const dateObj = new Date(y, m - 1, d);
+        const day = weekDays?.[dateObj.getDay()];
         weeklyPoints[day] = (weeklyPoints?.[day] || [])?.concat(activity?.points);
       });
 
       const weeklyPattern = weekDays?.map((day) => ({
         day,
-        average: weeklyPoints?.[day] 
+        average: weeklyPoints?.[day]
           ? Math.round(weeklyPoints?.[day]?.reduce((a, b) => a + b, 0) / weeklyPoints?.[day]?.length)
           : 0
       }));
@@ -177,13 +197,49 @@ const ProgressAnalytics = () => {
 
       // Load streaks (keeping mock data for now as there's no streak table)
       setStreakData([
-        { 
-          category: 'fitness', 
-          name: 'Morning Workout', 
-          days: stats?.currentStreak || 0, 
-          startDate: new Date()?.toLocaleDateString() 
+        {
+          category: 'fitness',
+          name: 'Morning Workout',
+          days: stats?.currentStreak || 0,
+          startDate: new Date()?.toLocaleDateString()
         }
       ]);
+
+      // Calculate heatmap data for last 84 days (12 weeks)
+      const heatData = [];
+      const now = new Date();
+      for (let i = 83; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        const dateKey = formatDate(date);
+        const score = dailyPoints[dateKey] || 0;
+        heatData.push({
+          date: date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }),
+          dayOfWeek: date.getDay(),
+          score
+        });
+      }
+      setHeatmapData(heatData);
+
+      // Update summary stats
+      const todayKey = formatDate(new Date());
+      const todayPoints = dailyPoints[todayKey] || 0;
+
+      const weeklySum = Object.entries(dailyPoints)
+        .filter(([dateKey]) => {
+          const d = new Date(dateKey);
+          const weekAgo = new Date();
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return d >= weekAgo;
+        })
+        .reduce((sum, [, pts]) => sum + pts, 0);
+
+      setSummaryStats({
+        dailyPoints: todayPoints,
+        weeklyAverage: Math.round(weeklySum / 7),
+        goalProgress: Math.min(Math.round((todayPoints / 100) * 100), 100),
+        dailyGoal: 100
+      });
 
     } catch (err) {
       console.error('Error loading analytics data:', err);
@@ -193,11 +249,6 @@ const ProgressAnalytics = () => {
     }
   };
 
-  const heatmapData = Array.from({ length: 84 }, (_, i) => ({
-    date: `12/${Math.floor(i / 7) + 1}`,
-    dayOfWeek: i % 7,
-    score: Math.floor(Math.random() * 100)
-  }));
 
   const handleExport = (format) => {
     console.log(`Exporting data as ${format}`);
@@ -223,7 +274,7 @@ const ProgressAnalytics = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500">{error}</p>
-          <button 
+          <button
             onClick={loadAnalyticsData}
             className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
           >
@@ -238,11 +289,11 @@ const ProgressAnalytics = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <TabNavigation />
-      <PointsSummary 
-        dailyPoints={100}
-        weeklyAverage={87}
-        goalProgress={85}
-        dailyGoal={120}
+      <PointsSummary
+        dailyPoints={summaryStats?.dailyPoints}
+        weeklyAverage={summaryStats?.weeklyAverage}
+        goalProgress={summaryStats?.goalProgress}
+        dailyGoal={summaryStats?.dailyGoal}
       />
       <QuickActionButton onActivityLogged={handleActivityLogged} />
 
@@ -255,15 +306,15 @@ const ProgressAnalytics = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 lg:mb-8">
-          <DateRangePicker 
+          <DateRangePicker
             selectedRange={selectedRange}
             onRangeChange={setSelectedRange}
           />
-          <CategoryFilter 
+          <CategoryFilter
             selectedCategories={selectedCategories}
             onCategoryChange={setSelectedCategories}
           />
-          <ComparisonToggle 
+          <ComparisonToggle
             enabled={comparisonMode}
             onToggle={() => setComparisonMode(!comparisonMode)}
           />

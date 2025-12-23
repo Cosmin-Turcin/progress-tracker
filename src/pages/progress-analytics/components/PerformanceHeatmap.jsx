@@ -3,18 +3,18 @@ import Icon from '../../../components/AppIcon';
 
 const PerformanceHeatmap = ({ data }) => {
   const getIntensityColor = (score) => {
-    if (score >= 90) return 'bg-secondary';
-    if (score >= 70) return 'bg-primary';
-    if (score >= 50) return 'bg-accent';
-    if (score >= 30) return 'bg-warning';
+    if (score >= 80) return 'bg-secondary';
+    if (score >= 50) return 'bg-primary';
+    if (score >= 25) return 'bg-accent';
+    if (score > 0) return 'bg-warning';
     return 'bg-muted';
   };
 
   const getIntensityOpacity = (score) => {
-    if (score >= 90) return 'opacity-100';
-    if (score >= 70) return 'opacity-75';
-    if (score >= 50) return 'opacity-50';
-    if (score >= 30) return 'opacity-30';
+    if (score >= 80) return 'opacity-100';
+    if (score >= 50) return 'opacity-80';
+    if (score >= 25) return 'opacity-60';
+    if (score > 0) return 'opacity-40';
     return 'opacity-10';
   };
 
@@ -57,7 +57,7 @@ const PerformanceHeatmap = ({ data }) => {
       <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
         <span className="text-xs text-muted-foreground">Less</span>
         <div className="flex gap-1">
-          {[10, 30, 50, 70, 90]?.map((score, idx) => (
+          {[5, 25, 50, 80, 100]?.map((score, idx) => (
             <div
               key={idx}
               className={`w-4 h-4 rounded ${getIntensityColor(score)} ${getIntensityOpacity(score)}`}

@@ -11,6 +11,7 @@ import ActivityLogCard from './components/ActivityLogCard';
 import DateNavigator from './components/DateNavigator';
 import { useAuth } from '../../contexts/AuthContext';
 import { activityService } from '../../services/activityService';
+import { achievementService } from '../../services/achievementService';
 import { realtimeService } from '../../services/realtimeService';
 import { supabase } from '../../lib/supabase';
 import Header from '../../components/Header';
@@ -32,33 +33,18 @@ export default function DailyActivityDashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activityFeed, setActivityFeed] = useState([]);
   const [metrics, setMetrics] = useState({});
+  const [achievements, setAchievements] = useState([]);
   const [recentAchievements, setRecentAchievements] = useState([]);
 
   const quickAddCategories = [
-    { category: "Workout", icon: "Dumbbell", iconColor: "var(--color-primary)" },
-    { category: "Meditation", icon: "Brain", iconColor: "var(--color-secondary)" },
-    { category: "Cardio", icon: "Heart", iconColor: "var(--color-error)" },
-    { category: "Strength", icon: "Zap", iconColor: "var(--color-accent)" },
-    { category: "Nutrition", icon: "Apple", iconColor: "var(--color-success)" },
-    { category: "Focus Session", icon: "Target", iconColor: "var(--color-primary)" }
+    { label: "Workout", category: "fitness", icon: "Dumbbell", iconColor: "var(--color-primary)" },
+    { label: "Meditation", category: "mindset", icon: "Brain", iconColor: "var(--color-secondary)" },
+    { label: "Cardio", category: "fitness", icon: "Heart", iconColor: "var(--color-error)" },
+    { label: "Strength", category: "fitness", icon: "Zap", iconColor: "var(--color-accent)" },
+    { label: "Nutrition", category: "nutrition", icon: "Apple", iconColor: "var(--color-success)" },
+    { label: "Focus Session", category: "work", icon: "Target", iconColor: "var(--color-primary)" }
   ];
 
-  const achievements = [
-    {
-      title: "7-Day Streak!",
-      description: "You\'ve logged activities for 7 consecutive days",
-      icon: "Flame",
-      iconColor: "var(--color-accent)",
-      isNew: true
-    },
-    {
-      title: "Fitness Milestone",
-      description: "Reached 500 total fitness points this month",
-      icon: "Trophy",
-      iconColor: "var(--color-success)",
-      isNew: true
-    }
-  ];
 
   useEffect(() => {
     if (selectedDate && user?.id) {
@@ -170,6 +156,10 @@ export default function DailyActivityDashboard() {
         setCurrentStreak(userStats?.current_streak || 0);
       }
 
+      // Load achievements
+      const achievementsData = await achievementService?.getAll();
+      setAchievements(achievementsData?.slice(0, 2) || []);
+
       // Calculate weekly average
       const weekStart = new Date(date);
       weekStart?.setDate(weekStart?.getDate() - 7);
@@ -197,12 +187,31 @@ export default function DailyActivityDashboard() {
     setCurrentDate(newDate);
   };
 
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
   const handleToday = () => {
     setCurrentDate(new Date());
   };
 
-  const handleQuickAdd = (category) => {
-    console.log(`Quick add: ${category}`);
+  const handleQuickAdd = async (category, label) => {
+    try {
+      const activityData = {
+        activityName: `Quick ${label}`,
+        category: category,
+        points: 10,
+        intensity: 'normal',
+        activityDate: formatDate(new Date()),
+        activityTime: new Date()?.toTimeString()?.split(' ')?.[0]
+      };
+      await activityService?.create(activityData);
+      await loadDashboardData(selectedDate);
+    } catch (err) {
+      console.error('Error in quick add:', err);
+      setError(err?.message || 'Failed to log quick activity');
+    }
   };
 
   const handleActivityLogged = async (activity) => {
@@ -216,7 +225,16 @@ export default function DailyActivityDashboard() {
   };
 
   const handleEditActivity = async (activity) => {
-    console.log('Edit activity:', activity);
+    // For now, let's just implement a simple toggle of intensity or something to show it works
+    // In a real app, this would open a modal with a form
+    try {
+      const newIntensity = activity?.intensity === 'intense' ? 'normal' : 'intense';
+      await activityService?.update(activity?.id, { intensity: newIntensity });
+      await loadDashboardData(selectedDate);
+    } catch (err) {
+      console.error('Error editing activity:', err);
+      setError(err?.message || 'Failed to edit activity');
+    }
   };
 
   const handleDeleteActivity = async (activity) => {
@@ -328,10 +346,10 @@ export default function DailyActivityDashboard() {
                 {quickAddCategories?.map((cat, index) => (
                   <QuickAddButton
                     key={index}
-                    category={cat?.category}
+                    label={cat?.label}
                     icon={cat?.icon}
                     iconColor={cat?.iconColor}
-                    onClick={() => handleQuickAdd(cat?.category)}
+                    onClick={() => handleQuickAdd(cat?.category, cat?.label)}
                   />
                 ))}
               </div>

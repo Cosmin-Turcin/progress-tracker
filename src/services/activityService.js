@@ -10,16 +10,16 @@ export const activityService = {
   async getAll(userId, date = null) {
     try {
       let query = supabase?.from('activity_logs')?.select('*')?.eq('user_id', userId)?.order('activity_date', { ascending: false })?.order('activity_time', { ascending: false });
-      
+
       if (date) {
         const dateStr = date?.toISOString()?.split('T')?.[0];
         query = query?.eq('activity_date', dateStr);
       }
-      
+
       const { data, error } = await query;
-      
+
       if (error) throw error;
-      
+
       // Convert snake_case to camelCase
       return data?.map(activity => ({
         id: activity?.id,
@@ -54,11 +54,11 @@ export const activityService = {
     try {
       const startStr = startDate?.toISOString()?.split('T')?.[0];
       const endStr = endDate?.toISOString()?.split('T')?.[0];
-      
+
       const { data, error } = await supabase?.from('activity_logs')?.select('*')?.eq('user_id', userId)?.gte('activity_date', startStr)?.lte('activity_date', endStr)?.order('activity_date', { ascending: false });
-      
+
       if (error) throw error;
-      
+
       return data?.map(activity => ({
         id: activity?.id,
         userId: activity?.user_id,
@@ -90,7 +90,12 @@ export const activityService = {
     try {
       const { data: { user } } = await supabase?.auth?.getUser();
       if (!user) throw new Error('Not authenticated');
-      
+
+      const getLocalDateString = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+
       // Convert camelCase to snake_case for database
       const dbActivity = {
         user_id: user?.id,
@@ -100,16 +105,16 @@ export const activityService = {
         points: activityData?.points,
         duration_minutes: activityData?.durationMinutes,
         notes: activityData?.notes,
-        activity_date: activityData?.activityDate || new Date()?.toISOString()?.split('T')?.[0],
+        activity_date: activityData?.activityDate || getLocalDateString(),
         activity_time: activityData?.activityTime || new Date()?.toTimeString()?.split(' ')?.[0],
         icon: activityData?.icon,
         icon_color: activityData?.iconColor
       };
-      
+
       const { data, error } = await supabase?.from('activity_logs')?.insert(dbActivity)?.select()?.single();
-      
+
       if (error) throw error;
-      
+
       // Convert back to camelCase
       return {
         id: data?.id,
@@ -153,13 +158,13 @@ export const activityService = {
       if (updates?.activityTime) dbUpdates.activity_time = updates?.activityTime;
       if (updates?.icon) dbUpdates.icon = updates?.icon;
       if (updates?.iconColor) dbUpdates.icon_color = updates?.iconColor;
-      
+
       dbUpdates.updated_at = new Date()?.toISOString();
-      
+
       const { data, error } = await supabase?.from('activity_logs')?.update(dbUpdates)?.eq('id', activityId)?.select()?.single();
-      
+
       if (error) throw error;
-      
+
       return {
         id: data?.id,
         userId: data?.user_id,
@@ -190,7 +195,7 @@ export const activityService = {
   async delete(activityId) {
     try {
       const { error } = await supabase?.from('activity_logs')?.delete()?.eq('id', activityId);
-      
+
       if (error) throw error;
     } catch (error) {
       console.error('Error deleting activity:', error);
@@ -207,16 +212,16 @@ export const activityService = {
   async getStatistics(userId, date = null) {
     try {
       let query = supabase?.from('activity_logs')?.select('category, points')?.eq('user_id', userId);
-      
+
       if (date) {
         const dateStr = date?.toISOString()?.split('T')?.[0];
         query = query?.eq('activity_date', dateStr);
       }
-      
+
       const { data, error } = await query;
-      
+
       if (error) throw error;
-      
+
       // Calculate statistics
       const stats = {
         totalPoints: 0,
@@ -227,10 +232,10 @@ export const activityService = {
         socialPoints: 0,
         activitiesCount: data?.length || 0
       };
-      
+
       data?.forEach(activity => {
         stats.totalPoints += activity?.points;
-        
+
         switch (activity?.category) {
           case 'fitness':
             stats.fitnessPoints += activity?.points;
@@ -249,7 +254,7 @@ export const activityService = {
             break;
         }
       });
-      
+
       return stats;
     } catch (error) {
       console.error('Error fetching activity statistics:', error);
@@ -266,21 +271,21 @@ export const activityService = {
   async getTimelineData(userId, date = null) {
     try {
       const dateStr = date ? date?.toISOString()?.split('T')?.[0] : new Date()?.toISOString()?.split('T')?.[0];
-      
+
       const { data, error } = await supabase?.from('activity_logs')?.select('activity_time, category, points')?.eq('user_id', userId)?.eq('activity_date', dateStr)?.order('activity_time', { ascending: true });
-      
+
       if (error) throw error;
-      
+
       // Generate hourly timeline data
       const hours = Array.from({ length: 24 }, (_, i) => i);
       const timeline = hours?.map(hour => {
         const hourStr = `${hour?.toString()?.padStart(2, '0')}:00`;
         const activities = data?.filter(a => a?.activity_time && a?.activity_time?.startsWith(hourStr?.split(':')?.[0])) || [];
-        
+
         const fitnessPoints = activities?.filter(a => a?.category === 'fitness')?.reduce((sum, a) => sum + a?.points, 0);
-        
+
         const mindsetPoints = activities?.filter(a => a?.category === 'mindset')?.reduce((sum, a) => sum + a?.points, 0);
-        
+
         return {
           time: hour >= 12 ? `${hour === 12 ? 12 : hour - 12} PM` : `${hour === 0 ? 12 : hour} AM`,
           fitness: fitnessPoints,
@@ -288,7 +293,7 @@ export const activityService = {
           total: fitnessPoints + mindsetPoints
         };
       });
-      
+
       return timeline;
     } catch (error) {
       console.error('Error fetching timeline data:', error);
