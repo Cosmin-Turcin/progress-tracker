@@ -7,6 +7,7 @@ import FeedFilters from './components/FeedFilters';
 import ActivityCard from './components/ActivityCard';
 import TrendingAchievements from './components/TrendingAchievements';
 import StreakLeaderboard from './components/StreakLeaderboard';
+import Header from '../../components/Header';
 
 /**
  * SocialActivityFeed Page
@@ -176,120 +177,121 @@ const SocialActivityFeed = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader className="w-8 h-8 text-blue-600 animate-spin" />
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader className="w-8 h-8 text-blue-600 animate-spin" />
+        </div>
       </div>
     );
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       <Helmet>
         <title>Social Activity Feed - HealthTrack</title>
       </Helmet>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          {/* Header */}
-          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                  Social Activity Feed
-                </h1>
-                <p className="text-gray-600 text-sm">
-                  Stay connected with your friends' health journey
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
-                <button
-                  onClick={() => setRealtimeEnabled(!realtimeEnabled)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    realtimeEnabled
-                      ? 'bg-green-100 text-green-700 hover:bg-green-200' :'bg-gray-100 text-gray-700 hover:bg-gray-200'
+      <Header />
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                Social Activity Feed
+              </h1>
+              <p className="text-gray-600 text-sm">
+                Stay connected with your friends' health journey
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+              <button
+                onClick={() => setRealtimeEnabled(!realtimeEnabled)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${realtimeEnabled
+                  ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
-                >
-                  {realtimeEnabled ? (
-                    <>
-                      <Bell className="w-4 h-4" />
-                      Live
-                    </>
-                  ) : (
-                    <>
-                      <BellOff className="w-4 h-4" />
-                      Paused
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <FeedFilters filters={filters} onFilterChange={setFilters} />
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Activity Feed - 8 columns */}
-            <div className="lg:col-span-8 space-y-4">
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                  <p className="text-red-800">{error}</p>
-                </div>
-              )}
-
-              {activities?.length === 0 ? (
-                <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-                  <p className="text-gray-500">
-                    No activities to show. Add some friends to see their activities!
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {activities?.map((activity) => (
-                    <ActivityCard
-                      key={activity?.id}
-                      activity={activity}
-                      reactions={reactions?.[activity?.id] || []}
-                      currentUserId={user?.id}
-                      onReaction={handleReaction}
-                      onComment={handleComment}
-                      onShare={handleShare}
-                    />
-                  ))}
-
-                  {/* Load More Button */}
-                  {hasMore && (
-                    <div className="text-center py-4">
-                      <button
-                        onClick={handleLoadMore}
-                        disabled={loading}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        {loading ? 'Loading...' : 'Load More'}
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Sidebar - 4 columns */}
-            <div className="lg:col-span-4 space-y-6">
-              <TrendingAchievements achievements={trendingAchievements} />
-              <StreakLeaderboard streaks={streakLeaderboard} />
+              >
+                {realtimeEnabled ? (
+                  <>
+                    <Bell className="w-4 h-4" />
+                    Live
+                  </>
+                ) : (
+                  <>
+                    <BellOff className="w-4 h-4" />
+                    Paused
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Filters */}
+        <FeedFilters filters={filters} onFilterChange={setFilters} />
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Activity Feed - 8 columns */}
+          <div className="lg:col-span-8 space-y-4">
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <p className="text-red-800">{error}</p>
+              </div>
+            )}
+
+            {activities?.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                <p className="text-gray-500">
+                  No activities to show. Add some friends to see their activities!
+                </p>
+              </div>
+            ) : (
+              <>
+                {activities?.map((activity) => (
+                  <ActivityCard
+                    key={activity?.id}
+                    activity={activity}
+                    reactions={reactions?.[activity?.id] || []}
+                    currentUserId={user?.id}
+                    onReaction={handleReaction}
+                    onComment={handleComment}
+                    onShare={handleShare}
+                  />
+                ))}
+
+                {/* Load More Button */}
+                {hasMore && (
+                  <div className="text-center py-4">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={loading}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {loading ? 'Loading...' : 'Load More'}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Sidebar - 4 columns */}
+          <div className="lg:col-span-4 space-y-6">
+            <TrendingAchievements achievements={trendingAchievements} />
+            <StreakLeaderboard streaks={streakLeaderboard} />
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Home, BarChart3, Target, Bell, Trophy, Settings, User, LogOut, Calendar, Activity } from 'lucide-react';
+import {
+  Menu, X, Home, BarChart3, Target, Bell, Trophy, Settings,
+  User, LogOut, Calendar, Activity, Users, LayoutDashboard,
+  TrendingUp, Star, MessageSquare, ChevronDown
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from './AppIcon';
 
-
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -20,187 +24,223 @@ const Header = () => {
     }
   };
 
-  const linkClass = (path) => {
-    const isActive = location?.pathname === path;
-    return `flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
-      isActive 
-        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-    }`;
-  };
+  const mainNav = [
+    { path: '/daily-activity-dashboard', icon: LayoutDashboard, label: 'Today' },
+    { path: '/progress-analytics', icon: TrendingUp, label: 'Analytics' },
+    { path: '/habit-consistency-hub', icon: Target, label: 'Habits' },
+  ];
 
-  const menuItems = [
-    { path: '/daily-activity-dashboard', icon: Home, label: 'Daily Dashboard' },
-    { path: '/progress-analytics', icon: BarChart3, label: 'Progress Analytics' },
-    { path: '/habit-consistency-hub', icon: Calendar, label: 'Habit Consistency' },
-    { path: '/reminders-notifications', icon: Bell, label: 'Reminders' },
+  const subNav = [
+    { path: '/social-activity-feed', icon: Activity, label: 'Feed' },
+    { path: '/friends-leaderboard', icon: Users, label: 'Leaderboard' },
     { path: '/achievements-badges-gallery', icon: Trophy, label: 'Achievements' },
-    { path: '/friends-leaderboard', icon: Trophy, label: 'Friends' },
+    { path: '/reminders-notifications', icon: Bell, label: 'Reminders' },
     { path: '/settings-customization', icon: Settings, label: 'Settings' },
-    { path: '/profile', icon: User, label: 'Profile' },
   ];
 
   const isActive = (path) => location?.pathname === path;
 
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-[100] w-full bg-background/80 backdrop-blur-md border-b border-border">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Tier 1: Main Nav & Profile */}
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/daily-activity-dashboard" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Target className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">Activity Tracker</span>
-          </Link>
+          <div className="flex items-center gap-8">
+            {/* Logo */}
+            <Link to="/daily-activity-dashboard" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
+                <Icon name="Activity" size={24} color="white" />
+              </div>
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 hidden sm:block">
+                Progress Tracker
+              </span>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-2">
-            <Link
-              to="/daily-activity-dashboard"
-              className={linkClass('/daily-activity-dashboard')}
-            >
-              Daily Dashboard
-            </Link>
-            <Link
-              to="/progress-analytics"
-              className={linkClass('/progress-analytics')}
-            >
-              Progress Analytics
-            </Link>
-            <Link
-              to="/habit-consistency-hub"
-              className={linkClass('/habit-consistency-hub')}
-            >
-              Habit Consistency
-            </Link>
-            <Link
-              to="/reminders-notifications"
-              className={linkClass('/reminders-notifications')}
-            >
-              Reminders
-            </Link>
-            <Link
-              to="/achievements-badges-gallery"
-              className={linkClass('/achievements-badges-gallery')}
-            >
-              Achievements
-            </Link>
-            <Link
-              to="/friends-leaderboard"
-              className={linkClass('/friends-leaderboard')}
-            >
-              Leaderboard
-            </Link>
-            <Link
-              to="/user-profile"
-              className={linkClass('/user-profile')}
-            >
-              My Profile
-            </Link>
-            <Link
-              to="/settings-customization"
-              className={linkClass('/settings-customization')}
-            >
-              Settings
-            </Link>
-          </nav>
-
-          {/* User Profile & Logout */}
-          <div className="hidden lg:flex items-center space-x-4">
-            {user && (
-              <>
-                <Link
-                  to="/profile"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
-                >
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-semibold">
-                      {user?.email?.charAt(0)?.toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {user?.email?.split('@')?.[0]}
-                  </span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all"
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span className="text-sm font-medium">Logout</span>
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
-          >
-            {isMenuOpen ? (
-              <X className="h-6 w-6 text-gray-700 dark:text-gray-300" />
-            ) : (
-              <Menu className="h-6 w-6 text-gray-700 dark:text-gray-300" />
-            )}
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-200 dark:border-gray-700">
-            <nav className="space-y-2">
-              {menuItems?.map((item) => {
-                const Icon = item?.icon;
+            {/* Desktop Tier 1 Nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              {mainNav.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.path);
                 return (
                   <Link
-                    key={item?.path}
-                    to={item?.path}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
-                      isActive(item?.path)
-                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}
+                    key={item.path}
+                    to={item.path}
+                    className={`
+                      flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
+                      ${active
+                        ? 'bg-primary text-primary-foreground shadow-subtle'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }
+                    `}
                   >
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{item?.label}</span>
+                    <Icon size={18} />
+                    {item.label}
                   </Link>
                 );
               })}
             </nav>
+          </div>
 
-            {/* Mobile User Section */}
+          <div className="flex items-center gap-4">
+            {/* User Profile Dropdown */}
             {user && (
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                <Link
-                  to="/profile"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
-                >
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold">
-                      {user?.email?.charAt(0)?.toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {user?.email?.split('@')?.[0]}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
-                  </div>
-                </Link>
+              <div className="relative">
                 <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all"
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-muted transition-colors border border-transparent hover:border-border"
                 >
-                  <LogOut className="h-5 w-5" />
-                  <span className="font-medium">Logout</span>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                    {profile?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-foreground hidden sm:block">
+                    {profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0]}
+                  </span>
+                  <ChevronDown size={14} className={`text-muted-foreground transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
                 </button>
+
+                {isProfileOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsProfileOpen(false)} />
+                    <div className="absolute right-0 mt-2 w-56 rounded-xl bg-card border border-border shadow-elevated z-20 overflow-hidden animate-scale-in">
+                      <div className="p-3 border-b border-border bg-muted/30">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Account</p>
+                        <p className="text-sm font-medium text-foreground truncate">{user?.email}</p>
+                      </div>
+                      <div className="p-1">
+                        <Link
+                          to="/profile"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
+                        >
+                          <User size={16} />
+                          My Profile
+                        </Link>
+                        <Link
+                          to="/user-profile"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
+                        >
+                          <Settings size={16} />
+                          Personal View
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors mt-1"
+                        >
+                          <LogOut size={16} />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
-        )}
+        </div>
+
+        {/* Tier 2: Desktop Sub Nav */}
+        <div className="hidden md:flex items-center h-10 gap-6 border-t border-border/50">
+          {subNav.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.path);
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`
+                  flex items-center gap-1.5 h-full px-1 text-xs font-medium transition-all relative
+                  ${active
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                  }
+                `}
+              >
+                <Icon size={14} />
+                {item.label}
+                {active && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                )}
+              </Link>
+            );
+          })}
+        </div>
       </div>
+
+      {/* Mobile Navigation Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden border-t border-border bg-card animate-slide-down">
+          <nav className="p-4 space-y-6">
+            <div className="space-y-1">
+              <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Main Menu</p>
+              {mainNav.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.path);
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`
+                      flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium
+                      ${active
+                        ? 'bg-primary text-primary-foreground shadow-subtle'
+                        : 'text-foreground hover:bg-muted'
+                      }
+                    `}
+                  >
+                    <Icon size={20} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="space-y-1">
+              <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Features</p>
+              {subNav.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.path);
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`
+                      flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
+                      ${active
+                        ? 'bg-primary/10 text-primary font-semibold'
+                        : 'text-muted-foreground hover:bg-muted'
+                      }
+                    `}
+                  >
+                    <Icon size={18} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 p-3 bg-destructive text-destructive-foreground rounded-xl font-semibold shadow-lg shadow-destructive/20"
+              >
+                <LogOut size={20} />
+                Sign Out
+              </button>
+            </div>
+          </nav>
+        </div>
+      )}
     </header>
   );
 };

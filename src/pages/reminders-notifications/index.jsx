@@ -33,9 +33,9 @@ const RemindersNotifications = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             const settings = await settingsService?.get(user?.id);
-            
+
             if (settings?.notifications) {
                 setGlobalSettings({
                     notificationsEnabled: settings?.notifications?.enabled ?? true,
@@ -131,25 +131,25 @@ const RemindersNotifications = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+            <div className="min-h-screen bg-background flex flex-col">
                 <Header />
-                <div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="min-h-screen bg-background">
             <Header />
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-screen-2xl mx-auto px-4 py-8">
                 {error && (
                     <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                         <p className="text-red-800 dark:text-red-200">{error}</p>
                     </div>
                 )}
-                
+
                 {/* Header */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -172,10 +172,9 @@ const RemindersNotifications = () => {
                             {/* Master Toggle */}
                             <button
                                 onClick={() => handleGlobalToggle('notificationsEnabled')}
-                                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all ${
-                                    globalSettings?.notificationsEnabled
-                                        ? 'bg-green-600 hover:bg-green-700 text-white' :'bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
-                                }`}
+                                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all ${globalSettings?.notificationsEnabled
+                                        ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+                                    }`}
                             >
                                 {globalSettings?.notificationsEnabled ? (
                                     <Bell className="h-5 w-5" />
@@ -199,10 +198,9 @@ const RemindersNotifications = () => {
                             {/* Settings Dropdown Indicator */}
                             <button
                                 onClick={() => handleGlobalToggle('doNotDisturbEnabled')}
-                                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all ${
-                                    globalSettings?.doNotDisturbEnabled
-                                        ? 'bg-purple-600 hover:bg-purple-700 text-white' :'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
-                                }`}
+                                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all ${globalSettings?.doNotDisturbEnabled
+                                        ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+                                    }`}
                             >
                                 <Moon className="h-5 w-5" />
                                 <span className="hidden sm:inline">DND</span>
@@ -246,20 +244,18 @@ const RemindersNotifications = () => {
                             <div className="flex flex-wrap items-center gap-4">
                                 <button
                                     onClick={() => handleGlobalToggle('soundEnabled')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                                        globalSettings?.soundEnabled
-                                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                                    }`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${globalSettings?.soundEnabled
+                                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                                        }`}
                                 >
                                     <Volume2 className="h-4 w-4" />
                                     <span className="text-sm font-medium">Sound</span>
                                 </button>
                                 <button
                                     onClick={() => handleGlobalToggle('vibrationEnabled')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                                        globalSettings?.vibrationEnabled
-                                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' :'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                                    }`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${globalSettings?.vibrationEnabled
+                                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                                        }`}
                                 >
                                     <span className="text-sm font-medium">📳 Vibration</span>
                                 </button>
@@ -275,11 +271,10 @@ const RemindersNotifications = () => {
                             <button
                                 key={section?.id}
                                 onClick={() => setActiveSection(section?.id)}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-                                    activeSection === section?.id
+                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${activeSection === section?.id
                                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
                                         : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                                }`}
+                                    }`}
                             >
                                 <span className="text-xl">{section?.icon}</span>
                                 <span>{section?.label}</span>

@@ -88,10 +88,10 @@ export default function AchievementsBadgesGallery() {
   const handleShare = (achievement) => {
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 3000);
-    
+
     // Copy to clipboard as fallback
     const text = `I just earned: ${achievement?.title}! ${achievement?.description}`;
-    navigator.clipboard?.writeText(text)?.catch(() => {});
+    navigator.clipboard?.writeText(text)?.catch(() => { });
   };
 
   if (loading) {
@@ -106,13 +106,12 @@ export default function AchievementsBadgesGallery() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>Achievements & Badges Gallery - Progress Tracker</title>
-        <meta name="description" content="View all your earned achievements, badges, and milestone certificates" />
+        <title>Achievements - Progress Tracker</title>
       </Helmet>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+      <Header />
+      <div className="max-w-7xl mx-auto p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
@@ -151,10 +150,10 @@ export default function AchievementsBadgesGallery() {
             <div className="text-center py-16 bg-white rounded-xl shadow-md">
               <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                {searchQuery || selectedType !== 'all' ?'No achievements match your filters' :'No achievements yet'}
+                {searchQuery || selectedType !== 'all' ? 'No achievements match your filters' : 'No achievements yet'}
               </h3>
               <p className="text-gray-500">
-                {searchQuery || selectedType !== 'all' ?'Try adjusting your search or filters' :'Keep logging activities to unlock achievements!'}
+                {searchQuery || selectedType !== 'all' ? 'Try adjusting your search or filters' : 'Keep logging activities to unlock achievements!'}
               </p>
             </div>
           ) : (

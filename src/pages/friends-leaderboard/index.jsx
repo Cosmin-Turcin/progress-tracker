@@ -7,6 +7,7 @@ import { LeaderboardCard } from './components/LeaderboardCard';
 import { LeaderboardFilters } from './components/LeaderboardFilters';
 import { SearchFriends } from './components/SearchFriends';
 import { CurrentUserStats } from './components/CurrentUserStats';
+import Header from '../../components/Header';
 
 export default function FriendsLeaderboard() {
   const { user } = useAuth();
@@ -80,14 +81,15 @@ export default function FriendsLeaderboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Users className="w-8 h-8 text-blue-500" />
             <h1 className="text-3xl font-bold text-gray-900">Friends Leaderboard</h1>
           </div>
-          
+
           <button
             onClick={handleRefresh}
             disabled={refreshing}
@@ -107,7 +109,7 @@ export default function FriendsLeaderboard() {
           <div className="lg:col-span-2">
             <CurrentUserStats userStats={currentUserStats} />
           </div>
-          
+
           <div className="space-y-4">
             <SearchFriends />
           </div>
@@ -115,7 +117,7 @@ export default function FriendsLeaderboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
-            <LeaderboardFilters 
+            <LeaderboardFilters
               selectedPeriod={selectedPeriod}
               onPeriodChange={handlePeriodChange}
             />
@@ -124,7 +126,7 @@ export default function FriendsLeaderboard() {
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Rankings</h2>
-              
+
               {loading ? (
                 <div className="text-center py-8 text-gray-600">Loading leaderboard...</div>
               ) : leaderboard?.length === 0 ? (
@@ -135,7 +137,7 @@ export default function FriendsLeaderboard() {
               ) : (
                 <div className="space-y-3">
                   {leaderboard?.map((friend) => (
-                    <LeaderboardCard 
+                    <LeaderboardCard
                       key={friend?.userId}
                       friend={friend}
                       currentUserId={user?.id}

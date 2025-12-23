@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import TabNavigation from '../../components/ui/TabNavigation';
 import PointsSummary from '../../components/ui/PointsSummary';
 import QuickActionButton from '../../components/ui/QuickActionButton';
 import MetricCard from './components/MetricCard';
@@ -277,7 +276,6 @@ export default function DailyActivityDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <TabNavigation />
       <PointsSummary
         dailyPoints={dailyPoints}
         weeklyAverage={weeklyAverage}

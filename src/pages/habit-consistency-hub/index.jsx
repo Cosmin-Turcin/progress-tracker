@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import TabNavigation from '../../components/ui/TabNavigation';
 import PointsSummary from '../../components/ui/PointsSummary';
 import QuickActionButton from '../../components/ui/QuickActionButton';
 import Select from '../../components/ui/Select';
@@ -9,10 +8,10 @@ import HabitPriorityRanking from './components/HabitPriorityRanking';
 import MilestoneAlerts from './components/MilestoneAlerts';
 import MotivationInsights from './components/MotivationInsights';
 import HabitBreakdownTable from './components/HabitBreakdownTable';
+import Header from '../../components/Header';
 import { useAuth } from '../../contexts/AuthContext';
 import { activityService } from '../../services/activityService';
 import { goalService } from '../../services/goalService';
-import Header from '../../components/Header';
 
 const HabitConsistencyHub = () => {
   const { user } = useAuth();
@@ -415,7 +414,6 @@ const HabitConsistencyHub = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <TabNavigation />
       <PointsSummary
         dailyPoints={summaryStats?.dailyPoints}
         weeklyAverage={summaryStats?.weeklyAverage}

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { activityService } from '../../services/activityService';
 import { realtimeService } from '../../services/realtimeService';
-import TabNavigation from '../../components/ui/TabNavigation';
 import PointsSummary from '../../components/ui/PointsSummary';
 import QuickActionButton from '../../components/ui/QuickActionButton';
 import KPICard from './components/KPICard';
@@ -288,7 +287,6 @@ const ProgressAnalytics = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <TabNavigation />
       <PointsSummary
         dailyPoints={summaryStats?.dailyPoints}
         weeklyAverage={summaryStats?.weeklyAverage}
