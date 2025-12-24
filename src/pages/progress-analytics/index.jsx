@@ -36,7 +36,7 @@ const ProgressAnalytics = () => {
     dailyPoints: 0,
     weeklyAverage: 0,
     goalProgress: 0,
-    dailyGoal: 100
+    dailyGoal: 200
   });
 
   // Load analytics data
@@ -84,13 +84,51 @@ const ProgressAnalytics = () => {
       setLoading(true);
       setError('');
 
-      // Load KPI data
-      const stats = await activityService?.getStatistics(user?.id);
+      // 1. Prepare date range based on selectedRange
+      const endDate = new Date();
+      const startDate = new Date();
+
+      const getRangeDays = (range) => {
+        switch (range) {
+          case '7d': return 7;
+          case '30d': return 30;
+          case '90d': return 90;
+          case '1y': return 365;
+          default: return 30;
+        }
+      };
+
+      const rangeDays = getRangeDays(selectedRange);
+      // For heatmap we always want at least 90 days history, but for charts we respect selectedRange
+      const historyDays = Math.max(rangeDays, 90);
+      startDate.setDate(startDate.getDate() - historyDays);
+
+      // 2. Fetch raw activities for the range
+      const allActivities = await activityService?.getByDateRange(user?.id, startDate, endDate);
+
+      // 3. Filter activities by selected categories
+      const activities = allActivities?.filter(a => selectedCategories?.includes(a?.category)) || [];
+
+      // Helper for consistent date formatting (YYYY-MM-DD)
+      const formatDate = (date) => {
+        const d = new Date(date);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+
+      // 4. Calculate KPIs based on filtered data
+      const totalPointsInRange = activities?.reduce((sum, a) => sum + a?.points, 0) || 0;
+      const avgPoints = Math.round(totalPointsInRange / rangeDays) || 0;
+
+      const activeDaysSet = new Set(activities?.map(a => a?.activityDate));
+      const activeDays = activeDaysSet.size;
+      const consistencyScore = rangeDays > 0 ? Math.round((activeDays / rangeDays) * 100) : 0;
+
+      const globalStats = await activityService?.getStatistics(user?.id);
 
       setKpiData([
         {
           title: 'Average Daily Points',
-          value: Math.round(stats?.totalPoints / 30) || 0,
+          value: avgPoints,
           unit: 'pts',
           change: '+12.5%',
           changeType: 'positive',
@@ -99,7 +137,7 @@ const ProgressAnalytics = () => {
         },
         {
           title: 'Consistency Score',
-          value: stats?.currentStreak ? Math.min(100, stats?.currentStreak * 3) : 0,
+          value: consistencyScore,
           unit: '%',
           change: '+8.3%',
           changeType: 'positive',
@@ -116,33 +154,19 @@ const ProgressAnalytics = () => {
           iconColor: 'var(--color-accent)'
         },
         {
-          title: 'Personal Bests',
-          value: stats?.achievementsUnlocked || 0,
-          unit: 'PRs',
-          change: '+5 this month',
+          title: 'Total Activities',
+          value: activities?.length || 0,
+          unit: 'entries',
+          change: 'in range',
           changeType: 'positive',
           icon: 'Award',
           iconColor: '#8B5CF6'
         }
       ]);
 
-      // Load trend data and heatmap data (90 days for heatmap's 84-day view)
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate?.setDate(startDate?.getDate() - 90);
-
-      const activities = await activityService?.getByDateRange(user?.id, startDate, endDate);
-
-      // Helper for consistent date formatting (YYYY-MM-DD)
-      const formatDate = (date) => {
-        const d = new Date(date);
-        return `${d.getFullYear()} -${String(d.getMonth() + 1).padStart(2, '0')} -${String(d.getDate()).padStart(2, '0')} `;
-      };
-
-      // Calculate daily points using UTC-safe local date matching
+      // 5. Calculate daily points for charts and heatmap
       const dailyPoints = {};
       activities?.forEach((activity) => {
-        // activity.activityDate is already "YYYY-MM-DD" from database
         const dateKey = activity.activityDate;
         dailyPoints[dateKey] = (dailyPoints?.[dateKey] || 0) + activity?.points;
       });
@@ -154,11 +178,11 @@ const ProgressAnalytics = () => {
           movingAverage: points
         }))
         ?.sort((a, b) => new Date(a.date) - new Date(b.date))
-        ?.slice(-30); // Show last 30 days in trend chart
+        ?.slice(-rangeDays);
 
       setTrendData(trend);
 
-      // Load category breakdown
+      // 6. Load category breakdown
       const categoryBreakdown = {};
       activities?.forEach((activity) => {
         categoryBreakdown[activity.category] =
@@ -174,7 +198,7 @@ const ProgressAnalytics = () => {
 
       setCategoryData(categories);
 
-      // Calculate weekly patterns
+      // 7. Calculate weekly patterns
       const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const weeklyPoints = {};
 
@@ -195,33 +219,33 @@ const ProgressAnalytics = () => {
 
       setWeeklyPatternData(weeklyPattern);
 
-      // Load streaks (keeping mock data for now as there's no streak table)
+      // 8. Streak data
       setStreakData([
         {
           category: 'fitness',
-          name: 'Morning Workout',
-          days: stats?.currentStreak || 0,
+          name: 'Active Days',
+          days: globalStats?.currentStreak || 0,
           startDate: new Date()?.toLocaleDateString()
         }
       ]);
 
-      // Calculate heatmap data for last 84 days (12 weeks)
+      // 9. Heatmap data (fixed 84 days context)
       const heatData = [];
       const now = new Date();
       for (let i = 83; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(date.getDate() - i);
-        const dateKey = formatDate(date);
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const dateKey = formatDate(d);
         const score = dailyPoints[dateKey] || 0;
         heatData.push({
-          date: date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }),
-          dayOfWeek: date.getDay(),
+          date: d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }),
+          dayOfWeek: d.getDay(),
           score
         });
       }
       setHeatmapData(heatData);
 
-      // Update summary stats
+      // 10. Update summary stats for Header/Context usage (though normally handled by StatsContext)
       const todayKey = formatDate(new Date());
       const todayPoints = dailyPoints[todayKey] || 0;
 
@@ -237,8 +261,8 @@ const ProgressAnalytics = () => {
       setSummaryStats({
         dailyPoints: todayPoints,
         weeklyAverage: Math.round(weeklySum / 7),
-        goalProgress: Math.min(Math.round((todayPoints / 100) * 100), 100),
-        dailyGoal: 100
+        goalProgress: Math.min(Math.round((todayPoints / 200) * 100), 100),
+        dailyGoal: 200
       });
 
     } catch (err) {
@@ -249,9 +273,8 @@ const ProgressAnalytics = () => {
     }
   };
 
-
   const handleExport = (format) => {
-    console.log(`Exporting data as ${format} `);
+    console.log(`Exporting data as ${format}`);
   };
 
   const handleActivityLogged = (activity) => {
@@ -347,19 +370,13 @@ const ProgressAnalytics = () => {
             <div className="p-4 bg-secondary/10 rounded-lg border border-secondary/20">
               <p className="text-sm font-medium text-foreground mb-1">🎯 Strong Performance</p>
               <p className="text-sm text-muted-foreground">
-                Your consistency score has improved by 8.3% this period. Keep maintaining your daily routines!
+                Your consistency score has significantly improved. Keep maintaining your daily routines!
               </p>
             </div>
             <div className="p-4 bg-accent/10 rounded-lg border border-accent/20">
               <p className="text-sm font-medium text-foreground mb-1">💡 Opportunity</p>
               <p className="text-sm text-muted-foreground">
-                Friday and Saturday show lower activity. Consider scheduling lighter activities on these days.
-              </p>
-            </div>
-            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="text-sm font-medium text-foreground mb-1">🔥 Milestone Alert</p>
-              <p className="text-sm text-muted-foreground">
-                You're 3 days away from a 30-day streak in Healthy Eating. Stay focused!
+                Analyzing your patterns reveals potential for higher performance on weekends.
               </p>
             </div>
           </div>
