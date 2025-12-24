@@ -52,41 +52,32 @@ const HabitConsistencyHub = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch activities and goals from database
-      const [activitiesData, goalsData] = await Promise.all([
+      // Fetch activities, goals, and statistics from database
+      const [activitiesData, goalsData, globalStats] = await Promise.all([
         activityService?.getAll(user?.id),
-        goalService?.getAll(user?.id)
+        goalService?.getAll(user?.id),
+        activityService?.getStatistics(user?.id)
       ]);
 
       setActivities(activitiesData || []);
       setGoals(goalsData || []);
 
       // Calculate metrics from real data
-      calculateConsistencyMetrics(activitiesData, goalsData);
+      calculateConsistencyMetrics(activitiesData, goalsData, globalStats);
       generateHabitsMatrix(activitiesData);
-      generateHabitBreakdown(activitiesData);
+      generateHabitBreakdown(activitiesData, globalStats);
       generateMilestonesAndInsights(activitiesData, goalsData);
 
-      // Update summary stats
-      const todayKey = formatDate(new Date());
-      const dailyPoints = activitiesData
-        ?.filter(a => a?.activityDate === todayKey)
-        ?.reduce((sum, a) => sum + a?.points, 0) || 0;
-
-      const weeklyTotal = activitiesData
-        ?.filter(a => {
-          const date = new Date(a?.activityDate);
+      setSummaryStats({
+        dailyPoints: globalStats?.totalPoints || 0,
+        weeklyAverage: Math.round((activitiesData?.filter(a => {
+          const d = new Date(a?.activityDate);
           const weekAgo = new Date();
           weekAgo?.setDate(weekAgo?.getDate() - 7);
-          return date >= weekAgo;
-        })
-        ?.reduce((sum, a) => sum + a?.points, 0) || 0;
-
-      setSummaryStats({
-        dailyPoints,
-        weeklyAverage: Math.round(weeklyTotal / 7),
-        goalProgress: Math.min(Math.round((dailyPoints / 300) * 100), 100),
-        dailyGoal: 300
+          return d >= weekAgo;
+        })?.reduce((sum, a) => sum + a?.points, 0) || 0) / 7),
+        goalProgress: Math.min(Math.round(((globalStats?.totalPoints || 0) / 200) * 100), 100),
+        dailyGoal: 200
       });
 
     } catch (err) {
@@ -97,10 +88,10 @@ const HabitConsistencyHub = () => {
     }
   };
 
-  const calculateConsistencyMetrics = (activitiesData, goalsData) => {
-    // Calculate current longest streak
-    const streaks = calculateStreaks(activitiesData);
-    const longestStreak = Math.max(...streaks, 0);
+  const calculateConsistencyMetrics = (activitiesData, goalsData, globalStats) => {
+    // Use the real current and longest streaks from statistics
+    const currentStreak = globalStats?.currentStreak || 0;
+    const longestStreak = globalStats?.longestStreak || 0;
 
     // Calculate weekly completion rate
     const lastWeekActivities = activitiesData?.filter(a => {
@@ -121,11 +112,19 @@ const HabitConsistencyHub = () => {
 
     setConsistencyMetrics([
       {
-        title: 'Current Longest Streak',
-        value: longestStreak?.toString(),
+        title: 'Current Streak',
+        value: currentStreak?.toString(),
         subtitle: 'Days in a row',
         icon: 'Flame',
-        trend: { direction: 'up', value: '+' + Math.floor(longestStreak * 0.1) + ' days' },
+        trend: { direction: 'up', value: '+' + currentStreak + ' days' },
+        status: 'success'
+      },
+      {
+        title: 'Longest Streak',
+        value: longestStreak?.toString(),
+        subtitle: 'Personal best',
+        icon: 'Award',
+        trend: { direction: 'up', value: 'Record' },
         status: 'success'
       },
       {
@@ -245,7 +244,7 @@ const HabitConsistencyHub = () => {
     setHabitsMatrixData(matrixData || []);
   };
 
-  const generateHabitBreakdown = (activitiesData) => {
+  const generateHabitBreakdown = (activitiesData, globalStats) => {
     // Group activities by name
     const habitGroups = {};
     activitiesData?.forEach(activity => {

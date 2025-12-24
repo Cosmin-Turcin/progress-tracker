@@ -222,10 +222,10 @@ const ProgressAnalytics = () => {
       // 8. Streak data
       setStreakData([
         {
-          category: 'fitness',
-          name: 'Active Days',
+          category: 'all',
+          name: 'Overall Activity',
           days: globalStats?.currentStreak || 0,
-          startDate: new Date()?.toLocaleDateString()
+          startDate: formatDate(new Date(new Date().setDate(new Date().getDate() - (globalStats?.currentStreak || 0))))
         }
       ]);
 

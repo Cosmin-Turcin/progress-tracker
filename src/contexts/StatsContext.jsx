@@ -9,6 +9,7 @@ export const StatsProvider = ({ children }) => {
     const [dailyPoints, setDailyPoints] = useState(0);
     const [weeklyAverage, setWeeklyAverage] = useState(0);
     const [dailyGoal, setDailyGoal] = useState(200); // Default goal
+    const [currentStreak, setCurrentStreak] = useState(0);
     const [loading, setLoading] = useState(false);
 
     const refreshStats = useCallback(async (date = new Date()) => {
@@ -19,6 +20,7 @@ export const StatsProvider = ({ children }) => {
             const stats = await activityService?.getStatistics(user?.id, date);
 
             setDailyPoints(stats?.totalPoints || 0);
+            setCurrentStreak(stats?.currentStreak || 0);
 
             // Load weekly average
             const endDate = new Date(date);
@@ -52,6 +54,7 @@ export const StatsProvider = ({ children }) => {
             weeklyAverage,
             dailyGoal,
             goalProgress,
+            currentStreak,
             loading,
             refreshStats
         }}>

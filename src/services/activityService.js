@@ -214,7 +214,8 @@ export const activityService = {
    */
   async getStatistics(userId, date = null) {
     try {
-      let query = supabase?.from('activity_logs')?.select('category, points')?.eq('user_id', userId);
+      // 1. Fetch points breakdown for the period (specific date or all time)
+      let query = supabase?.from('activity_logs')?.select('category, points, activity_date')?.eq('user_id', userId);
 
       if (date) {
         const dateStr = formatDate(date);
@@ -222,8 +223,73 @@ export const activityService = {
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
+
+      // 2. Fetch all unique activity dates for streak calculation
+      const { data: allDatesData, error: datesError } = await supabase
+        ?.from('activity_logs')
+        ?.select('activity_date')
+        ?.eq('user_id', userId)
+        ?.order('activity_date', { ascending: false });
+
+      if (datesError) throw datesError;
+
+      // Unique sorted dates (YYYY-MM-DD)
+      const uniqueDates = Array.from(new Set(allDatesData?.map(d => d.activity_date)));
+
+      const calculateStreaks = (dates) => {
+        if (!dates || dates.length === 0) return { currentStreak: 0, longestStreak: 0 };
+
+        let current = 0;
+        let longest = 0;
+        let tempStreak = 0;
+
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        const todayStr = formatDate(today);
+        const yesterdayStr = formatDate(yesterday);
+
+        // Check if user has activity today or yesterday to continue current streak
+        const hasActivityRecent = dates[0] === todayStr || dates[0] === yesterdayStr;
+
+        if (!hasActivityRecent) {
+          current = 0;
+        }
+
+        for (let i = 0; i < dates.length; i++) {
+          if (i === 0) {
+            tempStreak = 1;
+          } else {
+            const currentDay = new Date(dates[i]);
+            const prevDay = new Date(dates[i - 1]);
+
+            // Check if days are consecutive
+            const diffTime = Math.abs(prevDay - currentDay);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+              tempStreak++;
+            } else {
+              if (current === 0 && hasActivityRecent) {
+                current = tempStreak;
+              }
+              longest = Math.max(longest, tempStreak);
+              tempStreak = 1;
+            }
+          }
+        }
+
+        if (current === 0 && hasActivityRecent) {
+          current = tempStreak;
+        }
+        longest = Math.max(longest, tempStreak);
+
+        return { currentStreak: current, longestStreak: longest };
+      };
+
+      const { currentStreak, longestStreak } = calculateStreaks(uniqueDates);
 
       // Calculate statistics
       const stats = {
@@ -233,7 +299,9 @@ export const activityService = {
         nutritionPoints: 0,
         workPoints: 0,
         socialPoints: 0,
-        activitiesCount: data?.length || 0
+        activitiesCount: data?.length || 0,
+        currentStreak,
+        longestStreak
       };
 
       data?.forEach(activity => {
