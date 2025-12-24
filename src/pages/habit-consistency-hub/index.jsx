@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import PointsSummary from '../../components/ui/PointsSummary';
 import QuickActionButton from '../../components/ui/QuickActionButton';
 import Select from '../../components/ui/Select';
 import ConsistencyCard from './components/ConsistencyCard';
@@ -10,11 +9,13 @@ import MotivationInsights from './components/MotivationInsights';
 import HabitBreakdownTable from './components/HabitBreakdownTable';
 import Header from '../../components/Header';
 import { useAuth } from '../../contexts/AuthContext';
+import { useStats } from '../../contexts/StatsContext';
 import { activityService } from '../../services/activityService';
 import { goalService } from '../../services/goalService';
 
 const HabitConsistencyHub = () => {
   const { user } = useAuth();
+  const { refreshStats } = useStats();
   const [selectedHabit, setSelectedHabit] = useState('all');
   const [consistencyPeriod, setConsistencyPeriod] = useState('weekly');
   const [loading, setLoading] = useState(true);
@@ -385,6 +386,7 @@ const HabitConsistencyHub = () => {
   const handleActivityLogged = (activity) => {
     // Reload data after new activity is logged
     loadHabitData();
+    refreshStats();
   };
 
   if (loading) {
@@ -414,12 +416,6 @@ const HabitConsistencyHub = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <PointsSummary
-        dailyPoints={summaryStats?.dailyPoints}
-        weeklyAverage={summaryStats?.weeklyAverage}
-        goalProgress={summaryStats?.goalProgress}
-        dailyGoal={summaryStats?.dailyGoal}
-      />
       <QuickActionButton onActivityLogged={handleActivityLogged} />
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card p-6 rounded-lg border border-border">

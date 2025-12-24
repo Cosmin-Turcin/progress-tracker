@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import PointsSummary from '../../components/ui/PointsSummary';
 import QuickActionButton from '../../components/ui/QuickActionButton';
 import MetricCard from './components/MetricCard';
 import TimelineChart from './components/TimelineChart';
@@ -9,6 +8,7 @@ import AchievementNotification from './components/AchievementNotification';
 import ActivityLogCard from './components/ActivityLogCard';
 import DateNavigator from './components/DateNavigator';
 import { useAuth } from '../../contexts/AuthContext';
+import { useStats } from '../../contexts/StatsContext';
 import { activityService } from '../../services/activityService';
 import { achievementService } from '../../services/achievementService';
 import { realtimeService } from '../../services/realtimeService';
@@ -17,6 +17,7 @@ import Header from '../../components/Header';
 
 export default function DailyActivityDashboard() {
   const { user } = useAuth();
+  const { refreshStats } = useStats();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activities, setActivities] = useState([]);
   const [todayActivities, setTodayActivities] = useState([]);
@@ -29,7 +30,6 @@ export default function DailyActivityDashboard() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [activityFeed, setActivityFeed] = useState([]);
   const [metrics, setMetrics] = useState({});
   const [achievements, setAchievements] = useState([]);
@@ -46,10 +46,10 @@ export default function DailyActivityDashboard() {
 
 
   useEffect(() => {
-    if (selectedDate && user?.id) {
-      loadDashboardData(selectedDate);
+    if (currentDate && user?.id) {
+      loadDashboardData(currentDate);
     }
-  }, [selectedDate, user?.id]);
+  }, [currentDate, user?.id]);
 
   // Set up real-time subscriptions for instant activity updates
   useEffect(() => {
@@ -63,12 +63,12 @@ export default function DailyActivityDashboard() {
         console.log('Real-time: New activity logged', activity);
         // Add to activity feed if it's for today
         const activityDate = new Date(activity?.activityDate)?.toDateString();
-        const selectedDateStr = selectedDate?.toDateString();
+        const currentDateStr = currentDate?.toDateString();
 
-        if (activityDate === selectedDateStr) {
+        if (activityDate === currentDateStr) {
           setActivityFeed(prev => [activity, ...(prev || [])]);
           // Refresh metrics
-          loadDashboardData(selectedDate);
+          loadDashboardData(currentDate);
         }
       },
       onUpdate: (activity) => {
@@ -76,14 +76,14 @@ export default function DailyActivityDashboard() {
         setActivityFeed(prev =>
           prev?.map(a => a?.id === activity?.id ? activity : a)
         );
-        loadDashboardData(selectedDate);
+        loadDashboardData(currentDate);
       },
       onDelete: (activity) => {
         console.log('Real-time: Activity deleted', activity);
         setActivityFeed(prev =>
           prev?.filter(a => a?.id !== activity?.id)
         );
-        loadDashboardData(selectedDate);
+        loadDashboardData(currentDate);
       }
     });
 
@@ -109,7 +109,7 @@ export default function DailyActivityDashboard() {
       if (unsubStats) unsubStats();
       if (unsubAchievements) unsubAchievements();
     };
-  }, [user?.id, selectedDate]);
+  }, [user?.id, currentDate]);
 
   // Calculate statistics from activities
   useEffect(() => {
@@ -206,7 +206,8 @@ export default function DailyActivityDashboard() {
         activityTime: new Date()?.toTimeString()?.split(' ')?.[0]
       };
       await activityService?.create(activityData);
-      await loadDashboardData(selectedDate);
+      await loadDashboardData(currentDate);
+      refreshStats(currentDate);
     } catch (err) {
       console.error('Error in quick add:', err);
       setError(err?.message || 'Failed to log quick activity');
@@ -216,7 +217,8 @@ export default function DailyActivityDashboard() {
   const handleActivityLogged = async (activity) => {
     try {
       const newActivity = await activityService?.create(activity);
-      await loadDashboardData(selectedDate);
+      await loadDashboardData(currentDate);
+      refreshStats(currentDate);
     } catch (err) {
       console.error('Error logging activity:', err);
       setError(err?.message || 'Failed to log activity');
@@ -229,7 +231,8 @@ export default function DailyActivityDashboard() {
     try {
       const newIntensity = activity?.intensity === 'intense' ? 'normal' : 'intense';
       await activityService?.update(activity?.id, { intensity: newIntensity });
-      await loadDashboardData(selectedDate);
+      await loadDashboardData(currentDate);
+      refreshStats(currentDate);
     } catch (err) {
       console.error('Error editing activity:', err);
       setError(err?.message || 'Failed to edit activity');
@@ -239,7 +242,8 @@ export default function DailyActivityDashboard() {
   const handleDeleteActivity = async (activity) => {
     try {
       await activityService?.delete(activity?.id);
-      await loadDashboardData(selectedDate);
+      await loadDashboardData(currentDate);
+      refreshStats(currentDate);
     } catch (err) {
       console.error('Error deleting activity:', err);
       setError(err?.message || 'Failed to delete activity');
@@ -276,12 +280,6 @@ export default function DailyActivityDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <PointsSummary
-        dailyPoints={dailyPoints}
-        weeklyAverage={weeklyAverage}
-        goalProgress={87}
-        dailyGoal={200}
-      />
       <QuickActionButton onActivityLogged={handleActivityLogged} />
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <div className="mb-6">

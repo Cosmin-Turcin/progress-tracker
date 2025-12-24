@@ -6,6 +6,7 @@ import {
   TrendingUp, Star, MessageSquare, ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useStats } from '../contexts/StatsContext';
 import Icon from './AppIcon';
 
 const Header = () => {
@@ -14,6 +15,7 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { dailyPoints, goalProgress, dailyGoal } = useStats();
 
   const handleLogout = async () => {
     try {
@@ -81,7 +83,26 @@ const Header = () => {
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 lg:gap-8">
+            {/* Quick Stats (Desktop) */}
+            {user && (
+              <div className="hidden lg:flex items-center gap-6 pr-4 border-r border-border/50">
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Daily Points</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold font-data text-primary leading-none">{dailyPoints}</span>
+                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden self-center">
+                      <div
+                        className="h-full bg-secondary transition-all duration-500 ease-out rounded-full"
+                        style={{ width: `${goalProgress}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-bold font-data text-muted-foreground">{goalProgress}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* User Profile Dropdown */}
             {user && (
               <div className="relative">
@@ -179,6 +200,50 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden border-t border-border bg-card animate-slide-down">
           <nav className="p-4 space-y-6">
+            {/* Mobile Stats Panel */}
+            <div className="px-3 py-4 bg-muted/30 rounded-2xl border border-border/50">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Today's Progress</span>
+                  <span className="text-2xl font-black text-primary font-data">{dailyPoints} <span className="text-xs font-medium text-muted-foreground font-sans">Points</span></span>
+                </div>
+                <div className="w-12 h-12 rounded-full border-4 border-muted flex items-center justify-center relative">
+                  <svg className="w-full h-full -rotate-90">
+                    <circle
+                      cx="24"
+                      cy="24"
+                      r="18"
+                      fill="transparent"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      className="text-primary/10"
+                    />
+                    <circle
+                      cx="24"
+                      cy="24"
+                      r="18"
+                      fill="transparent"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      strokeDasharray={113}
+                      strokeDashoffset={113 - (113 * goalProgress) / 100}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-[10px] font-bold text-foreground">{goalProgress}%</span>
+                </div>
+              </div>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-secondary transition-all duration-500 ease-out rounded-full"
+                  style={{ width: `${goalProgress}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-2">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">Goal: {dailyGoal}</span>
+              </div>
+            </div>
+
             <div className="space-y-1">
               <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Main Menu</p>
               {mainNav.map((item) => {

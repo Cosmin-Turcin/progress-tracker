@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { useStats } from '../../contexts/StatsContext';
 import { activityService } from '../../services/activityService';
 import { realtimeService } from '../../services/realtimeService';
-import PointsSummary from '../../components/ui/PointsSummary';
 import QuickActionButton from '../../components/ui/QuickActionButton';
 import KPICard from './components/KPICard';
 import DateRangePicker from './components/DateRangePicker';
@@ -19,6 +19,7 @@ import Header from '../../components/Header';
 
 const ProgressAnalytics = () => {
   const { user } = useAuth();
+  const { refreshStats } = useStats();
   const [selectedRange, setSelectedRange] = useState('30d');
   const [selectedCategories, setSelectedCategories] = useState(['fitness', 'mindset', 'nutrition', 'work', 'social']);
   const [comparisonMode, setComparisonMode] = useState(false);
@@ -135,7 +136,7 @@ const ProgressAnalytics = () => {
       // Helper for consistent date formatting (YYYY-MM-DD)
       const formatDate = (date) => {
         const d = new Date(date);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        return `${d.getFullYear()} -${String(d.getMonth() + 1).padStart(2, '0')} -${String(d.getDate()).padStart(2, '0')} `;
       };
 
       // Calculate daily points using UTC-safe local date matching
@@ -250,11 +251,13 @@ const ProgressAnalytics = () => {
 
 
   const handleExport = (format) => {
-    console.log(`Exporting data as ${format}`);
+    console.log(`Exporting data as ${format} `);
   };
 
   const handleActivityLogged = (activity) => {
     console.log('Activity logged:', activity);
+    loadAnalyticsData();
+    refreshStats();
   };
 
   if (loading) {
@@ -287,12 +290,6 @@ const ProgressAnalytics = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <PointsSummary
-        dailyPoints={summaryStats?.dailyPoints}
-        weeklyAverage={summaryStats?.weeklyAverage}
-        goalProgress={summaryStats?.goalProgress}
-        dailyGoal={summaryStats?.dailyGoal}
-      />
       <QuickActionButton onActivityLogged={handleActivityLogged} />
 
       <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">

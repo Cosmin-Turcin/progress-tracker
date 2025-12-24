@@ -1,5 +1,11 @@
 import { supabase } from '../lib/supabase';
 
+const formatDate = (date) => {
+  if (!date) return null;
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 export const activityService = {
   /**
    * Get all activities for the current user
@@ -12,7 +18,7 @@ export const activityService = {
       let query = supabase?.from('activity_logs')?.select('*')?.eq('user_id', userId)?.order('activity_date', { ascending: false })?.order('activity_time', { ascending: false });
 
       if (date) {
-        const dateStr = date?.toISOString()?.split('T')?.[0];
+        const dateStr = formatDate(date);
         query = query?.eq('activity_date', dateStr);
       }
 
@@ -52,8 +58,8 @@ export const activityService = {
    */
   async getByDateRange(userId, startDate, endDate) {
     try {
-      const startStr = startDate?.toISOString()?.split('T')?.[0];
-      const endStr = endDate?.toISOString()?.split('T')?.[0];
+      const startStr = formatDate(startDate);
+      const endStr = formatDate(endDate);
 
       const { data, error } = await supabase?.from('activity_logs')?.select('*')?.eq('user_id', userId)?.gte('activity_date', startStr)?.lte('activity_date', endStr)?.order('activity_date', { ascending: false });
 
@@ -91,10 +97,7 @@ export const activityService = {
       const { data: { user } } = await supabase?.auth?.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const getLocalDateString = () => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      };
+      const getLocalDateString = () => formatDate(new Date());
 
       // Convert camelCase to snake_case for database
       const dbActivity = {
@@ -214,7 +217,7 @@ export const activityService = {
       let query = supabase?.from('activity_logs')?.select('category, points')?.eq('user_id', userId);
 
       if (date) {
-        const dateStr = date?.toISOString()?.split('T')?.[0];
+        const dateStr = formatDate(date);
         query = query?.eq('activity_date', dateStr);
       }
 
@@ -270,7 +273,7 @@ export const activityService = {
    */
   async getTimelineData(userId, date = null) {
     try {
-      const dateStr = date ? date?.toISOString()?.split('T')?.[0] : new Date()?.toISOString()?.split('T')?.[0];
+      const dateStr = date ? formatDate(date) : formatDate(new Date());
 
       const { data, error } = await supabase?.from('activity_logs')?.select('activity_time, category, points')?.eq('user_id', userId)?.eq('activity_date', dateStr)?.order('activity_time', { ascending: true });
 
