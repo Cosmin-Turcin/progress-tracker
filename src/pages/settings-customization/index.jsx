@@ -9,9 +9,11 @@ import SystemPreferences from './components/SystemPreferences';
 import { useAuth } from '../../contexts/AuthContext';
 import { settingsService } from '../../services/settingsService';
 import Header from '../../components/Header';
+import { useStats } from '../../contexts/StatsContext';
 
 const SettingsCustomization = () => {
     const { user } = useAuth();
+    const { refreshStats } = useStats();
     const [activeTab, setActiveTab] = useState('activity-points');
     const [searchQuery, setSearchQuery] = useState('');
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -26,7 +28,7 @@ const SettingsCustomization = () => {
             social: { base: 7, multiplier: 1.1 },
         },
         dailyGoals: {
-            totalPoints: 100,
+            dailyGoal: 100,
             activityFrequency: 5,
             streakTarget: 7,
         },
@@ -62,13 +64,15 @@ const SettingsCustomization = () => {
             setLoading(true);
             setError('');
             const data = await settingsService?.get(user?.id);
-            
-            setSettings({
-                activityPoints: data?.activityPoints || settings?.activityPoints,
-                dailyGoals: data?.dailyGoals || settings?.dailyGoals,
-                notifications: data?.notifications || settings?.notifications,
-                systemPreferences: data?.systemPreferences || settings?.systemPreferences,
-            });
+
+            if (data) {
+                setSettings(prev => ({
+                    activityPoints: data.activityPoints || prev.activityPoints,
+                    dailyGoals: data.dailyGoals || prev.dailyGoals,
+                    notifications: data.notifications || prev.notifications,
+                    systemPreferences: data.systemPreferences || prev.systemPreferences,
+                }));
+            }
         } catch (err) {
             console.error('Error loading settings:', err);
             setError(err?.message || 'Failed to load settings');
@@ -93,6 +97,7 @@ const SettingsCustomization = () => {
             setError('');
             await settingsService?.update(user?.id, settings);
             setHasUnsavedChanges(false);
+            refreshStats(); // Propagate changes globally
             alert('Settings saved successfully!');
         } catch (err) {
             console.error('Error saving settings:', err);
@@ -145,6 +150,21 @@ const SettingsCustomization = () => {
     return (
         <div className="min-h-screen bg-background">
             <Header />
+            {/* Error Alert */}
+            {error && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3 text-red-800 dark:text-red-200">
+                        <span className="text-xl">⚠️</span>
+                        <p className="text-sm font-medium">{error}</p>
+                        <button
+                            onClick={() => setError('')}
+                            className="ml-auto text-red-500 hover:text-red-700 font-bold"
+                        >
+                            ×
+                        </button>
+                    </div>
+                </div>
+            )}
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -155,10 +175,9 @@ const SettingsCustomization = () => {
                                 <button
                                     key={tab?.id}
                                     onClick={() => setActiveTab(tab?.id)}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                                        activeTab === tab?.id
-                                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' :'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                    }`}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === tab?.id
+                                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                        }`}
                                 >
                                     <span className="text-xl">{tab?.icon}</span>
                                     <span className="font-medium">{tab?.label}</span>
@@ -204,6 +223,40 @@ const SettingsCustomization = () => {
                                     onChange={(key, value) => handleSettingChange('systemPreferences', key, value)}
                                 />
                             )}
+
+                            {/* Action Bar */}
+                            <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handleReset}
+                                        className="text-sm text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+                                    >
+                                        Reset to defaults
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-3 w-full sm:w-auto">
+                                    <button
+                                        onClick={handleCancel}
+                                        disabled={!hasUnsavedChanges}
+                                        className={`flex-1 sm:flex-none px-6 py-2 rounded-lg border border-gray-300 dark:border-gray-600 font-medium transition-all ${hasUnsavedChanges
+                                            ? 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                            : 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                                            }`}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={!hasUnsavedChanges}
+                                        className={`flex-1 sm:flex-none px-8 py-2 rounded-lg font-bold shadow-lg transition-all ${hasUnsavedChanges
+                                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/25'
+                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed shadow-none'
+                                            }`}
+                                    >
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

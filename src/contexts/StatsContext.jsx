@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { activityService } from '../services/activityService';
+import { settingsService } from '../services/settingsService';
 import { useAuth } from './AuthContext';
 
 const StatsContext = createContext();
@@ -9,6 +10,7 @@ export const StatsProvider = ({ children }) => {
     const [dailyPoints, setDailyPoints] = useState(0);
     const [weeklyAverage, setWeeklyAverage] = useState(0);
     const [dailyGoal, setDailyGoal] = useState(200); // Default goal
+    const [activityPoints, setActivityPoints] = useState(null);
     const [currentStreak, setCurrentStreak] = useState(0);
     const [loading, setLoading] = useState(false);
 
@@ -31,8 +33,12 @@ export const StatsProvider = ({ children }) => {
             const weekTotal = weekActivities?.reduce((sum, a) => sum + a?.points, 0) || 0;
             setWeeklyAverage(Math.round(weekTotal / 7));
 
-            // In a real app, dailyGoal might come from a settings service
-            // For now we use the default or could fetch from settingsService
+            // Load user settings
+            const settings = await settingsService?.get(user?.id);
+            if (settings) {
+                setDailyGoal(settings?.dailyGoals?.dailyGoal || 200);
+                setActivityPoints(settings?.activityPoints);
+            }
         } catch (error) {
             console.error('Error refreshing global stats:', error);
         } finally {
@@ -53,6 +59,7 @@ export const StatsProvider = ({ children }) => {
             dailyPoints,
             weeklyAverage,
             dailyGoal,
+            activityPoints,
             goalProgress,
             currentStreak,
             loading,

@@ -8,8 +8,8 @@ export const settingsService = {
    */
   async get(userId) {
     try {
-      const { data, error } = await supabase?.from('user_settings')?.select('*')?.eq('user_id', userId)?.single();
-      
+      const { data, error } = await supabase?.from('user_settings')?.select('*')?.eq('user_id', userId)?.maybeSingle();
+
       if (error) {
         // If no settings exist, return defaults
         if (error?.code === 'PGRST116') {
@@ -22,7 +22,7 @@ export const settingsService = {
               social: { base: 7, multiplier: 1.1 }
             },
             dailyGoals: {
-              totalPoints: 100,
+              dailyGoal: 100,
               activityFrequency: 5,
               streakTarget: 7
             },
@@ -42,12 +42,15 @@ export const settingsService = {
         }
         throw error;
       }
-      
+
       return {
         id: data?.id,
         userId: data?.user_id,
         activityPoints: data?.activity_points,
-        dailyGoals: data?.daily_goals,
+        dailyGoals: data?.daily_goals ? {
+          ...data.daily_goals,
+          dailyGoal: data.daily_goals.dailyGoal || data.daily_goals.totalPoints || 100
+        } : null,
         notifications: data?.notifications,
         systemPreferences: data?.system_preferences,
         createdAt: data?.created_at,
@@ -67,50 +70,36 @@ export const settingsService = {
    */
   async update(userId, settings) {
     try {
-      const dbSettings = {};
-      
+      const dbSettings = {
+        user_id: userId,
+        updated_at: new Date()?.toISOString()
+      };
+
       if (settings?.activityPoints) dbSettings.activity_points = settings?.activityPoints;
       if (settings?.dailyGoals) dbSettings.daily_goals = settings?.dailyGoals;
       if (settings?.notifications) dbSettings.notifications = settings?.notifications;
       if (settings?.systemPreferences) dbSettings.system_preferences = settings?.systemPreferences;
-      
-      dbSettings.updated_at = new Date()?.toISOString();
-      
-      // Try to update first
-      const { data: updateData, error: updateError } = await supabase?.from('user_settings')?.update(dbSettings)?.eq('user_id', userId)?.select()?.single();
-      
-      if (updateError) {
-        // If no row exists, insert
-        if (updateError?.code === 'PGRST116') {
-          dbSettings.user_id = userId;
-          
-          const { data: insertData, error: insertError } = await supabase?.from('user_settings')?.insert(dbSettings)?.select()?.single();
-          
-          if (insertError) throw insertError;
-          
-          return {
-            id: insertData?.id,
-            userId: insertData?.user_id,
-            activityPoints: insertData?.activity_points,
-            dailyGoals: insertData?.daily_goals,
-            notifications: insertData?.notifications,
-            systemPreferences: insertData?.system_preferences,
-            createdAt: insertData?.created_at,
-            updatedAt: insertData?.updated_at
-          };
-        }
-        throw updateError;
-      }
-      
+
+      const { data, error } = await supabase
+        ?.from('user_settings')
+        ?.upsert(dbSettings, { onConflict: 'user_id' })
+        ?.select()
+        ?.maybeSingle();
+
+      if (error) throw error;
+
       return {
-        id: updateData?.id,
-        userId: updateData?.user_id,
-        activityPoints: updateData?.activity_points,
-        dailyGoals: updateData?.daily_goals,
-        notifications: updateData?.notifications,
-        systemPreferences: updateData?.system_preferences,
-        createdAt: updateData?.created_at,
-        updatedAt: updateData?.updated_at
+        id: data?.id,
+        userId: data?.user_id,
+        activityPoints: data?.activity_points,
+        dailyGoals: data?.daily_goals ? {
+          ...data.daily_goals,
+          dailyGoal: data.daily_goals.dailyGoal || data.daily_goals.totalPoints || 100
+        } : null,
+        notifications: data?.notifications,
+        systemPreferences: data?.system_preferences,
+        createdAt: data?.created_at,
+        updatedAt: data?.updated_at
       };
     } catch (error) {
       console.error('Error updating settings:', error);
@@ -135,7 +124,7 @@ export const settingsService = {
           social: { base: 7, multiplier: 1.1 }
         },
         daily_goals: {
-          totalPoints: 100,
+          dailyGoal: 100,
           activityFrequency: 5,
           streakTarget: 7
         },
@@ -153,16 +142,19 @@ export const settingsService = {
         },
         updated_at: new Date()?.toISOString()
       };
-      
-      const { data, error } = await supabase?.from('user_settings')?.upsert(defaultSettings)?.select()?.single();
-      
+
+      const { data, error } = await supabase?.from('user_settings')?.upsert(defaultSettings)?.select()?.maybeSingle();
+
       if (error) throw error;
-      
+
       return {
         id: data?.id,
         userId: data?.user_id,
         activityPoints: data?.activity_points,
-        dailyGoals: data?.daily_goals,
+        dailyGoals: data?.daily_goals ? {
+          ...data.daily_goals,
+          dailyGoal: data.daily_goals.dailyGoal || data.daily_goals.totalPoints || 100
+        } : null,
         notifications: data?.notifications,
         systemPreferences: data?.system_preferences,
         createdAt: data?.created_at,

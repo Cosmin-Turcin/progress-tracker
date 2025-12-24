@@ -8,7 +8,7 @@ const DailyGoalsManager = ({ settings, onChange }) => {
 
     const goalConfigs = [
         {
-            key: 'totalPoints',
+            key: 'dailyGoal',
             label: 'Daily Points Target',
             icon: <Target className="h-5 w-5" />,
             min: 50,
@@ -44,7 +44,7 @@ const DailyGoalsManager = ({ settings, onChange }) => {
 
     const getRecommendation = (key, value) => {
         const recommendations = {
-            totalPoints: {
+            dailyGoal: {
                 low: value < 100 ? 'Consider setting a higher target for better results' : null,
                 optimal: value >= 100 && value <= 200 ? 'Great balanced target!' : null,
                 high: value > 200 ? 'Ambitious goal - make sure it\'s sustainable' : null,
@@ -121,9 +121,8 @@ const DailyGoalsManager = ({ settings, onChange }) => {
                                     onChange={(e) => handleSliderChange(config?.key, e?.target?.value)}
                                     className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer"
                                     style={{
-                                        background: `linear-gradient(to right, ${
-                                            config?.color?.replace('bg-', '')
-                                        } 0%, ${config?.color?.replace('bg-', '')} ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`,
+                                        background: `linear-gradient(to right, ${config?.color?.replace('bg-', '')
+                                            } 0%, ${config?.color?.replace('bg-', '')} ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`,
                                     }}
                                 />
                                 <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -153,7 +152,7 @@ const DailyGoalsManager = ({ settings, onChange }) => {
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Weekly Points</p>
                         <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                            {(settings?.totalPoints || 0) * 7}
+                            {(settings?.dailyGoal || 0) * 7}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             Based on daily target

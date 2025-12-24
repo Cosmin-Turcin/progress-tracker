@@ -19,7 +19,7 @@ import Header from '../../components/Header';
 
 const ProgressAnalytics = () => {
   const { user } = useAuth();
-  const { refreshStats } = useStats();
+  const { dailyGoal, refreshStats } = useStats();
   const [selectedRange, setSelectedRange] = useState('30d');
   const [selectedCategories, setSelectedCategories] = useState(['fitness', 'mindset', 'nutrition', 'work', 'social']);
   const [comparisonMode, setComparisonMode] = useState(false);
@@ -261,8 +261,8 @@ const ProgressAnalytics = () => {
       setSummaryStats({
         dailyPoints: todayPoints,
         weeklyAverage: Math.round(weeklySum / 7),
-        goalProgress: Math.min(Math.round((todayPoints / 200) * 100), 100),
-        dailyGoal: 200
+        goalProgress: Math.min(Math.round((todayPoints / dailyGoal) * 100), 100),
+        dailyGoal: dailyGoal
       });
 
     } catch (err) {

@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 
 const ActivityPointsConfig = ({ settings, onChange }) => {
     const activityTypes = [
-        { id: 'exercise', label: 'Exercise', icon: '🏃', description: 'Physical activities and workouts', color: 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' },
-        { id: 'reading', label: 'Reading', icon: '📚', description: 'Books, articles, and learning', color: 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800' },
-        { id: 'meditation', label: 'Meditation', icon: '🧘', description: 'Mindfulness and relaxation', color: 'bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800' },
+        { id: 'fitness', label: 'Fitness', icon: '🏃', description: 'Physical activities and workouts', color: 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' },
+        { id: 'mindset', label: 'Mindset', icon: '🧘', description: 'Mindfulness, learning, and relaxation', color: 'bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800' },
+        { id: 'nutrition', label: 'Nutrition', icon: '🥗', description: 'Healthy eating and hydration', color: 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800' },
         { id: 'work', label: 'Work', icon: '💼', description: 'Professional tasks and projects', color: 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' },
         { id: 'social', label: 'Social', icon: '👥', description: 'Social interactions and networking', color: 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800' },
     ];
@@ -123,10 +123,9 @@ const ActivityPointsConfig = ({ settings, onChange }) => {
                                     <button
                                         key={level?.level}
                                         onClick={() => handleMultiplierChange(activity?.id, level?.multiplier)}
-                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                                            Math.abs(activitySettings?.multiplier - level?.multiplier) < 0.1
-                                                ? 'bg-blue-600 text-white' :'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                                        }`}
+                                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${Math.abs(activitySettings?.multiplier - level?.multiplier) < 0.1
+                                                ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                            }`}
                                     >
                                         {level?.label}
                                     </button>
@@ -153,7 +152,7 @@ const ActivityPointsConfig = ({ settings, onChange }) => {
                         <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                             {Math.round(
                                 Object.values(settings || {})?.reduce((sum, s) => sum + (s?.base || 0), 0) /
-                                    activityTypes?.length
+                                activityTypes?.length
                             )}
                         </p>
                     </div>

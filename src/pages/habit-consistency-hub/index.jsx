@@ -15,7 +15,7 @@ import { goalService } from '../../services/goalService';
 
 const HabitConsistencyHub = () => {
   const { user } = useAuth();
-  const { refreshStats } = useStats();
+  const { dailyGoal, refreshStats } = useStats();
   const [selectedHabit, setSelectedHabit] = useState('all');
   const [consistencyPeriod, setConsistencyPeriod] = useState('weekly');
   const [loading, setLoading] = useState(true);
@@ -76,8 +76,8 @@ const HabitConsistencyHub = () => {
           weekAgo?.setDate(weekAgo?.getDate() - 7);
           return d >= weekAgo;
         })?.reduce((sum, a) => sum + a?.points, 0) || 0) / 7),
-        goalProgress: Math.min(Math.round(((globalStats?.totalPoints || 0) / 200) * 100), 100),
-        dailyGoal: 200
+        goalProgress: Math.min(Math.round(((globalStats?.totalPoints || 0) / dailyGoal) * 100), 100),
+        dailyGoal: dailyGoal
       });
 
     } catch (err) {

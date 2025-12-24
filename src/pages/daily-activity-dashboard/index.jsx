@@ -17,17 +17,15 @@ import Header from '../../components/Header';
 
 export default function DailyActivityDashboard() {
   const { user } = useAuth();
-  const { refreshStats } = useStats();
+  const { dailyPoints, weeklyAverage, dailyGoal, activityPoints, refreshStats } = useStats();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activities, setActivities] = useState([]);
   const [todayActivities, setTodayActivities] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
   const [timelineData, setTimelineData] = useState([]);
-  const [dailyPoints, setDailyPoints] = useState(0);
-  const [fitnessPoints, setFitnessPoints] = useState(0);
-  const [mindsetPoints, setMindsetPoints] = useState(0);
-  const [weeklyAverage, setWeeklyAverage] = useState(0);
-  const [currentStreak, setCurrentStreak] = useState(0);
+  const [fitnessPoints, setFitnessPoints] = useState(0); // Still needed for local display in MetricCard
+  const [mindsetPoints, setMindsetPoints] = useState(0); // Still needed for local display in MetricCard
+  const [currentStreak, setCurrentStreak] = useState(0); // Still needed for local display in MetricCard
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activityFeed, setActivityFeed] = useState([]);
@@ -95,6 +93,7 @@ export default function DailyActivityDashboard() {
         ...prev,
         currentStreak: stats?.currentStreak || 0
       }));
+      setCurrentStreak(stats?.currentStreak || 0); // Update local state for MetricCard
     });
 
     // Subscribe to achievements
@@ -119,7 +118,10 @@ export default function DailyActivityDashboard() {
 
       setFitnessPoints(fitness);
       setMindsetPoints(mindset);
-      setDailyPoints(fitness + mindset);
+      // dailyPoints is now from context, no need to set here
+    } else {
+      setFitnessPoints(0);
+      setMindsetPoints(0);
     }
   }, [todayActivities]);
 
@@ -142,12 +144,6 @@ export default function DailyActivityDashboard() {
       const timeline = await activityService?.getTimelineData(user?.id, date);
       setTimelineData(timeline || []);
 
-      // Load statistics
-      const stats = await activityService?.getStatistics(user?.id, date);
-      setDailyPoints(stats?.totalPoints || 0);
-      setFitnessPoints(stats?.fitnessPoints || 0);
-      setMindsetPoints(stats?.mindsetPoints || 0);
-
       // Load user statistics for streak
       const { data: userStats } = await supabase?.from('user_statistics')?.select('current_streak')?.eq('user_id', user?.id)?.single();
 
@@ -159,12 +155,8 @@ export default function DailyActivityDashboard() {
       const achievementsData = await achievementService?.getAll();
       setAchievements(achievementsData?.slice(0, 2) || []);
 
-      // Calculate weekly average
-      const weekStart = new Date(date);
-      weekStart?.setDate(weekStart?.getDate() - 7);
-      const weekActivities = await activityService?.getByDateRange(user?.id, weekStart, date);
-      const weekTotal = weekActivities?.reduce((sum, a) => sum + a?.points, 0) || 0;
-      setWeeklyAverage(Math.round(weekTotal / 7));
+      // Refresh global stats context
+      refreshStats(date);
 
     } catch (err) {
       console.error('Error loading dashboard data:', err);
@@ -197,10 +189,13 @@ export default function DailyActivityDashboard() {
 
   const handleQuickAdd = async (category, label) => {
     try {
+      const config = activityPoints?.[category] || { base: 10, multiplier: 1.0 };
+      const points = Math.round(config.base * config.multiplier);
+
       const activityData = {
         activityName: `Quick ${label}`,
         category: category,
-        points: 10,
+        points: points,
         intensity: 'normal',
         activityDate: formatDate(new Date()),
         activityTime: new Date()?.toTimeString()?.split(' ')?.[0]
@@ -216,7 +211,7 @@ export default function DailyActivityDashboard() {
 
   const handleActivityLogged = async (activity) => {
     try {
-      const newActivity = await activityService?.create(activity);
+      await activityService?.create(activity);
       await loadDashboardData(currentDate);
       refreshStats(currentDate);
     } catch (err) {
@@ -328,6 +323,26 @@ export default function DailyActivityDashboard() {
             trend="up"
             trendValue="New record"
           />
+        </div>
+
+        {/* Daily Goal Progress */}
+        <div className="bg-card rounded-lg border border-border p-6 mb-6 lg:mb-8">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Daily Goal Progress</h3>
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary transition-all duration-1000 ease-out"
+                style={{ width: `${Math.min(Math.round((dailyPoints / dailyGoal) * 100), 100)}%` }}
+              />
+            </div>
+            <span className="text-xl font-bold font-data text-primary">
+              {Math.min(Math.round((dailyPoints / dailyGoal) * 100), 100)}%
+            </span>
+          </div>
+          <div className="flex justify-between text-sm text-muted-foreground font-medium mt-2">
+            <span>{dailyPoints} / {dailyGoal} Points</span>
+            <span>Goal achievement</span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mb-6 lg:mb-8">
