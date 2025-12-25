@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, TrendingUp, Award, Activity, Users, Briefcase } from 'lucide-react';
 import Header from '../../components/Header';
 import FriendProfileHeader from './components/FriendProfileHeader';
 import FriendStatsCard from './components/FriendStatsCard';
@@ -8,24 +8,33 @@ import AchievementShowcase from './components/AchievementShowcase';
 import ActivityTimeline from './components/ActivityTimeline';
 import FriendshipStats from './components/FriendshipStats';
 import QuickChallengePanel from './components/QuickChallengePanel';
-import { 
-  getFriendProfile, 
-  getSharedAchievements, 
-  sendChallenge, 
+import ProfessionalTab from '../user-profile/components/ProfessionalTab';
+import {
+  getFriendProfile,
+  getSharedAchievements,
+  sendChallenge,
   congratulateFriend,
-  removeFriend 
+  removeFriend
 } from '../../services/friendService';
 
 const FriendProfileView = () => {
   const { friendId } = useParams();
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [friendData, setFriendData] = useState(null);
   const [sharedAchievements, setSharedAchievements] = useState([]);
   const [userStats, setUserStats] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('stats');
+
+  const tabs = [
+    { id: 'stats', label: 'Statistics', icon: TrendingUp },
+    { id: 'professional', label: 'Professional', icon: Briefcase },
+    { id: 'achievements', label: 'Achievements', icon: Award },
+    { id: 'timeline', label: 'Activity Feed', icon: Activity },
+  ];
 
   useEffect(() => {
     loadFriendProfile();
@@ -44,10 +53,6 @@ const FriendProfileView = () => {
       const shared = await getSharedAchievements(friendId);
       setSharedAchievements(shared);
 
-      // Load current user stats for comparison (would need to be implemented)
-      // const currentUserStats = await getUserStats();
-      // setUserStats(currentUserStats);
-
     } catch (err) {
       console.error('Error loading friend profile:', err);
       setError(err?.message || 'Failed to load friend profile');
@@ -57,7 +62,7 @@ const FriendProfileView = () => {
   };
 
   const handleUnfriend = async () => {
-    if (!window.confirm(`Are you sure you want to remove ${friendData?.profile?.display_name} from your friends?`)) {
+    if (!window.confirm(`Are you sure you want to remove ${friendData?.profile?.display_name || friendData?.profile?.full_name} from your friends?`)) {
       return;
     }
 
@@ -73,10 +78,9 @@ const FriendProfileView = () => {
   };
 
   const handleMessage = () => {
-    // Navigate to direct messaging with friend data
     const friendName = friendData?.profile?.display_name || friendData?.profile?.full_name || 'this friend';
     const friendUserId = friendData?.profile?.user_id || friendId;
-    
+
     navigate('/direct-messaging', {
       state: {
         friendId: friendUserId,
@@ -89,7 +93,7 @@ const FriendProfileView = () => {
   const handleSendChallenge = async (challengeData) => {
     try {
       await sendChallenge(friendId, challengeData);
-      setSuccessMessage(`Challenge sent to ${friendData?.profile?.display_name}!`);
+      setSuccessMessage(`Challenge sent to ${friendData?.profile?.display_name || friendData?.profile?.full_name}!`);
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       setError(err?.message || 'Failed to send challenge');
@@ -142,7 +146,7 @@ const FriendProfileView = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Success Message */}
         {successMessage && (
@@ -160,37 +164,62 @@ const FriendProfileView = () => {
           onChallenge={() => handleSendChallenge({ type: 'quick', details: 'Quick challenge' })}
         />
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Stats and Activities (8 cols on desktop) */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Statistics */}
-            <FriendStatsCard
-              stats={friendData?.stats}
-              userStats={userStats}
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Content Area (Tabs) */}
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+              <div className="border-b border-gray-200">
+                <div className="flex gap-1 p-2 overflow-x-auto">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition whitespace-nowrap ${activeTab === tab.id
+                          ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                    >
+                      <tab.icon className="w-5 h-5" />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            {/* Achievements */}
-            <AchievementShowcase
-              achievements={friendData?.achievements}
-              onCongratulate={handleCongratulate}
-            />
+              <div className="p-6">
+                {activeTab === 'stats' && (
+                  <FriendStatsCard
+                    stats={friendData?.stats}
+                    userStats={userStats}
+                  />
+                )}
 
-            {/* Activity Timeline */}
-            <ActivityTimeline
-              activities={friendData?.activities}
-            />
+                {activeTab === 'professional' && (
+                  <ProfessionalTab targetProfile={friendData?.profile} isReadOnly={true} />
+                )}
+
+                {activeTab === 'achievements' && (
+                  <AchievementShowcase
+                    achievements={friendData?.achievements}
+                    onCongratulate={handleCongratulate}
+                  />
+                )}
+
+                {activeTab === 'timeline' && (
+                  <ActivityTimeline
+                    activities={friendData?.activities}
+                  />
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Right Sidebar - Quick Actions and Stats (4 cols on desktop) */}
-          <div className="space-y-6">
-            {/* Quick Challenge Panel */}
+          {/* Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
             <QuickChallengePanel
               onSendChallenge={handleSendChallenge}
-              friendName={friendData?.profile?.display_name}
+              friendName={friendData?.profile?.display_name || friendData?.profile?.full_name}
             />
 
-            {/* Friendship Statistics */}
             <FriendshipStats
               stats={friendData}
               sharedAchievements={sharedAchievements}

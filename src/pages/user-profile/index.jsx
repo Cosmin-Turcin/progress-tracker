@@ -213,7 +213,7 @@ export default function UserProfile() {
             )}
 
             {activeTab === 'professional' && (
-              <ProfessionalTab />
+              <ProfessionalTab targetProfile={profile} />
             )}
 
             {activeTab === 'achievements' && (

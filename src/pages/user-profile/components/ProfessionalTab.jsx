@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Briefcase, GraduationCap, Award, Edit2, Save, X, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 
-export default function ProfessionalTab() {
-    const { profile, updateProfile } = useAuth();
+export default function ProfessionalTab({ targetProfile, isReadOnly = false }) {
+    const { profile: currentUserProfile, updateProfile } = useAuth();
+    const effectiveProfile = targetProfile || currentUserProfile;
+
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [profData, setProfData] = useState({
@@ -15,15 +17,15 @@ export default function ProfessionalTab() {
 
     // Sync profData with profile when profile loads or when not editing
     React.useEffect(() => {
-        if (!isEditing && profile?.professional_data) {
+        if (!isEditing && effectiveProfile?.professional_data) {
             setProfData({
-                experience: profile.professional_data.experience || [],
-                education: profile.professional_data.education || [],
-                skills: profile.professional_data.skills || [],
-                summary: profile.professional_data.summary || ""
+                experience: effectiveProfile.professional_data.experience || [],
+                education: effectiveProfile.professional_data.education || [],
+                skills: effectiveProfile.professional_data.skills || [],
+                summary: effectiveProfile.professional_data.summary || ""
             });
         }
-    }, [profile, isEditing]);
+    }, [effectiveProfile, isEditing]);
 
     const handleSave = async () => {
         setSaving(true);
@@ -131,7 +133,7 @@ export default function ProfessionalTab() {
                         <>
                             <button
                                 onClick={() => {
-                                    setProfData(profile?.professional_data || { experience: [], education: [], skills: [], summary: "" });
+                                    setProfData(effectiveProfile?.professional_data || { experience: [], education: [], skills: [], summary: "" });
                                     setIsEditing(false);
                                 }}
                                 className="flex items-center gap-2 px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-bold"
@@ -147,7 +149,7 @@ export default function ProfessionalTab() {
                                 {saving ? 'Saving...' : <><Save className="w-4 h-4" /> Save CV</>}
                             </button>
                         </>
-                    ) : (
+                    ) : !isReadOnly && (
                         <button
                             onClick={() => setIsEditing(true)}
                             className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-bold shadow-xl"

@@ -51,7 +51,7 @@ export default function AchievementShowcase({ achievements }) {
           {achievements?.map((achievement) => {
             const Icon = getIconComponent(achievement?.icon);
             const colors = getTypeColor(achievement?.achievementType);
-            
+
             return (
               <div
                 key={achievement?.id}
@@ -65,9 +65,9 @@ export default function AchievementShowcase({ achievements }) {
                     </span>
                   </div>
                 )}
-                
+
                 <div className="flex items-start gap-4 mb-4">
-                  <div 
+                  <div
                     className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 group-hover:scale-110 transition"
                     style={{ color: achievement?.iconColor || 'currentColor' }}
                   >
@@ -82,11 +82,11 @@ export default function AchievementShowcase({ achievements }) {
                     </span>
                   </div>
                 </div>
-                
+
                 <p className="text-gray-700 text-sm leading-relaxed mb-4">
                   {achievement?.description}
                 </p>
-                
+
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span className="flex items-center gap-1">
                     <Trophy className="w-3 h-3" />
@@ -102,7 +102,10 @@ export default function AchievementShowcase({ achievements }) {
 
       {achievements?.length > 0 && (
         <div className="flex justify-center">
-          <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm">
+          <button
+            onClick={() => window.location.href = '/achievements-badges-gallery'}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm"
+          >
             View All Achievements
           </button>
         </div>
