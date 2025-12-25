@@ -39,7 +39,8 @@ export default function DailyActivityDashboard() {
     { label: "Cardio", category: "fitness", icon: "Heart", iconColor: "var(--color-error)" },
     { label: "Strength", category: "fitness", icon: "Zap", iconColor: "var(--color-accent)" },
     { label: "Nutrition", category: "nutrition", icon: "Apple", iconColor: "var(--color-success)" },
-    { label: "Focus Session", category: "work", icon: "Target", iconColor: "var(--color-primary)" }
+    { label: "Focus Session", category: "work", icon: "Target", iconColor: "var(--color-primary)" },
+    { label: "Journalling", category: "mindset", icon: "Book", iconColor: "var(--color-secondary)" }
   ];
 
 
