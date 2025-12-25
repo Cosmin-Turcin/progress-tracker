@@ -6,20 +6,21 @@ import { friendService } from '../../services/friendService';
 import { authService } from '../../services/authService';
 import { realtimeService } from '../../services/realtimeService';
 import Header from '../../components/Header';
-import { Award, TrendingUp, Activity, Target, Users, Loader, AlertCircle, X } from 'lucide-react';
+import { Award, TrendingUp, Activity, Target, Users, Loader, AlertCircle, X, Briefcase } from 'lucide-react';
 import ProfileHeader from './components/ProfileHeader';
 import StatsGrid from './components/StatsGrid';
 import AchievementShowcase from './components/AchievementShowcase';
 import ActivityTimeline from './components/ActivityTimeline';
 import FriendRequestPanel from './components/FriendRequestPanel';
 import ProfileCustomization from './components/ProfileCustomization';
+import ProfessionalTab from './components/ProfessionalTab';
 
 export default function UserProfile() {
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('stats');
-  
+
   // Data states
   const [statistics, setStatistics] = useState(null);
   const [achievements, setAchievements] = useState([]);
@@ -64,13 +65,13 @@ export default function UserProfile() {
       },
       onUpdate: (activity) => {
         console.log('Real-time: Activity updated', activity);
-        setRecentActivities(prev => 
+        setRecentActivities(prev =>
           prev?.map(a => a?.id === activity?.id ? activity : a)
         );
       },
       onDelete: (activity) => {
         console.log('Real-time: Activity deleted', activity);
-        setRecentActivities(prev => 
+        setRecentActivities(prev =>
           prev?.filter(a => a?.id !== activity?.id)
         );
       }
@@ -156,6 +157,7 @@ export default function UserProfile() {
 
   const tabs = [
     { id: 'stats', label: 'Statistics', icon: TrendingUp },
+    { id: 'professional', label: 'Professional', icon: Briefcase },
     { id: 'achievements', label: 'Achievements', icon: Award },
     { id: 'timeline', label: 'Activity Timeline', icon: Activity },
     { id: 'friends', label: 'Friends', icon: Users }
@@ -194,10 +196,9 @@ export default function UserProfile() {
                 <button
                   key={tab?.id}
                   onClick={() => setActiveTab(tab?.id)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition whitespace-nowrap ${
-                    activeTab === tab?.id
-                      ? 'bg-blue-50 text-blue-600' :'text-gray-600 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition whitespace-nowrap ${activeTab === tab?.id
+                    ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                    }`}
                 >
                   <tab.icon className="w-5 h-5" />
                   {tab?.label}
@@ -211,10 +212,14 @@ export default function UserProfile() {
               <StatsGrid statistics={statistics} />
             )}
 
+            {activeTab === 'professional' && (
+              <ProfessionalTab />
+            )}
+
             {activeTab === 'achievements' && (
-              <AchievementShowcase 
+              <AchievementShowcase
                 achievements={achievements}
-                onCongratulate={() => {}}
+                onCongratulate={() => { }}
               />
             )}
 

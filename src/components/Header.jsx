@@ -129,20 +129,12 @@ const Header = () => {
                       </div>
                       <div className="p-1">
                         <Link
-                          to="/profile"
+                          to="/user-profile"
                           onClick={() => setIsProfileOpen(false)}
                           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
                         >
                           <User size={16} />
                           My Profile
-                        </Link>
-                        <Link
-                          to="/user-profile"
-                          onClick={() => setIsProfileOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
-                        >
-                          <Settings size={16} />
-                          Personal View
                         </Link>
                         <button
                           onClick={handleLogout}

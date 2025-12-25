@@ -10,7 +10,6 @@ import SettingsCustomization from './pages/settings-customization';
 import RemindersNotifications from './pages/reminders-notifications';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
-import Profile from './pages/profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import AchievementsBadgesGallery from 'pages/achievements-badges-gallery';
 import FriendsLeaderboard from './pages/friends-leaderboard';
@@ -28,9 +27,8 @@ function Routes() {
           {/* Auth Routes */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          
+
           {/* Protected Routes */}
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
           <Route path="/achievements-badges-gallery" element={<ProtectedRoute><AchievementsBadgesGallery /></ProtectedRoute>} />
           <Route
@@ -42,7 +40,7 @@ function Routes() {
             }
           />
           <Route path="/friend-profile-view/:friendId" element={<FriendProfileView />} />
-          
+
           <Route
             path="/social-activity-feed"
             element={
@@ -51,10 +49,10 @@ function Routes() {
               </ProtectedRoute>
             }
           />
-          
+
           <Route path="/direct-messaging" element={<ProtectedRoute><DirectMessaging /></ProtectedRoute>} />
           <Route path="/direct-messaging/:friendId" element={<ProtectedRoute><DirectMessaging /></ProtectedRoute>} />
-          
+
           {/* Define your route here */}
           <Route path="/" element={<DailyActivityDashboard />} />
           <Route path="/habit-consistency-hub" element={<HabitConsistencyHub />} />
