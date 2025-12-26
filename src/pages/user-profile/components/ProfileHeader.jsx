@@ -23,7 +23,17 @@ export default function ProfileHeader({ profile, user, onCustomize, friendCount 
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 h-32"></div>
+      {profile?.cover_url ? (
+        <div className="h-32 w-full overflow-hidden">
+          <img
+            src={profile.cover_url}
+            alt="Profile Cover"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 h-32"></div>
+      )}
 
       <div className="px-8 pb-8">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between -mt-16 mb-6">

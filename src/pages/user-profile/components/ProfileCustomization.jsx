@@ -9,7 +9,8 @@ export default function ProfileCustomization({ onClose, onSave }) {
   const [formData, setFormData] = useState({
     fullName: profile?.full_name || '',
     bio: profile?.bio || '',
-    avatarUrl: profile?.avatar_url || ''
+    avatarUrl: profile?.avatar_url || '',
+    coverUrl: profile?.cover_url || ''
   });
 
   const handleSubmit = async (e) => {
@@ -21,7 +22,8 @@ export default function ProfileCustomization({ onClose, onSave }) {
       await updateProfile({
         full_name: formData?.fullName,
         bio: formData?.bio,
-        avatar_url: formData?.avatarUrl
+        avatar_url: formData?.avatarUrl,
+        cover_url: formData?.coverUrl
       });
       onSave();
     } catch (err) {
@@ -94,6 +96,22 @@ export default function ProfileCustomization({ onClose, onSave }) {
             />
             <p className="text-xs text-gray-500 mt-1">
               Enter a URL to your profile picture
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cover Image URL
+            </label>
+            <input
+              type="url"
+              value={formData?.coverUrl}
+              onChange={(e) => setFormData({ ...formData, coverUrl: e?.target?.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              placeholder="https://example.com/cover.jpg"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Enter a URL for your profile's header background
             </p>
           </div>
 
