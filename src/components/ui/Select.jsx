@@ -4,6 +4,7 @@ import { ChevronDown, Check, Search, X } from "lucide-react";
 import { cn } from "../../utils/cn";
 import Button from "./Button";
 import Input from "./Input";
+import Icon from "../AppIcon";
 
 const Select = React.forwardRef(({
     className,
@@ -204,6 +205,11 @@ const Select = React.forwardRef(({
                                         )}
                                         onClick={() => !option?.disabled && handleOptionSelect(option)}
                                     >
+                                        {option?.icon && (
+                                            <div className="mr-2 opacity-70">
+                                                <Icon name={option?.icon} size={16} />
+                                            </div>
+                                        )}
                                         <span className="flex-1">{option?.label}</span>
                                         {multiple && isSelected(option?.value) && (
                                             <Check className="h-4 w-4" />

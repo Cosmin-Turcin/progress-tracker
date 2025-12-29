@@ -113,9 +113,10 @@ const QuickActionButton = ({ onActivityLogged }) => {
         <Button
           onClick={() => setIsOpen(!isOpen)}
           variant="default"
-          size="lg"
+          size="icon"
           iconName={isOpen ? "X" : "Plus"}
-          className="shadow-elevated hover-lift rounded-full w-14 h-14"
+          iconSize={28}
+          className="shadow-elevated hover-lift rounded-full w-14 h-14 p-0"
         />
       </div>
       <button
