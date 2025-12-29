@@ -7,6 +7,7 @@ import ActivityFeedItem from './components/ActivityFeedItem';
 import AchievementNotification from './components/AchievementNotification';
 import ActivityLogCard from './components/ActivityLogCard';
 import DateNavigator from './components/DateNavigator';
+import QuickIntensityModal from './components/QuickIntensityModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useStats } from '../../contexts/StatsContext';
 import { activityService } from '../../services/activityService';
@@ -32,6 +33,7 @@ export default function DailyActivityDashboard() {
   const [metrics, setMetrics] = useState({});
   const [achievements, setAchievements] = useState([]);
   const [recentAchievements, setRecentAchievements] = useState([]);
+  const [quickAddActivity, setQuickAddActivity] = useState(null);
 
   const quickAddCategories = [
     { label: "Workout", category: "fitness", icon: "Dumbbell", iconColor: "var(--color-primary)" },
@@ -184,16 +186,24 @@ export default function DailyActivityDashboard() {
     setCurrentDate(new Date());
   };
 
-  const handleQuickAdd = async (category, label) => {
+  const handleQuickAdd = (category, label) => {
+    setQuickAddActivity({ category, label });
+  };
+
+  const handleSubmitQuickAdd = async (intensity) => {
     try {
+      if (!quickAddActivity) return;
+
       const activityData = {
-        activityName: `Quick ${label}`,
-        category: category,
-        intensity: 'normal',
+        activityName: `Quick ${quickAddActivity?.label}`,
+        category: quickAddActivity?.category,
+        intensity: intensity,
         activityDate: formatDate(new Date()),
         activityTime: new Date()?.toTimeString()?.split(' ')?.[0]
       };
+
       await activityService?.create(activityData);
+      setQuickAddActivity(null);
       await loadDashboardData(currentDate);
       refreshStats(currentDate);
     } catch (err) {
@@ -420,6 +430,14 @@ export default function DailyActivityDashboard() {
             </div>
           )}
         </div>
+        {/* Quick Intensity Modal */}
+        {quickAddActivity && (
+          <QuickIntensityModal
+            activity={quickAddActivity}
+            onClose={() => setQuickAddActivity(null)}
+            onSelect={handleSubmitQuickAdd}
+          />
+        )}
       </div>
     </div>
   );
