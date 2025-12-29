@@ -40,7 +40,8 @@ export default function DailyActivityDashboard() {
     { label: "Strength", category: "fitness", icon: "Zap", iconColor: "var(--color-accent)" },
     { label: "Nutrition", category: "nutrition", icon: "Apple", iconColor: "var(--color-success)" },
     { label: "Focus Session", category: "work", icon: "Target", iconColor: "var(--color-primary)" },
-    { label: "Journalling", category: "mindset", icon: "Book", iconColor: "var(--color-secondary)" }
+    { label: "Journalling", category: "mindset", icon: "Book", iconColor: "var(--color-secondary)" },
+    { label: "Other", category: "others", icon: "MoreHorizontal", iconColor: "var(--color-muted-foreground)" }
   ];
 
 
@@ -185,13 +186,9 @@ export default function DailyActivityDashboard() {
 
   const handleQuickAdd = async (category, label) => {
     try {
-      const config = activityPoints?.[category] || { base: 10, multiplier: 1.0 };
-      const points = Math.round(config.base * config.multiplier);
-
       const activityData = {
         activityName: `Quick ${label}`,
         category: category,
-        points: points,
         intensity: 'normal',
         activityDate: formatDate(new Date()),
         activityTime: new Date()?.toTimeString()?.split(' ')?.[0]

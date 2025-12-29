@@ -19,7 +19,8 @@ export const settingsService = {
               mindset: { base: 8, multiplier: 1.3 },
               nutrition: { base: 5, multiplier: 1.2 },
               work: { base: 15, multiplier: 1.4 },
-              social: { base: 7, multiplier: 1.1 }
+              social: { base: 7, multiplier: 1.1 },
+              others: { base: 5, multiplier: 1.0 }
             },
             dailyGoals: {
               dailyGoal: 100,
@@ -121,7 +122,8 @@ export const settingsService = {
           mindset: { base: 8, multiplier: 1.3 },
           nutrition: { base: 5, multiplier: 1.2 },
           work: { base: 15, multiplier: 1.4 },
-          social: { base: 7, multiplier: 1.1 }
+          social: { base: 7, multiplier: 1.1 },
+          others: { base: 5, multiplier: 1.0 }
         },
         daily_goals: {
           dailyGoal: 100,

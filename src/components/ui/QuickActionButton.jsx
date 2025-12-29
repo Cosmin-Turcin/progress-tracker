@@ -8,24 +8,23 @@ const QuickActionButton = ({ onActivityLogged }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [activityName, setActivityName] = useState('');
-  const [points, setPoints] = useState('');
 
   const categories = [
     { value: 'fitness', label: 'Fitness', icon: 'Dumbbell' },
     { value: 'mindset', label: 'Mindset', icon: 'Brain' },
     { value: 'nutrition', label: 'Nutrition', icon: 'Apple' },
     { value: 'work', label: 'Work', icon: 'Briefcase' },
-    { value: 'social', label: 'Social', icon: 'Users' }
+    { value: 'social', label: 'Social', icon: 'Users' },
+    { value: 'others', label: 'Others', icon: 'MoreHorizontal' }
   ];
 
   const handleSubmit = (e) => {
     e?.preventDefault();
 
-    if (selectedCategory && activityName && points) {
+    if (selectedCategory && activityName) {
       const activity = {
         category: selectedCategory,
         activityName: activityName,
-        points: parseInt(points),
         timestamp: new Date()?.toISOString()
       };
 
@@ -35,7 +34,6 @@ const QuickActionButton = ({ onActivityLogged }) => {
 
       setSelectedCategory('');
       setActivityName('');
-      setPoints('');
       setIsOpen(false);
     }
   };
@@ -78,15 +76,7 @@ const QuickActionButton = ({ onActivityLogged }) => {
                   required
                 />
 
-                <Input
-                  label="Points"
-                  type="number"
-                  placeholder="Enter points"
-                  value={points}
-                  onChange={(e) => setPoints(e?.target?.value)}
-                  min="1"
-                  required
-                />
+
 
                 <Button
                   type="submit"
@@ -148,15 +138,7 @@ const QuickActionButton = ({ onActivityLogged }) => {
                 required
               />
 
-              <Input
-                label="Points"
-                type="number"
-                placeholder="Enter points"
-                value={points}
-                onChange={(e) => setPoints(e?.target?.value)}
-                min="1"
-                required
-              />
+
 
               <Button
                 type="submit"

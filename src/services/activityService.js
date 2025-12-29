@@ -97,6 +97,26 @@ export const activityService = {
       const { data: { user } } = await supabase?.auth?.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      let points = activityData?.points;
+
+      // If points are not provided, calculate them based on settings
+      if (points === undefined || points === null || points === '') {
+        const { data: settings } = await supabase?.from('user_settings')?.select('activity_points')?.eq('user_id', user?.id)?.maybeSingle();
+
+        const activityPoints = settings?.activity_points || {
+          fitness: { base: 10, multiplier: 1.5 },
+          mindset: { base: 8, multiplier: 1.3 },
+          nutrition: { base: 5, multiplier: 1.2 },
+          work: { base: 15, multiplier: 1.4 },
+          social: { base: 7, multiplier: 1.1 },
+          others: { base: 5, multiplier: 1.0 }
+        };
+
+        const config = activityPoints[activityData?.category] || activityPoints['others'] || { base: 5, multiplier: 1.0 };
+        const intensityMultiplier = activityData?.intensity === 'intense' ? 1.5 : (activityData?.intensity === 'light' ? 0.7 : 1.0);
+        points = Math.round(config.base * config.multiplier * intensityMultiplier);
+      }
+
       const getLocalDateString = () => formatDate(new Date());
 
       // Convert camelCase to snake_case for database
@@ -105,7 +125,7 @@ export const activityService = {
         activity_name: activityData?.activityName,
         category: activityData?.category,
         intensity: activityData?.intensity || 'normal',
-        points: activityData?.points,
+        points: points,
         duration_minutes: activityData?.durationMinutes,
         notes: activityData?.notes,
         activity_date: activityData?.activityDate || getLocalDateString(),
