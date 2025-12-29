@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { achievementService } from '../../services/achievementService';
+import { ACHIEVEMENT_DEFINITIONS } from '../../data/achievementDefinitions';
 import { Trophy, Sparkles } from 'lucide-react';
 import AchievementCard from './components/AchievementCard';
 import AchievementModal from './components/AchievementModal';
@@ -9,7 +10,8 @@ import FilterBar from './components/FilterBar';
 import Header from '../../components/Header';
 
 export default function AchievementsBadgesGallery() {
-  const [achievements, setAchievements] = useState([]);
+  const [earnedAchievements, setEarnedAchievements] = useState([]);
+  const [allAchievements, setAllAchievements] = useState([]);
   const [filteredAchievements, setFilteredAchievements] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,13 +28,29 @@ export default function AchievementsBadgesGallery() {
 
   useEffect(() => {
     filterAchievements();
-  }, [achievements, searchQuery, selectedType]);
+  }, [allAchievements, searchQuery, selectedType]);
 
   const loadAchievements = async () => {
     try {
       setLoading(true);
-      const data = await achievementService?.getAll();
-      setAchievements(data);
+      const earned = await achievementService?.getAll();
+      setEarnedAchievements(earned || []);
+
+      // Merge with master list
+      const merged = ACHIEVEMENT_DEFINITIONS?.map(def => {
+        const earnedMatch = earned?.find(e => {
+          // Attempt to match by type if it's a specific badge (e.g. streak_7) 
+          // or fallback to title matching for legacy 
+          return e?.achievementType === def?.id || e?.title === def?.title;
+        });
+
+        if (earnedMatch) {
+          return { ...earnedMatch, requirement: def?.requirement, isLocked: false };
+        }
+        return { ...def, isLocked: true };
+      });
+
+      setAllAchievements(merged);
       setError('');
     } catch (err) {
       setError(err?.message || 'Failed to load achievements');
@@ -51,7 +69,7 @@ export default function AchievementsBadgesGallery() {
   };
 
   const filterAchievements = () => {
-    let filtered = [...achievements];
+    let filtered = [...allAchievements];
 
     // Filter by type
     if (selectedType !== 'all') {
@@ -63,7 +81,8 @@ export default function AchievementsBadgesGallery() {
       const query = searchQuery?.toLowerCase();
       filtered = filtered?.filter(a =>
         a?.title?.toLowerCase()?.includes(query) ||
-        a?.description?.toLowerCase()?.includes(query)
+        a?.description?.toLowerCase()?.includes(query) ||
+        a?.requirement?.toLowerCase()?.includes(query)
       );
     }
 
@@ -76,7 +95,7 @@ export default function AchievementsBadgesGallery() {
       try {
         await achievementService?.markAsViewed(achievement?.id);
         // Update local state
-        setAchievements(prev =>
+        setAllAchievements(prev =>
           prev?.map(a => a?.id === achievement?.id ? { ...a, isNew: false } : a)
         );
       } catch (err) {
@@ -160,9 +179,10 @@ export default function AchievementsBadgesGallery() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredAchievements?.map((achievement) => (
                 <AchievementCard
-                  key={achievement?.id}
+                  key={achievement?.id || achievement?.title}
                   achievement={achievement}
                   onCardClick={handleCardClick}
+                  locked={achievement?.isLocked}
                 />
               ))}
             </div>

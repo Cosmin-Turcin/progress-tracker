@@ -103,7 +103,8 @@ export default function DailyActivityDashboard() {
     // Subscribe to achievements
     const unsubAchievements = realtimeService?.subscribeToAchievements(user?.id, (achievement) => {
       console.log('Real-time: New achievement unlocked!', achievement);
-      setRecentAchievements(prev => [achievement, ...(prev || [])]);
+      setAchievements(prev => [achievement, ...(prev || [])]?.slice(0, 5));
+      setShowAchievement(achievement); // Trigger notification overlay
     });
 
     // Cleanup subscriptions on unmount
@@ -389,21 +390,23 @@ export default function DailyActivityDashboard() {
               </div>
             </div>
 
-            <div className="bg-card rounded-lg border border-border p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Achievements</h3>
-              <div className="space-y-3">
-                {achievements?.map((achievement, index) => (
-                  <AchievementNotification
-                    key={index}
-                    title={achievement?.title}
-                    description={achievement?.description}
-                    icon={achievement?.icon}
-                    iconColor={achievement?.iconColor}
-                    isNew={achievement?.isNew}
-                  />
-                ))}
+            {achievements?.length > 0 && (
+              <div className="bg-card rounded-lg border border-border p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Achievements</h3>
+                <div className="space-y-3">
+                  {achievements?.map((achievement, index) => (
+                    <AchievementNotification
+                      key={index}
+                      title={achievement?.title}
+                      description={achievement?.description}
+                      icon={achievement?.icon}
+                      iconColor={achievement?.iconColor}
+                      isNew={achievement?.isNew}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
