@@ -17,7 +17,7 @@ import Header from '../../components/Header';
 
 export default function DailyActivityDashboard() {
   const { user } = useAuth();
-  const { dailyPoints, weeklyAverage, dailyGoal, activityPoints, refreshStats } = useStats();
+  const { dailyPoints, weeklyAverage, dailyGoal, activityPoints, currentStreak, refreshStats } = useStats();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activities, setActivities] = useState([]);
   const [todayActivities, setTodayActivities] = useState([]);
@@ -25,7 +25,7 @@ export default function DailyActivityDashboard() {
   const [timelineData, setTimelineData] = useState([]);
   const [fitnessPoints, setFitnessPoints] = useState(0); // Still needed for local display in MetricCard
   const [mindsetPoints, setMindsetPoints] = useState(0); // Still needed for local display in MetricCard
-  const [currentStreak, setCurrentStreak] = useState(0); // Still needed for local display in MetricCard
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activityFeed, setActivityFeed] = useState([]);
@@ -89,12 +89,12 @@ export default function DailyActivityDashboard() {
     // Subscribe to statistics updates (for streaks)
     const unsubStats = realtimeService?.subscribeToStatistics(user?.id, (stats) => {
       console.log('Real-time: Statistics updated', stats);
-      // Update metrics with new statistics
+      // Update local metrics and refresh context stats
       setMetrics(prev => ({
         ...prev,
         currentStreak: stats?.currentStreak || 0
       }));
-      setCurrentStreak(stats?.currentStreak || 0); // Update local state for MetricCard
+      refreshStats(currentDate);
     });
 
     // Subscribe to achievements
@@ -145,12 +145,7 @@ export default function DailyActivityDashboard() {
       const timeline = await activityService?.getTimelineData(user?.id, date);
       setTimelineData(timeline || []);
 
-      // Load user statistics for streak
-      const { data: userStats } = await supabase?.from('user_statistics')?.select('current_streak')?.eq('user_id', user?.id)?.single();
 
-      if (userStats) {
-        setCurrentStreak(userStats?.current_streak || 0);
-      }
 
       // Load achievements
       const achievementsData = await achievementService?.getAll();

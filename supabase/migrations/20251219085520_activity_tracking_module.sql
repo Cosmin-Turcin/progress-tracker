@@ -138,6 +138,9 @@ BEGIN
         last_activity_date = NEW.activity_date,
         updated_at = CURRENT_TIMESTAMP
     WHERE user_id = NEW.user_id;
+
+    -- Recalculate streak
+    PERFORM public.calculate_user_streak(NEW.user_id);
     
     RETURN NEW;
 END;
