@@ -120,9 +120,8 @@ export default function DailyActivityDashboard() {
       const fitness = todayActivities?.filter(a => a?.category === 'fitness')?.reduce((sum, a) => sum + a?.points, 0);
       const mindset = todayActivities?.filter(a => a?.category === 'mindset')?.reduce((sum, a) => sum + a?.points, 0);
 
-      setFitnessPoints(fitness);
-      setMindsetPoints(mindset);
-      // dailyPoints is now from context, no need to set here
+      setFitnessPoints(fitness || 0);
+      setMindsetPoints(mindset || 0);
     } else {
       setFitnessPoints(0);
       setMindsetPoints(0);

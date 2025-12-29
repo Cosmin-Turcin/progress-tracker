@@ -343,6 +343,9 @@ export const activityService = {
           case 'social':
             stats.socialPoints += activity?.points;
             break;
+          case 'others':
+            stats.othersPoints = (stats.othersPoints || 0) + activity?.points;
+            break;
         }
       });
 
@@ -374,14 +377,21 @@ export const activityService = {
         const activities = data?.filter(a => a?.activity_time && a?.activity_time?.startsWith(hourStr?.split(':')?.[0])) || [];
 
         const fitnessPoints = activities?.filter(a => a?.category === 'fitness')?.reduce((sum, a) => sum + a?.points, 0);
-
         const mindsetPoints = activities?.filter(a => a?.category === 'mindset')?.reduce((sum, a) => sum + a?.points, 0);
+        const nutritionPoints = activities?.filter(a => a?.category === 'nutrition')?.reduce((sum, a) => sum + a?.points, 0);
+        const workPoints = activities?.filter(a => a?.category === 'work')?.reduce((sum, a) => sum + a?.points, 0);
+        const socialPoints = activities?.filter(a => a?.category === 'social')?.reduce((sum, a) => sum + a?.points, 0);
+        const othersPoints = activities?.filter(a => a?.category === 'others')?.reduce((sum, a) => sum + a?.points, 0);
 
         return {
           time: hour >= 12 ? `${hour === 12 ? 12 : hour - 12} PM` : `${hour === 0 ? 12 : hour} AM`,
           fitness: fitnessPoints,
           mindset: mindsetPoints,
-          total: fitnessPoints + mindsetPoints
+          nutrition: nutritionPoints,
+          work: workPoints,
+          social: socialPoints,
+          others: othersPoints,
+          total: fitnessPoints + mindsetPoints + nutritionPoints + workPoints + socialPoints + othersPoints
         };
       });
 
