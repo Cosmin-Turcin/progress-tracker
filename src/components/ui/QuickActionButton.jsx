@@ -8,6 +8,7 @@ const QuickActionButton = ({ onActivityLogged }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [activityName, setActivityName] = useState('');
+  const [intensity, setIntensity] = useState('normal');
 
   const categories = [
     { value: 'fitness', label: 'Fitness', icon: 'Dumbbell' },
@@ -18,6 +19,12 @@ const QuickActionButton = ({ onActivityLogged }) => {
     { value: 'others', label: 'Others', icon: 'MoreHorizontal' }
   ];
 
+  const intensities = [
+    { value: 'light', label: 'Easy (0.7x)', icon: 'Zap' },
+    { value: 'normal', label: 'Medium (1.0x)', icon: 'Zap' },
+    { value: 'intense', label: 'Hard (1.5x)', icon: 'Zap' }
+  ];
+
   const handleSubmit = (e) => {
     e?.preventDefault();
 
@@ -25,6 +32,7 @@ const QuickActionButton = ({ onActivityLogged }) => {
       const activity = {
         category: selectedCategory,
         activityName: activityName,
+        intensity: intensity,
         timestamp: new Date()?.toISOString()
       };
 
@@ -34,6 +42,7 @@ const QuickActionButton = ({ onActivityLogged }) => {
 
       setSelectedCategory('');
       setActivityName('');
+      setIntensity('normal');
       setIsOpen(false);
     }
   };
@@ -73,6 +82,15 @@ const QuickActionButton = ({ onActivityLogged }) => {
                   placeholder="e.g., Morning run"
                   value={activityName}
                   onChange={(e) => setActivityName(e?.target?.value)}
+                  required
+                />
+
+                <Select
+                  label="Intensity"
+                  placeholder="Select intensity"
+                  options={intensities}
+                  value={intensity}
+                  onChange={setIntensity}
                   required
                 />
 
@@ -135,6 +153,15 @@ const QuickActionButton = ({ onActivityLogged }) => {
                 placeholder="e.g., Morning run"
                 value={activityName}
                 onChange={(e) => setActivityName(e?.target?.value)}
+                required
+              />
+
+              <Select
+                label="Intensity"
+                placeholder="Select intensity"
+                options={intensities}
+                value={intensity}
+                onChange={setIntensity}
                 required
               />
 
