@@ -67,11 +67,16 @@ export const achievementService = {
 
     if (error) throw error;
 
-    // Count by type
+    // Count by category (handling specific IDs)
     const stats = {
       total: data?.length,
-      streak: data?.filter(a => a?.achievement_type === 'streak')?.length,
-      milestone: data?.filter(a => a?.achievement_type === 'milestone')?.length,
+      streak: data?.filter(a => a?.achievement_type?.startsWith('streak'))?.length,
+      milestone: data?.filter(a =>
+        a?.achievement_type?.startsWith('first_steps') ||
+        a?.achievement_type?.startsWith('points_') ||
+        a?.achievement_type?.startsWith('fitness_') ||
+        a?.achievement_type === 'milestone'
+      )?.length,
       goal: data?.filter(a => a?.achievement_type === 'goal')?.length,
       special: data?.filter(a => a?.achievement_type === 'special')?.length
     };
