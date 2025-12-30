@@ -12,6 +12,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useStats } from '../../contexts/StatsContext';
 import { activityService } from '../../services/activityService';
 import { goalService } from '../../services/goalService';
+import { realtimeService } from '../../services/realtimeService';
+import { ACHIEVEMENT_DEFINITIONS } from '../../data/achievementDefinitions';
 
 const HabitConsistencyHub = () => {
   const { user } = useAuth();
@@ -46,6 +48,26 @@ const HabitConsistencyHub = () => {
       loadHabitData();
     }
   }, [user?.id, consistencyPeriod]);
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const unsubActivities = realtimeService?.subscribeToActivities(user?.id, {
+      onInsert: () => loadHabitData(),
+      onUpdate: () => loadHabitData(),
+      onDelete: () => loadHabitData()
+    });
+
+    const unsubAchievements = realtimeService?.subscribeToAchievements(user?.id, () => {
+      loadHabitData();
+    });
+
+    return () => {
+      if (unsubActivities) unsubActivities();
+      if (unsubAchievements) unsubAchievements();
+    };
+  }, [user?.id]);
 
   const loadHabitData = async () => {
     try {
@@ -276,40 +298,82 @@ const HabitConsistencyHub = () => {
   };
 
   const generateMilestonesAndInsights = (activitiesData, goalsData) => {
-    // Mock milestones for now but based on real data existence
-    if (activitiesData?.length > 0) {
-      setUpcomingMilestones([
-        {
-          id: 1,
-          type: 'streak',
-          title: 'Keep it going!',
-          description: 'You are doing great with your logged habits.',
-          habit: activitiesData?.[0]?.activityName,
-          daysUntil: 2
-        }
-      ]);
+    const milestones = [];
+    const insights = [];
 
-      setMotivationInsights([
-        {
-          id: 1,
-          type: 'positive',
-          title: 'Great start!',
-          message: `You have logged ${activitiesData?.length} activities so far.`,
-          action: 'View Details'
-        }
-      ]);
-    } else {
-      setUpcomingMilestones([]);
-      setMotivationInsights([
-        {
-          id: 1,
+    // Group by habit
+    const habitGroups = {};
+    activitiesData?.forEach(activity => {
+      const name = activity?.activityName;
+      if (!habitGroups[name]) habitGroups[name] = [];
+      habitGroups[name].push(activity);
+    });
+
+    // 1. Calculate REAL upcoming milestones
+    Object.entries(habitGroups).forEach(([name, activities]) => {
+      const currentStreak = calculateCurrentStreak(activities);
+      const thresholds = [3, 7, 14, 30];
+      const nextThreshold = thresholds.find(t => t > currentStreak);
+
+      if (nextThreshold) {
+        milestones.push({
+          id: `streak-${name}-${nextThreshold}`,
+          type: 'streak',
+          title: `${nextThreshold}-Day Streak!`,
+          description: `You're just ${nextThreshold - currentStreak} days away from a new ${name} record.`,
+          habit: name,
+          daysUntil: nextThreshold - currentStreak
+        });
+      }
+
+      // Category milestones (based on definitions)
+      const count = activities.length;
+      if (count < 10) {
+        milestones.push({
+          id: `count-${name}-10`,
+          type: 'achievement',
+          title: 'Category Master',
+          description: `Log ${10 - count} more activities to earn a specialty badge.`,
+          habit: name,
+          daysUntil: 10 - count // Roughly estimated as logs needed
+        });
+      }
+    });
+
+    // Sort milestones by priority (daysUntil)
+    setUpcomingMilestones(milestones.sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 3));
+
+    // 2. Generate insights
+    if (activitiesData.length > 0) {
+      insights.push({
+        id: 'total-logs',
+        type: 'positive',
+        title: 'Habit Hero',
+        message: `You've logged ${activitiesData.length} activities. Consistency is building!`,
+        action: 'View History'
+      });
+
+      const lowConsistency = Object.entries(habitGroups).find(([_, activities]) => calculateCurrentStreak(activities) < 2);
+      if (lowConsistency) {
+        insights.push({
+          id: 'tip-consistency',
           type: 'tip',
-          title: 'Get Started',
-          message: 'Log your first activity to see insights and milestones!',
-          action: 'Log Activity'
-        }
-      ]);
+          title: 'Bounce Back',
+          message: `Your ${lowConsistency[0]} streak is fresh. Try a log today to lock it in!`,
+          action: 'Log Now'
+        });
+      }
+    } else {
+      insights.push({
+        id: 'empty-tip',
+        type: 'tip',
+        title: 'Get Started',
+        message: 'Log your first activity to see insights and milestones!',
+        action: 'Log Activity'
+      });
     }
+
+    setMotivationInsights(insights);
   };
 
   const getLast7Days = () => {
@@ -370,16 +434,32 @@ const HabitConsistencyHub = () => {
     { value: 'quarterly', label: 'Quarterly View' }
   ];
 
-  // Generate priority habits from matrix data
-  const priorityHabits = habitsMatrixData?.slice(0, 5)?.map((habit, index) => ({
-    id: habit?.id,
-    name: habit?.name,
-    icon: habit?.icon,
-    category: activities?.find(a => a?.activityName === habit?.name)?.category || 'Other',
-    priority: habit?.completionRate > 85 ? 'high' : habit?.completionRate > 70 ? 'medium' : 'low',
-    completionRate: habit?.completionRate,
-    streak: habit?.currentStreak
-  }));
+  // Generate priority habits with dynamic scoring
+  const priorityHabits = habitsMatrixData
+    ?.map((habit) => {
+      // Consistency score = (completionRate / 100) * log_count + currentStreak
+      const score = (habit.completionRate / 100) * habit.totalCompletions + (habit.currentStreak * 2);
+
+      // Determine priority: 
+      // High streak but low recent completion = CRITICAL (to protect)
+      // High completion = High
+      let priority = 'low';
+      if (habit.currentStreak >= 3 && habit.completionRate < 60) priority = 'high';
+      else if (habit.completionRate > 80) priority = 'medium';
+
+      return {
+        id: habit?.id,
+        name: habit?.name,
+        icon: habit?.icon,
+        category: activities?.find(a => a?.activityName === habit?.name)?.category || 'Other',
+        priority,
+        completionRate: habit?.completionRate,
+        streak: habit?.currentStreak,
+        score
+      };
+    })
+    ?.sort((a, b) => b.score - a.score)
+    ?.slice(0, 5);
 
 
   const handleActivityLogged = (activity) => {

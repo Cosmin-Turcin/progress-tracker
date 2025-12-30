@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 
 const HabitBreakdownTable = ({ habits }) => {
@@ -20,103 +21,106 @@ const HabitBreakdownTable = ({ habits }) => {
   });
 
   const getScoreColor = (score) => {
-    if (score >= 80) return 'text-success';
+    if (score >= 80) return 'text-blue-500';
     if (score >= 60) return 'text-primary';
-    if (score >= 40) return 'text-warning';
-    return 'text-error';
+    if (score >= 40) return 'text-orange-500';
+    return 'text-red-500';
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="p-6 border-b border-border">
-        <h2 className="text-xl font-semibold text-foreground">Detailed Habit Breakdown</h2>
+    <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+      <div className="p-8 border-b border-border flex items-center justify-between bg-muted/10">
+        <div>
+          <h2 className="text-xl font-black text-foreground uppercase tracking-tight">Detailed Breakdown</h2>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Deep dive into your habit metrics</p>
+        </div>
+        <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-xl">
+          <Icon name="Filter" size={14} className="text-muted-foreground" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sorted by {sortBy}</span>
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-muted">
-            <tr>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                Habit
+          <thead>
+            <tr className="bg-muted/30 border-b border-border">
+              <th className="text-left p-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                Habit Discovery
               </th>
-              <th 
-                className="text-left p-4 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              <th
+                className="text-left p-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest cursor-pointer hover:text-foreground transition-colors"
                 onClick={() => handleSort('consistency')}
               >
                 <div className="flex items-center gap-2">
-                  Consistency Score
-                  <Icon name={sortBy === 'consistency' ? (sortOrder === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} size={16} />
+                  Consistency
+                  <Icon name={sortBy === 'consistency' ? (sortOrder === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} size={14} />
                 </div>
               </th>
-              <th 
-                className="text-left p-4 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-                onClick={() => handleSort('bestStreak')}
-              >
-                <div className="flex items-center gap-2">
-                  Best Streak
-                  <Icon name={sortBy === 'bestStreak' ? (sortOrder === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} size={16} />
-                </div>
-              </th>
-              <th 
-                className="text-left p-4 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+              <th
+                className="text-left p-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest cursor-pointer hover:text-foreground transition-colors"
                 onClick={() => handleSort('currentStreak')}
               >
                 <div className="flex items-center gap-2">
-                  Current Streak
-                  <Icon name={sortBy === 'currentStreak' ? (sortOrder === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} size={16} />
+                  Power Streak
+                  <Icon name={sortBy === 'currentStreak' ? (sortOrder === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} size={14} />
                 </div>
               </th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">
-                Recommendation
+              <th className="text-left p-6 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                Growth Strategy
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border">
             {sortedHabits?.map((habit, index) => (
-              <tr 
-                key={habit?.id} 
-                className={`border-b border-border hover:bg-muted/50 transition-colors ${index % 2 === 0 ? 'bg-background' : 'bg-card'}`}
+              <motion.tr
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                key={habit?.id}
+                className="hover:bg-muted/20 transition-colors group"
               >
-                <td className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Icon name={habit?.icon} size={20} color="var(--color-primary)" />
+                <td className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/10 group-hover:scale-110 transition-transform">
+                      <Icon name={habit?.icon} size={24} color="var(--color-primary)" />
+                    </div>
                     <div>
-                      <p className="font-medium text-foreground">{habit?.name}</p>
-                      <p className="text-sm text-muted-foreground">{habit?.category}</p>
+                      <p className="font-black text-foreground uppercase tracking-tight leading-none mb-1">{habit?.name}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{habit?.category}</p>
                     </div>
                   </div>
                 </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-lg font-semibold font-data ${getScoreColor(habit?.consistency)}`}>
-                      {habit?.consistency}%
-                    </span>
-                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-300 ${habit?.consistency >= 80 ? 'bg-success' : habit?.consistency >= 60 ? 'bg-primary' : habit?.consistency >= 40 ? 'bg-warning' : 'bg-error'}`}
-                        style={{ width: `${habit?.consistency}%` }}
+                <td className="p-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-lg font-black font-data tracking-tighter ${getScoreColor(habit?.consistency)}`}>
+                        {habit?.consistency}%
+                      </span>
+                    </div>
+                    <div className="w-32 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${habit?.consistency}%` }}
+                        className={`h-full ${habit?.consistency >= 80 ? 'bg-blue-500' : habit?.consistency >= 60 ? 'bg-primary' : habit?.consistency >= 40 ? 'bg-orange-500' : 'bg-red-500'}`}
                       />
                     </div>
                   </div>
                 </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-1">
-                    <Icon name="Award" size={16} color="var(--color-warning)" />
-                    <span className="font-medium font-data">{habit?.bestStreak} days</span>
+                <td className="p-6">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                      <Icon name="Flame" size={16} color="var(--color-warning)" />
+                    </div>
+                    <span className="font-black font-data text-foreground tracking-tighter text-lg">{habit?.currentStreak}d</span>
                   </div>
                 </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-1">
-                    <Icon name="Flame" size={16} color="var(--color-warning)" />
-                    <span className="font-medium font-data">{habit?.currentStreak} days</span>
+                <td className="p-6">
+                  <div className="flex items-center gap-3 max-w-xs">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Icon name="Lightbulb" size={16} color="var(--color-primary)" />
+                    </div>
+                    <p className="text-xs font-bold text-muted-foreground uppercase leading-relaxed tracking-tight italic">"{habit?.recommendation}"</p>
                   </div>
                 </td>
-                <td className="p-4">
-                  <div className="flex items-start gap-2">
-                    <Icon name="Lightbulb" size={16} color="var(--color-primary)" className="mt-0.5" />
-                    <p className="text-sm text-muted-foreground">{habit?.recommendation}</p>
-                  </div>
-                </td>
-              </tr>
+              </motion.tr>
             ))}
           </tbody>
         </table>
