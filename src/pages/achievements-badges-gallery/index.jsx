@@ -39,13 +39,18 @@ export default function AchievementsBadgesGallery() {
       // Merge with master list
       const merged = ACHIEVEMENT_DEFINITIONS?.map(def => {
         const earnedMatch = earned?.find(e => {
-          // Attempt to match by type if it's a specific badge (e.g. streak_7) 
-          // or fallback to title matching for legacy 
-          return e?.achievementType === def?.id || e?.title === def?.title;
+          // Robust matching: by specific ID (stored in achievement_type) OR by exact title
+          return e?.achievementType === def?.id || e?.title?.toLowerCase() === def?.title?.toLowerCase();
         });
 
         if (earnedMatch) {
-          return { ...earnedMatch, requirement: def?.requirement, isLocked: false };
+          // Merge: Take definition (for visual category/req) but overlay earned data (achievedAt, id, etc.)
+          return {
+            ...def,
+            ...earnedMatch,
+            achievementType: def?.achievementType, // Ensure we keep the visual category (streak, milestone, etc.)
+            isLocked: false
+          };
         }
         return { ...def, isLocked: true };
       });

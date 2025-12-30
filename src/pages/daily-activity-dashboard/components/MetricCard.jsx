@@ -1,7 +1,7 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 
-const MetricCard = ({ title, value, subtitle, icon, iconColor, trend, trendValue }) => {
+const MetricCard = ({ title, value, subtitle, icon, iconColor, trend, trendValue, onClick }) => {
   const getTrendIcon = () => {
     if (trend === 'up') return 'TrendingUp';
     if (trend === 'down') return 'TrendingDown';
@@ -15,7 +15,10 @@ const MetricCard = ({ title, value, subtitle, icon, iconColor, trend, trendValue
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border p-6 hover-lift transition-all duration-200">
+    <div
+      onClick={onClick}
+      className={`bg-card rounded-lg border border-border p-6 hover-lift transition-all duration-200 ${onClick ? 'cursor-pointer' : ''}`}
+    >
       <div className="flex items-start justify-between mb-4">
         <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${iconColor}15` }}>
           <Icon name={icon} size={24} color={iconColor} />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import QuickActionButton from '../../components/ui/QuickActionButton';
 import MetricCard from './components/MetricCard';
 import TimelineChart from './components/TimelineChart';
@@ -18,6 +19,7 @@ import Header from '../../components/Header';
 
 export default function DailyActivityDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { dailyPoints, weeklyAverage, dailyGoal, activityPoints, currentStreak, refreshStats } = useStats();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activities, setActivities] = useState([]);
@@ -325,6 +327,7 @@ export default function DailyActivityDashboard() {
             iconColor="var(--color-accent)"
             trend="up"
             trendValue="New record"
+            onClick={() => navigate('/achievements-badges-gallery')}
           />
         </div>
 
@@ -391,8 +394,16 @@ export default function DailyActivityDashboard() {
             </div>
 
             {achievements?.length > 0 && (
-              <div className="bg-card rounded-lg border border-border p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Achievements</h3>
+              <div className="bg-card rounded-lg border border-border p-6 transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-foreground">Achievements</h3>
+                  <Link
+                    to="/achievements-badges-gallery"
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    View Gallery
+                  </Link>
+                </div>
                 <div className="space-y-3">
                   {achievements?.map((achievement, index) => (
                     <AchievementNotification

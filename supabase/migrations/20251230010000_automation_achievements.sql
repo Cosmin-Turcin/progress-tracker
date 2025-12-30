@@ -27,38 +27,38 @@ BEGIN
     WHERE user_id = NEW.user_id AND activity_date = CURRENT_DATE;
 
     -- 2. Check for "First Steps"
-    IF v_total_activities = 1 THEN
-        SELECT EXISTS(SELECT 1 FROM public.achievements WHERE user_id = NEW.user_id AND achievement_type = 'first_steps') INTO v_has_achievement;
+    IF v_total_activities >= 1 THEN
+        SELECT EXISTS(SELECT 1 FROM public.achievements WHERE user_id = NEW.user_id AND (achievement_type = 'first_steps' OR title = 'First Steps')) INTO v_has_achievement;
         IF NOT v_has_achievement THEN
             INSERT INTO public.achievements (user_id, title, description, icon, icon_color, achievement_type)
-            VALUES (NEW.user_id, 'First Steps', 'You logged your first activity! Welcome aboard.', 'Footprints', 'var(--color-primary)', 'milestone');
+            VALUES (NEW.user_id, 'First Steps', 'You logged your first activity! Welcome aboard.', 'Footprints', 'var(--color-primary)', 'first_steps');
         END IF;
     END IF;
 
     -- 3. Check for "Streak Starter" (3 days)
     IF v_current_streak >= 3 THEN
-        SELECT EXISTS(SELECT 1 FROM public.achievements WHERE user_id = NEW.user_id AND achievement_type = 'streak_3') INTO v_has_achievement;
+        SELECT EXISTS(SELECT 1 FROM public.achievements WHERE user_id = NEW.user_id AND (achievement_type = 'streak_3' OR title = 'Streak Starter')) INTO v_has_achievement;
         IF NOT v_has_achievement THEN
             INSERT INTO public.achievements (user_id, title, description, icon, icon_color, achievement_type)
-            VALUES (NEW.user_id, 'Streak Starter', '3 days in a row! You''re building a great habit.', 'Zap', 'var(--color-warning)', 'streak');
+            VALUES (NEW.user_id, 'Streak Starter', '3 days in a row! You''re building a great habit.', 'Zap', 'var(--color-warning)', 'streak_3');
         END IF;
     END IF;
 
     -- 4. Check for "Consistent" (7 days)
     IF v_current_streak >= 7 THEN
-        SELECT EXISTS(SELECT 1 FROM public.achievements WHERE user_id = NEW.user_id AND achievement_type = 'streak_7') INTO v_has_achievement;
+        SELECT EXISTS(SELECT 1 FROM public.achievements WHERE user_id = NEW.user_id AND (achievement_type = 'streak_7' OR title = 'Consistent')) INTO v_has_achievement;
         IF NOT v_has_achievement THEN
             INSERT INTO public.achievements (user_id, title, description, icon, icon_color, achievement_type)
-            VALUES (NEW.user_id, 'Consistent', 'A full week! You''re on fire.', 'Flame', 'var(--color-accent)', 'streak');
+            VALUES (NEW.user_id, 'Consistent', 'A full week! You''re on fire.', 'Flame', 'var(--color-accent)', 'streak_7');
         END IF;
     END IF;
 
     -- 5. Check for "High Flyer" (100+ points in a day)
     IF v_total_points_today >= 100 THEN
-        SELECT EXISTS(SELECT 1 FROM public.achievements WHERE user_id = NEW.user_id AND achievement_type = 'points_100_day') INTO v_has_achievement;
+        SELECT EXISTS(SELECT 1 FROM public.achievements WHERE user_id = NEW.user_id AND (achievement_type = 'points_100_day' OR title = 'High Flyer')) INTO v_has_achievement;
         IF NOT v_has_achievement THEN
             INSERT INTO public.achievements (user_id, title, description, icon, icon_color, achievement_type)
-            VALUES (NEW.user_id, 'High Flyer', 'You earned over 100 points in a single day!', 'Rocket', 'var(--color-success)', 'milestone');
+            VALUES (NEW.user_id, 'High Flyer', 'You earned over 100 points in a single day!', 'Rocket', 'var(--color-success)', 'points_100_day');
         END IF;
     END IF;
 

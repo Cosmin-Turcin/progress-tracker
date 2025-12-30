@@ -1,5 +1,6 @@
 import { Award, Trophy, Star } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 
 
@@ -102,12 +103,12 @@ export default function AchievementShowcase({ achievements }) {
 
       {achievements?.length > 0 && (
         <div className="flex justify-center">
-          <button
-            onClick={() => window.location.href = '/achievements-badges-gallery'}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm"
+          <Link
+            to="/achievements-badges-gallery"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm transition-all duration-200"
           >
             View All Achievements
-          </button>
+          </Link>
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { achievementService } from '../../services/achievementService';
 import { activityService } from '../../services/activityService';
@@ -17,6 +18,7 @@ import ProfessionalTab from './components/ProfessionalTab';
 
 export default function UserProfile() {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('stats');
@@ -258,7 +260,10 @@ export default function UserProfile() {
               <p className="text-sm opacity-90 mt-2">Days in a row</p>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+            <div
+              onClick={() => navigate('/achievements-badges-gallery')}
+              className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg cursor-pointer hover:scale-[1.02] transition-transform"
+            >
               <div className="flex items-center justify-between mb-4">
                 <Award className="w-8 h-8 opacity-80" />
                 <span className="text-sm opacity-90">Achievements</span>
