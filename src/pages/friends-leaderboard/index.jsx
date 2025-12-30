@@ -28,7 +28,7 @@ export default function FriendsLeaderboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('all-time');
   const [refreshing, setRefreshing] = useState(false);
 
-  const currentUserStats = leaderboard?.find(item => item?.userId === user?.id);
+  const [userRankingStats, setUserRankingStats] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -60,13 +60,25 @@ export default function FriendsLeaderboard() {
     try {
       setLoading(true);
       setError('');
-      let data = [];
+
+      const promises = [];
+
+      // Load leaderboard data
       if (activeTab === 'global') {
-        data = await friendService?.getGlobalLeaderboard(selectedPeriod);
+        promises.push(friendService?.getGlobalLeaderboard(selectedPeriod));
       } else if (activeTab === 'friends') {
-        data = await friendService?.getFriendsLeaderboard(selectedPeriod);
+        promises.push(friendService?.getFriendsLeaderboard(selectedPeriod));
+      } else {
+        promises.push(Promise.resolve([]));
       }
-      setLeaderboard(data);
+
+      // Always load current user's ranking stats for header
+      promises.push(friendService?.getUserRankingStats(selectedPeriod));
+
+      const [leaderboardData, rankingStats] = await Promise.all(promises);
+
+      setLeaderboard(leaderboardData);
+      setUserRankingStats(rankingStats);
     } catch (err) {
       setError(err?.message || 'Failed to load data');
       setLeaderboard([]);
@@ -125,10 +137,20 @@ export default function FriendsLeaderboard() {
           </div>
         </div>
 
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-8 p-4 bg-error/10 border-2 border-error/20 rounded-2xl text-error text-sm font-black flex items-center gap-3 uppercase tracking-widest animate-pulse">
+            <div className="p-2 bg-error/20 rounded-lg">
+              <RefreshCw className="w-5 h-5" />
+            </div>
+            {error}
+          </div>
+        )}
+
         {/* Global Summary & Search */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
           <div className="lg:col-span-2">
-            <CurrentUserStats userStats={currentUserStats} />
+            <CurrentUserStats userStats={userRankingStats} />
           </div>
           <div className="flex flex-col gap-4">
             <SearchFriends />

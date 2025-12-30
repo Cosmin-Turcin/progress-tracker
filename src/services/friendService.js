@@ -277,6 +277,33 @@ export const friendService = {
     }
   },
 
+  // Get current user's ranking and stats for header
+  async getUserRankingStats(timePeriod = 'all-time') {
+    try {
+      const { data: { user } } = await supabase?.auth?.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase?.rpc('get_user_ranking_stats', {
+        p_user_id: user?.id,
+        p_period: timePeriod
+      });
+
+      if (error) throw error;
+
+      const row = data?.[0];
+      return {
+        userId: row?.user_id,
+        totalPoints: row?.total_points || 0,
+        currentStreak: row?.current_streak || 0,
+        achievementsUnlocked: row?.achievements_unlocked || 0,
+        rank: row?.rank || '-'
+      };
+    } catch (error) {
+      console.error('Error fetching user ranking stats:', error);
+      throw error;
+    }
+  },
+
   /**
    * Get detailed friend profile information
    * @param {string} friendId - Friend's user ID

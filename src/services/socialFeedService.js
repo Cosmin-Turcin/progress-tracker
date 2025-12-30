@@ -14,40 +14,82 @@ class SocialFeedService {
    */
   async getFriendActivities(userId, filters = {}, limit = 20, offset = 0) {
     try {
-      // Get user's friends
-      const { data: friendships, error: friendshipsError } = await supabase?.from('friendships')?.select('friend_id')?.eq('user_id', userId)?.eq('status', 'accepted');
+      // Get user's friends (bidirectional)
+      const { data: friendships, error: friendshipsError } = await supabase
+        ?.from('friendships')
+        ?.select('user_id, friend_id')
+        ?.eq('status', 'accepted')
+        ?.or(`user_id.eq.${userId},friend_id.eq.${userId}`);
 
-      if (friendshipsError) throw friendshipsError;
+      if (friendshipsError) {
+        console.error('Friendships fetch error:', friendshipsError);
+        throw friendshipsError;
+      }
 
-      const friendIds = friendships?.map(f => f?.friend_id) || [];
+      // Map to get unique IDs of friends
+      const friendIds = Array.from(new Set(
+        friendships?.map(f => f.user_id === userId ? f.friend_id : f.user_id) || []
+      ));
 
       if (friendIds?.length === 0) {
         return { activities: [], hasMore: false };
       }
 
-      // Build query for activities
-      let query = supabase?.from('activity_logs')?.select(`
+      // Build query for activities with user details
+      let query = supabase
+        ?.from('activity_logs')
+        ?.select(`
           *,
-          user_profiles (
+          user_profiles!activity_logs_user_id_fkey (
             id,
             full_name,
             avatar_url
           )
-        `)?.in('user_id', friendIds)?.order('created_at', { ascending: false })?.range(offset, offset + limit - 1);
+        `)
+        ?.in('user_id', friendIds)
+        ?.order('created_at', { ascending: false })
+        ?.range(offset, offset + limit - 1);
 
-      // Apply activity type filter
+      // Apply activity type filter if specified
       if (filters?.activityType && filters?.activityType !== 'all') {
         query = query?.eq('category', filters?.activityType);
       }
 
       const { data: activities, error: activitiesError } = await query;
 
-      if (activitiesError) throw activitiesError;
+      if (activitiesError) {
+        // Fallback for join if explicit FKEY name is wrong
+        console.warn('First join attempt failed, trying default join name...', activitiesError);
+        const { data: altActivities, error: altError } = await supabase
+          ?.from('activity_logs')
+          ?.select(`
+            *,
+            user_profiles (
+              id,
+              full_name,
+              avatar_url
+            )
+          `)
+          ?.in('user_id', friendIds)
+          ?.order('created_at', { ascending: false })
+          ?.range(offset, offset + limit - 1);
 
-      // Fetch achievements for these users
-      const { data: achievements } = await supabase?.from('achievements')?.select('*')?.in('user_id', friendIds);
+        if (altError) throw altError;
+        return {
+          activities: altActivities || [],
+          hasMore: altActivities?.length === limit
+        };
+      }
 
-      // Map achievements to activities
+      // Fetch achievements for these users to show alongside activities
+      const { data: achievements, error: achievementsError } = await supabase
+        ?.from('achievements')
+        ?.select('*')
+        ?.in('user_id', friendIds);
+
+      if (achievementsError) console.error('Error fetching achievements:', achievementsError);
+
+      // Map achievements to activities for richer feed items
       const activitiesWithAchievements = activities?.map(activity => ({
         ...activity,
         achievements: achievements?.filter(a => a?.user_id === activity?.user_id) || []
@@ -71,26 +113,58 @@ class SocialFeedService {
    */
   async getTrendingAchievements(userId, limit = 5) {
     try {
-      const { data: friendships, error: friendshipsError } = await supabase?.from('friendships')?.select('friend_id')?.eq('user_id', userId)?.eq('status', 'accepted');
+      // Get user's friends (bidirectional)
+      const { data: friendships, error: friendshipsError } = await supabase
+        ?.from('friendships')
+        ?.select('user_id, friend_id')
+        ?.eq('status', 'accepted')
+        ?.or(`user_id.eq.${userId},friend_id.eq.${userId}`);
 
       if (friendshipsError) throw friendshipsError;
 
-      const friendIds = friendships?.map(f => f?.friend_id) || [];
+      const friendIds = Array.from(new Set(
+        friendships?.map(f => f.user_id === userId ? f.friend_id : f.user_id) || []
+      ));
 
       if (friendIds?.length === 0) {
         return [];
       }
 
-      const { data: achievements, error } = await supabase?.from('achievements')?.select(`
+      const { data: achievements, error } = await supabase
+        ?.from('achievements')
+        ?.select(`
           *,
-          user_profiles (
+          user_profiles!achievements_user_id_fkey (
             id,
             full_name,
             avatar_url
           )
-        `)?.in('user_id', friendIds)?.gte('achieved_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)?.toISOString())?.order('achieved_at', { ascending: false })?.limit(limit);
+        `)
+        ?.in('user_id', friendIds)
+        ?.gte('achieved_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)?.toISOString())
+        ?.order('achieved_at', { ascending: false })
+        ?.limit(limit);
 
-      if (error) throw error;
+      if (error) {
+        console.warn('First achievements join failed, trying default...', error);
+        const { data: altAchievements, error: altError } = await supabase
+          ?.from('achievements')
+          ?.select(`
+            *,
+            user_profiles (
+              id,
+              full_name,
+              avatar_url
+            )
+          `)
+          ?.in('user_id', friendIds)
+          ?.gte('achieved_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)?.toISOString())
+          ?.order('achieved_at', { ascending: false })
+          ?.limit(limit);
+
+        if (altError) throw altError;
+        return altAchievements || [];
+      }
 
       return achievements || [];
     } catch (error) {
@@ -107,17 +181,29 @@ class SocialFeedService {
    */
   async getStreakLeaderboard(userId, limit = 10) {
     try {
-      const { data: friendships, error: friendshipsError } = await supabase?.from('friendships')?.select('friend_id')?.eq('user_id', userId)?.eq('status', 'accepted');
+      // Get user's friends (bidirectional)
+      const { data: friendships, error: friendshipsError } = await supabase
+        ?.from('friendships')
+        ?.select('user_id, friend_id')
+        ?.eq('status', 'accepted')
+        ?.or(`user_id.eq.${userId},friend_id.eq.${userId}`);
 
       if (friendshipsError) throw friendshipsError;
 
-      const friendIds = friendships?.map(f => f?.friend_id) || [];
+      const friendIds = Array.from(new Set(
+        friendships?.map(f => f.user_id === userId ? f.friend_id : f.user_id) || []
+      ));
 
       if (friendIds?.length === 0) {
         return [];
       }
 
-      const { data: profiles, error } = await supabase?.from('user_profiles')?.select('id, full_name, avatar_url, current_streak, longest_streak')?.in('id', friendIds)?.order('current_streak', { ascending: false })?.limit(limit);
+      const { data: profiles, error } = await supabase
+        ?.from('user_profiles')
+        ?.select('id, full_name, avatar_url, current_streak, longest_streak')
+        ?.in('id', friendIds)
+        ?.order('current_streak', { ascending: false })
+        ?.limit(limit);
 
       if (error) throw error;
 
