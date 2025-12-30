@@ -11,6 +11,7 @@ import { Award, TrendingUp, Activity, Target, Users, Loader, AlertCircle, X, Bri
 import ProfileHeader from './components/ProfileHeader';
 import StatsGrid from './components/StatsGrid';
 import AchievementShowcase from './components/AchievementShowcase';
+import AchievementOverlay from '../../components/ui/AchievementOverlay';
 import ActivityTimeline from './components/ActivityTimeline';
 import FriendRequestPanel from './components/FriendRequestPanel';
 import ProfileCustomization from './components/ProfileCustomization';
@@ -32,6 +33,7 @@ export default function UserProfile() {
 
   // UI states
   const [showCustomization, setShowCustomization] = useState(false);
+  const [showAchievement, setShowAchievement] = useState(null);
 
   useEffect(() => {
     loadProfileData();
@@ -54,9 +56,7 @@ export default function UserProfile() {
       console.log('Real-time: New achievement unlocked!', achievement);
       setAchievements(prev => [achievement, ...(prev || [])]);
       // Show notification
-      if (achievement?.title) {
-        alert(`🎉 Achievement Unlocked: ${achievement?.title}!`);
-      }
+      setShowAchievement(achievement);
     });
 
     // Subscribe to activities
@@ -283,6 +283,10 @@ export default function UserProfile() {
           }}
         />
       )}
+      <AchievementOverlay
+        achievement={showAchievement}
+        onClose={() => setShowAchievement(null)}
+      />
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { achievementService } from '../../services/achievementService';
+import { realtimeService } from '../../services/realtimeService';
+import { useAuth } from '../../contexts/AuthContext';
 import { ACHIEVEMENT_DEFINITIONS } from '../../data/achievementDefinitions';
 import { Trophy, Sparkles } from 'lucide-react';
 import AchievementCard from './components/AchievementCard';
@@ -8,8 +10,10 @@ import AchievementModal from './components/AchievementModal';
 import AchievementStats from './components/AchievementStats';
 import FilterBar from './components/FilterBar';
 import Header from '../../components/Header';
+import AchievementOverlay from '../../components/ui/AchievementOverlay';
 
 export default function AchievementsBadgesGallery() {
+  const { user } = useAuth();
   const [earnedAchievements, setEarnedAchievements] = useState([]);
   const [allAchievements, setAllAchievements] = useState([]);
   const [filteredAchievements, setFilteredAchievements] = useState([]);
@@ -19,12 +23,28 @@ export default function AchievementsBadgesGallery() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedAchievement, setSelectedAchievement] = useState(null);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [showAchievement, setShowAchievement] = useState(null);
 
   useEffect(() => {
     loadAchievements();
     loadStats();
-  }, []);
+
+    // Subscribe to real-time achievements
+    if (user?.id) {
+      const unsub = realtimeService?.subscribeToAchievements(user?.id, (newAchievement) => {
+        console.log('Gallery: New achievement received real-time', newAchievement);
+        loadAchievements(); // Refresh list to get merged roadmap
+        loadStats(); // Update counters
+
+        // Celebration!
+        setShowAchievement(newAchievement);
+      });
+
+      return () => {
+        if (unsub) unsub();
+      };
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     filterAchievements();
@@ -110,8 +130,7 @@ export default function AchievementsBadgesGallery() {
   };
 
   const handleShare = (achievement) => {
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 3000);
+    setShowAchievement(achievement);
 
     // Copy to clipboard as fallback
     const text = `I just earned: ${achievement?.title}! ${achievement?.description}`;
@@ -192,15 +211,6 @@ export default function AchievementsBadgesGallery() {
               ))}
             </div>
           )}
-
-          {/* Confetti Effect */}
-          {showConfetti && (
-            <div className="fixed inset-0 pointer-events-none z-50">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-6xl animate-bounce">
-                🎉
-              </div>
-            </div>
-          )}
         </div>
       </div>
       {/* Achievement Detail Modal */}
@@ -211,6 +221,10 @@ export default function AchievementsBadgesGallery() {
           onShare={handleShare}
         />
       )}
+      <AchievementOverlay
+        achievement={showAchievement}
+        onClose={() => setShowAchievement(null)}
+      />
     </div>
   );
 }

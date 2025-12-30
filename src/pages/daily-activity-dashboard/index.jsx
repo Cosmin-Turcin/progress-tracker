@@ -6,6 +6,7 @@ import TimelineChart from './components/TimelineChart';
 import QuickAddButton from './components/QuickAddButton';
 import ActivityFeedItem from './components/ActivityFeedItem';
 import AchievementNotification from './components/AchievementNotification';
+import AchievementOverlay from '../../components/ui/AchievementOverlay';
 import ActivityLogCard from './components/ActivityLogCard';
 import DateNavigator from './components/DateNavigator';
 import QuickIntensityModal from './components/QuickIntensityModal';
@@ -34,6 +35,7 @@ export default function DailyActivityDashboard() {
   const [activityFeed, setActivityFeed] = useState([]);
   const [metrics, setMetrics] = useState({});
   const [achievements, setAchievements] = useState([]);
+  const [showAchievement, setShowAchievement] = useState(null);
   const [recentAchievements, setRecentAchievements] = useState([]);
   const [quickAddActivity, setQuickAddActivity] = useState(null);
 
@@ -451,6 +453,11 @@ export default function DailyActivityDashboard() {
             onSelect={handleSubmitQuickAdd}
           />
         )}
+        {/* Achievement Celebration Overlay */}
+        <AchievementOverlay
+          achievement={showAchievement}
+          onClose={() => setShowAchievement(null)}
+        />
       </div>
     </div>
   );
