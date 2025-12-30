@@ -28,9 +28,8 @@ class SocialFeedService {
       // Build query for activities
       let query = supabase?.from('activity_logs')?.select(`
           *,
-          user_profiles!activity_logs_user_id_fkey (
+          user_profiles (
             id,
-            username,
             full_name,
             avatar_url
           )
@@ -45,8 +44,7 @@ class SocialFeedService {
 
       if (activitiesError) throw activitiesError;
 
-      // Fetch achievements for activities
-      const activityIds = activities?.map(a => a?.id) || [];
+      // Fetch achievements for these users
       const { data: achievements } = await supabase?.from('achievements')?.select('*')?.in('user_id', friendIds);
 
       // Map achievements to activities
@@ -85,13 +83,12 @@ class SocialFeedService {
 
       const { data: achievements, error } = await supabase?.from('achievements')?.select(`
           *,
-          user_profiles!achievements_user_id_fkey (
+          user_profiles (
             id,
-            username,
             full_name,
             avatar_url
           )
-        `)?.in('user_id', friendIds)?.gte('earned_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)?.toISOString())?.order('earned_at', { ascending: false })?.limit(limit);
+        `)?.in('user_id', friendIds)?.gte('achieved_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)?.toISOString())?.order('achieved_at', { ascending: false })?.limit(limit);
 
       if (error) throw error;
 
@@ -120,7 +117,7 @@ class SocialFeedService {
         return [];
       }
 
-      const { data: profiles, error } = await supabase?.from('user_profiles')?.select('id, username, full_name, avatar_url, current_streak, longest_streak')?.in('id', friendIds)?.order('current_streak', { ascending: false })?.limit(limit);
+      const { data: profiles, error } = await supabase?.from('user_profiles')?.select('id, full_name, avatar_url, current_streak, longest_streak')?.in('id', friendIds)?.order('current_streak', { ascending: false })?.limit(limit);
 
       if (error) throw error;
 
@@ -141,10 +138,10 @@ class SocialFeedService {
   async addReaction(activityId, userId, reactionType) {
     try {
       const { data, error } = await supabase?.from('activity_reactions')?.insert({
-          activity_id: activityId,
-          user_id: userId,
-          reaction_type: reactionType
-        })?.select()?.single();
+        activity_id: activityId,
+        user_id: userId,
+        reaction_type: reactionType
+      })?.select()?.single();
 
       if (error) throw error;
 
@@ -179,6 +176,8 @@ class SocialFeedService {
    */
   async getReactions(activityIds) {
     try {
+      if (!activityIds || activityIds.length === 0) return {};
+
       const { data, error } = await supabase?.from('activity_reactions')?.select('*')?.in('activity_id', activityIds);
 
       if (error) throw error;
@@ -209,14 +208,13 @@ class SocialFeedService {
   async addComment(activityId, userId, content) {
     try {
       const { data, error } = await supabase?.from('activity_comments')?.insert({
-          activity_id: activityId,
-          user_id: userId,
-          content: content
-        })?.select(`
+        activity_id: activityId,
+        user_id: userId,
+        content: content
+      })?.select(`
           *,
-          user_profiles!activity_comments_user_id_fkey (
+          user_profiles (
             id,
-            username,
             full_name,
             avatar_url
           )
@@ -240,9 +238,8 @@ class SocialFeedService {
     try {
       const { data, error } = await supabase?.from('activity_comments')?.select(`
           *,
-          user_profiles!activity_comments_user_id_fkey (
+          user_profiles (
             id,
-            username,
             full_name,
             avatar_url
           )
@@ -265,34 +262,33 @@ class SocialFeedService {
    */
   subscribeFriendActivities(userId, callback) {
     const channel = supabase?.channel('friend_activities')?.on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'activities'
-        },
-        async (payload) => {
-          // Check if the activity is from a friend
-          const { data: friendship } = await supabase?.from('friendships')?.select('id')?.eq('user_id', userId)?.eq('friend_id', payload?.new?.user_id)?.eq('status', 'accepted')?.single();
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'activity_logs'
+      },
+      async (payload) => {
+        // Check if the activity is from a friend
+        const { data: friendship } = await supabase?.from('friendships')?.select('id')?.eq('user_id', userId)?.eq('friend_id', payload?.new?.user_id)?.eq('status', 'accepted')?.single();
 
-          if (friendship) {
-            // Fetch complete activity with user profile
-            const { data: activity } = await supabase?.from('activities')?.select(`
+        if (friendship) {
+          // Fetch complete activity with user profile
+          const { data: activity } = await supabase?.from('activity_logs')?.select(`
                 *,
-                user_profiles!activities_user_id_fkey (
+                user_profiles (
                   id,
-                  username,
                   full_name,
                   avatar_url
                 )
               `)?.eq('id', payload?.new?.id)?.single();
 
-            if (activity) {
-              callback(activity);
-            }
+          if (activity) {
+            callback(activity);
           }
         }
-      )?.subscribe();
+      }
+    )?.subscribe();
 
     return () => {
       supabase?.removeChannel(channel);
@@ -307,34 +303,33 @@ class SocialFeedService {
    */
   subscribeFriendAchievements(userId, callback) {
     const channel = supabase?.channel('friend_achievements')?.on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'achievements'
-        },
-        async (payload) => {
-          // Check if the achievement is from a friend
-          const { data: friendship } = await supabase?.from('friendships')?.select('id')?.eq('user_id', userId)?.eq('friend_id', payload?.new?.user_id)?.eq('status', 'accepted')?.single();
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'achievements'
+      },
+      async (payload) => {
+        // Check if the achievement is from a friend
+        const { data: friendship } = await supabase?.from('friendships')?.select('id')?.eq('user_id', userId)?.eq('friend_id', payload?.new?.user_id)?.eq('status', 'accepted')?.single();
 
-          if (friendship) {
-            // Fetch complete achievement with user profile
-            const { data: achievement } = await supabase?.from('achievements')?.select(`
+        if (friendship) {
+          // Fetch complete achievement with user profile
+          const { data: achievement } = await supabase?.from('achievements')?.select(`
                 *,
-                user_profiles!achievements_user_id_fkey (
+                user_profiles (
                   id,
-                  username,
                   full_name,
                   avatar_url
                 )
               `)?.eq('id', payload?.new?.id)?.single();
 
-            if (achievement) {
-              callback(achievement);
-            }
+          if (achievement) {
+            callback(achievement);
           }
         }
-      )?.subscribe();
+      }
+    )?.subscribe();
 
     return () => {
       supabase?.removeChannel(channel);

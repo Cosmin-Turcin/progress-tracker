@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Users, RefreshCw, Trophy, UserPlus, Globe, Clock, Search } from 'lucide-react';
+import { Users, RefreshCw, Trophy, UserPlus, Globe, Clock, Search, Activity as ActivityIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { friendService } from '../../services/friendService';
 import { realtimeService } from '../../services/realtimeService';
@@ -106,6 +107,13 @@ export default function FriendsLeaderboard() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              to="/social-activity-feed"
+              className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2 font-black text-[10px] tracking-widest uppercase"
+            >
+              <ActivityIcon className="w-4 h-4" />
+              Activity Feed
+            </Link>
             <button
               onClick={handleRefresh}
               disabled={refreshing}

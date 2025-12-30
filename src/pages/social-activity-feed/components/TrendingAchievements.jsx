@@ -1,20 +1,22 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { TrendingUp, Trophy } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 /**
  * TrendingAchievements Component
- * Displays trending achievements among friends
+ * Displays trending achievements among friends with premium styling
  */
 const TrendingAchievements = ({ achievements }) => {
   if (!achievements || achievements?.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="w-5 h-5 text-orange-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Trending Achievements</h3>
+      <div className="p-4 text-center">
+        <div className="flex justify-center mb-3">
+          <div className="p-2 rounded-full bg-muted">
+            <TrendingUp size={16} className="text-muted-foreground" />
+          </div>
         </div>
-        <p className="text-gray-500 text-sm text-center py-4">
+        <p className="text-muted-foreground text-xs font-medium italic">
           No trending achievements yet
         </p>
       </div>
@@ -22,41 +24,58 @@ const TrendingAchievements = ({ achievements }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
-      <div className="flex items-center gap-2 mb-4">
-        <TrendingUp className="w-5 h-5 text-orange-600" />
-        <h3 className="text-lg font-semibold text-gray-900">Trending Achievements</h3>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-orange-500" />
+          <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Trending</h3>
+        </div>
       </div>
+
       <div className="space-y-3">
-        {achievements?.map((achievement) => (
-          <div
-            key={achievement?.id}
-            className="flex items-start gap-3 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200 hover:shadow-md transition-shadow"
+        {achievements?.map((achievement, index) => (
+          <motion.div
+            key={achievement?.id || index}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="group relative p-3 rounded-xl bg-muted/30 hover:bg-muted/50 border border-transparent hover:border-border transition-all cursor-default"
           >
-            <div className="text-3xl">{achievement?.badge_icon || '🏆'}</div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <img
-                  src={achievement?.user_profiles?.avatar_url || '/assets/images/no_image.png'}
-                  alt={`${achievement?.user_profiles?.full_name || 'User'} profile`}
-                  className="w-6 h-6 rounded-full object-cover"
-                />
-                <span className="text-sm font-medium text-gray-900 truncate">
-                  {achievement?.user_profiles?.full_name || achievement?.user_profiles?.username}
-                </span>
+            <div className="flex items-start gap-3">
+              <div className="relative">
+                <div className="text-2xl drop-shadow-sm group-hover:scale-110 transition-transform duration-300">
+                  {achievement?.icon === 'Trophy' ? '🏆' : achievement?.icon === 'Flame' ? '🔥' : achievement?.icon === 'Zap' ? '⚡️' : '🏅'}
+                </div>
               </div>
-              <p className="font-semibold text-gray-900 text-sm mb-1">
-                {achievement?.title}
-              </p>
-              <p className="text-xs text-gray-600 mb-1">
-                {achievement?.description}
-              </p>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <Trophy className="w-3 h-3" />
-                <span>{formatDistanceToNow(new Date(achievement.earned_at), { addSuffix: true })}</span>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <img
+                    src={achievement?.user_profiles?.avatar_url || 'https://ui-avatars.com/api/?name=' + (achievement?.user_profiles?.full_name || 'User')}
+                    alt={achievement?.user_profiles?.full_name}
+                    className="w-4 h-4 rounded-full border border-white"
+                  />
+                  <span className="text-[10px] font-bold text-foreground/70 truncate">
+                    {achievement?.user_profiles?.full_name?.split(' ')[0]}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">•</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {formatDistanceToNow(new Date(achievement.achieved_at || achievement.created_at), { addSuffix: true })}
+                  </span>
+                </div>
+
+                <h4 className="font-bold text-xs text-foreground mb-0.5 line-clamp-1 group-hover:text-primary transition-colors">
+                  {achievement?.title}
+                </h4>
+                <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
+                  {achievement?.description}
+                </p>
               </div>
             </div>
-          </div>
+
+            {/* Hover Indicator */}
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-0 bg-primary group-hover:h-1/2 transition-all duration-300 rounded-full" />
+          </motion.div>
         ))}
       </div>
     </div>
