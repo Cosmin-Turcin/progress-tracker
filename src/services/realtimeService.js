@@ -20,61 +20,61 @@ class RealtimeService {
    */
   subscribeToActivities(userId, { onInsert, onUpdate, onDelete }) {
     const channelName = `activities_${userId}`;
-    
+
     // Remove existing channel if it exists
     if (this.channels?.has(channelName)) {
       this.unsubscribe(channelName);
     }
 
     const channel = supabase?.channel(channelName)?.on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'activity_logs',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('Real-time: Activity inserted', payload);
-          if (onInsert) {
-            // Convert snake_case to camelCase
-            const activity = this._convertToCamelCase(payload?.new);
-            onInsert(activity);
-          }
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'activity_logs',
+        filter: `user_id=eq.${userId}`
+      },
+      (payload) => {
+        console.log('Real-time: Activity inserted', payload);
+        if (onInsert) {
+          // Convert snake_case to camelCase
+          const activity = this._convertToCamelCase(payload?.new);
+          onInsert(activity);
         }
-      )?.on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'activity_logs',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('Real-time: Activity updated', payload);
-          if (onUpdate) {
-            const activity = this._convertToCamelCase(payload?.new);
-            onUpdate(activity);
-          }
+      }
+    )?.on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'activity_logs',
+        filter: `user_id=eq.${userId}`
+      },
+      (payload) => {
+        console.log('Real-time: Activity updated', payload);
+        if (onUpdate) {
+          const activity = this._convertToCamelCase(payload?.new);
+          onUpdate(activity);
         }
-      )?.on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'activity_logs',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('Real-time: Activity deleted', payload);
-          if (onDelete) {
-            const activity = this._convertToCamelCase(payload?.old);
-            onDelete(activity);
-          }
+      }
+    )?.on(
+      'postgres_changes',
+      {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'activity_logs',
+        filter: `user_id=eq.${userId}`
+      },
+      (payload) => {
+        console.log('Real-time: Activity deleted', payload);
+        if (onDelete) {
+          const activity = this._convertToCamelCase(payload?.old);
+          onDelete(activity);
         }
-      )?.subscribe((status) => {
-        console.log('Activity subscription status:', status);
-      });
+      }
+    )?.subscribe((status) => {
+      console.log('Activity subscription status:', status);
+    });
 
     this.channels?.set(channelName, channel);
 
@@ -90,29 +90,29 @@ class RealtimeService {
    */
   subscribeToStatistics(userId, onChange) {
     const channelName = `statistics_${userId}`;
-    
+
     if (this.channels?.has(channelName)) {
       this.unsubscribe(channelName);
     }
 
     const channel = supabase?.channel(channelName)?.on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_statistics',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('Real-time: Statistics changed', payload);
-          if (onChange) {
-            const stats = this._convertToCamelCase(payload?.new);
-            onChange(stats);
-          }
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'user_statistics',
+        filter: `user_id=eq.${userId}`
+      },
+      (payload) => {
+        console.log('Real-time: Statistics changed', payload);
+        if (onChange) {
+          const stats = this._convertToCamelCase(payload?.new);
+          onChange(stats);
         }
-      )?.subscribe((status) => {
-        console.log('Statistics subscription status:', status);
-      });
+      }
+    )?.subscribe((status) => {
+      console.log('Statistics subscription status:', status);
+    });
 
     this.channels?.set(channelName, channel);
     return () => this.unsubscribe(channelName);
@@ -128,59 +128,59 @@ class RealtimeService {
    */
   subscribeToGoals(userId, { onInsert, onUpdate, onDelete }) {
     const channelName = `goals_${userId}`;
-    
+
     if (this.channels?.has(channelName)) {
       this.unsubscribe(channelName);
     }
 
     const channel = supabase?.channel(channelName)?.on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'goals',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('Real-time: Goal inserted', payload);
-          if (onInsert) {
-            const goal = this._convertToCamelCase(payload?.new);
-            onInsert(goal);
-          }
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'goals',
+        filter: `user_id=eq.${userId}`
+      },
+      (payload) => {
+        console.log('Real-time: Goal inserted', payload);
+        if (onInsert) {
+          const goal = this._convertToCamelCase(payload?.new);
+          onInsert(goal);
         }
-      )?.on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'goals',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('Real-time: Goal updated', payload);
-          if (onUpdate) {
-            const goal = this._convertToCamelCase(payload?.new);
-            onUpdate(goal);
-          }
+      }
+    )?.on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'goals',
+        filter: `user_id=eq.${userId}`
+      },
+      (payload) => {
+        console.log('Real-time: Goal updated', payload);
+        if (onUpdate) {
+          const goal = this._convertToCamelCase(payload?.new);
+          onUpdate(goal);
         }
-      )?.on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'goals',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('Real-time: Goal deleted', payload);
-          if (onDelete) {
-            const goal = this._convertToCamelCase(payload?.old);
-            onDelete(goal);
-          }
+      }
+    )?.on(
+      'postgres_changes',
+      {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'goals',
+        filter: `user_id=eq.${userId}`
+      },
+      (payload) => {
+        console.log('Real-time: Goal deleted', payload);
+        if (onDelete) {
+          const goal = this._convertToCamelCase(payload?.old);
+          onDelete(goal);
         }
-      )?.subscribe((status) => {
-        console.log('Goals subscription status:', status);
-      });
+      }
+    )?.subscribe((status) => {
+      console.log('Goals subscription status:', status);
+    });
 
     this.channels?.set(channelName, channel);
     return () => this.unsubscribe(channelName);
@@ -194,29 +194,29 @@ class RealtimeService {
    */
   subscribeToAchievements(userId, onInsert) {
     const channelName = `achievements_${userId}`;
-    
+
     if (this.channels?.has(channelName)) {
       this.unsubscribe(channelName);
     }
 
     const channel = supabase?.channel(channelName)?.on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'achievements',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('Real-time: Achievement unlocked', payload);
-          if (onInsert) {
-            const achievement = this._convertToCamelCase(payload?.new);
-            onInsert(achievement);
-          }
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'achievements',
+        filter: `user_id=eq.${userId}`
+      },
+      (payload) => {
+        console.log('Real-time: Achievement unlocked', payload);
+        if (onInsert) {
+          const achievement = this._convertToCamelCase(payload?.new);
+          onInsert(achievement);
         }
-      )?.subscribe((status) => {
-        console.log('Achievements subscription status:', status);
-      });
+      }
+    )?.subscribe((status) => {
+      console.log('Achievements subscription status:', status);
+    });
 
     this.channels?.set(channelName, channel);
     return () => this.unsubscribe(channelName);
@@ -231,17 +231,17 @@ class RealtimeService {
    */
   subscribeToFriendsActivities(userId, friendIds, onUpdate) {
     const channelName = `friends_activities_${userId}`;
-    
+
     if (this.channels?.has(channelName)) {
       this.unsubscribe(channelName);
     }
 
     // Include current user in the monitoring
     const allUserIds = [userId, ...(friendIds || [])];
-    
+
     if (allUserIds?.length === 0) {
       console.log('No users to subscribe to for friends activities');
-      return () => {};
+      return () => { };
     }
 
     const channel = supabase?.channel(channelName);
@@ -306,51 +306,58 @@ class RealtimeService {
    */
   subscribeToFriendships(userId, onChange) {
     const channelName = `friendships_${userId}`;
-    
+
     if (this.channels?.has(channelName)) {
       this.unsubscribe(channelName);
     }
 
     const channel = supabase?.channel(channelName)?.on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'friendships',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('Real-time: Friendships changed', payload);
-          if (onChange) {
-            onChange({
-              event: payload?.eventType,
-              friendship: this._convertToCamelCase(payload?.new || payload?.old)
-            });
-          }
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'friendships',
+        filter: `user_id=eq.${userId}`
+      },
+      (payload) => {
+        console.log('Real-time: Friendships changed', payload);
+        if (onChange) {
+          onChange({
+            event: payload?.eventType,
+            friendship: this._convertToCamelCase(payload?.new || payload?.old)
+          });
         }
-      )?.on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'friendships',
-          filter: `friend_id=eq.${userId}`
-        },
-        (payload) => {
-          console.log('Real-time: Received friendship request/update', payload);
-          if (onChange) {
-            onChange({
-              event: payload?.eventType,
-              friendship: this._convertToCamelCase(payload?.new || payload?.old)
-            });
-          }
+      }
+    )?.on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'friendships',
+        filter: `friend_id=eq.${userId}`
+      },
+      (payload) => {
+        console.log('Real-time: Received friendship request/update', payload);
+        if (onChange) {
+          onChange({
+            event: payload?.eventType,
+            friendship: this._convertToCamelCase(payload?.new || payload?.old)
+          });
         }
-      )?.subscribe((status) => {
-        console.log('Friendships subscription status:', status);
-      });
+      }
+    )?.subscribe((status) => {
+      console.log('Friendships subscription status:', status);
+    });
 
     this.channels?.set(channelName, channel);
     return () => this.unsubscribe(channelName);
+  }
+
+  /**
+   * Alias for subscribeToFriendships focusing on request notifications
+   */
+  subscribeToFriendRequests(userId, onChange) {
+    return this.subscribeToFriendships(userId, onChange);
   }
 
   /**

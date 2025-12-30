@@ -61,10 +61,10 @@ export const friendService = {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase?.from('friendships')?.insert({
-          user_id: user?.id,
-          friend_id: friendId,
-          status: 'pending'
-        })?.select()?.single();
+        user_id: user?.id,
+        friend_id: friendId,
+        status: 'pending'
+      })?.select()?.single();
 
       if (error) throw error;
 
@@ -246,6 +246,37 @@ export const friendService = {
     }
   },
 
+  // Get global leaderboard
+  async getGlobalLeaderboard(timePeriod = 'all-time', limitCount = 100) {
+    try {
+      const { data: { user } } = await supabase?.auth?.getUser();
+      // user might be null for global list if public (but we are in authenticated app)
+
+      const { data, error } = await supabase?.rpc('get_global_leaderboard', {
+        requesting_user_id: user?.id,
+        time_period: timePeriod,
+        limit_count: limitCount
+      });
+
+      if (error) throw error;
+
+      return data?.map(row => ({
+        userId: row?.user_id,
+        fullName: row?.full_name,
+        avatarUrl: row?.avatar_url,
+        totalPoints: row?.total_points,
+        currentStreak: row?.current_streak,
+        achievementsUnlocked: row?.achievements_unlocked,
+        totalActivities: row?.total_activities,
+        rank: row?.rank,
+        friendshipStatus: row?.friendship_status
+      })) || [];
+    } catch (error) {
+      console.error('Error fetching global leaderboard:', error);
+      throw error;
+    }
+  },
+
   /**
    * Get detailed friend profile information
    * @param {string} friendId - Friend's user ID
@@ -286,8 +317,8 @@ export const friendService = {
 
       // Get mutual friends count
       const { count: mutualCount } = await supabase?.from('friendships')?.select('*', { count: 'only', head: true })?.eq('status', 'accepted')?.or(`user_id.eq.${user?.id},friend_id.eq.${user?.id}`)?.in('friend_id', [
-          supabase?.from('friendships')?.select('friend_id')?.eq('user_id', friendId)?.eq('status', 'accepted')
-        ]);
+        supabase?.from('friendships')?.select('friend_id')?.eq('user_id', friendId)?.eq('status', 'accepted')
+      ]);
 
       return {
         profile,
@@ -322,9 +353,9 @@ export const friendService = {
             achievement_category,
             points_value
           )
-        `)?.eq('user_id', user?.id)?.in('achievement_id', 
-          supabase?.from('user_achievements')?.select('achievement_id')?.eq('user_id', friendId)
-        );
+        `)?.eq('user_id', user?.id)?.in('achievement_id',
+        supabase?.from('user_achievements')?.select('achievement_id')?.eq('user_id', friendId)
+      );
 
       if (error) throw error;
       return data || [];
@@ -347,12 +378,12 @@ export const friendService = {
 
       // Create challenge notification or record
       const { data, error } = await supabase?.from('friend_challenges')?.insert({
-          challenger_id: user?.id,
-          challenged_id: friendId,
-          challenge_type: challengeData?.type,
-          challenge_details: challengeData?.details,
-          status: 'pending'
-        })?.select()?.single();
+        challenger_id: user?.id,
+        challenged_id: friendId,
+        challenge_type: challengeData?.type,
+        challenge_details: challengeData?.details,
+        status: 'pending'
+      })?.select()?.single();
 
       if (error) throw error;
       return data;
@@ -374,11 +405,11 @@ export const friendService = {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase?.from('achievement_reactions')?.insert({
-          user_id: user?.id,
-          achievement_user_id: friendId,
-          achievement_id: achievementId,
-          reaction_type: 'congratulations'
-        })?.select()?.single();
+        user_id: user?.id,
+        achievement_user_id: friendId,
+        achievement_id: achievementId,
+        reaction_type: 'congratulations'
+      })?.select()?.single();
 
       if (error) throw error;
       return data;
