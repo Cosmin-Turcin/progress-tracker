@@ -115,18 +115,19 @@ const HabitConsistencyHub = () => {
     const currentStreak = globalStats?.currentStreak || 0;
     const longestStreak = globalStats?.longestStreak || 0;
 
-    // Calculate weekly completion rate
-    const lastWeekActivities = activitiesData?.filter(a => {
+    // Calculate weekly completion rate using UNIQUE active days
+    const uniqueDaysLastWeek = new Set(activitiesData?.filter(a => {
       const activityDate = new Date(a?.activityDate);
       const weekAgo = new Date();
-      weekAgo?.setDate(weekAgo?.getDate() - 7);
+      weekAgo.setHours(0, 0, 0, 0);
+      weekAgo.setDate(weekAgo.getDate() - 7);
       return activityDate >= weekAgo;
-    });
-    const completionRate = lastWeekActivities?.length > 0
-      ? Math.round((lastWeekActivities?.length / 7) * 100)
-      : 0;
+    }).map(a => new Date(a.activityDate).toDateString()));
 
-    // Calculate habit stability score (based on consistency over time)
+    const activeDaysCount = uniqueDaysLastWeek.size;
+    const completionRate = Math.min(Math.round((activeDaysCount / 7) * 100), 100);
+
+    // Calculate habit stability score (based on unique active days over 30 days)
     const stabilityScore = calculateStabilityScore(activitiesData);
 
     // Calculate missed day recovery rate
@@ -152,9 +153,9 @@ const HabitConsistencyHub = () => {
       {
         title: 'Weekly Completion Rate',
         value: `${completionRate}%`,
-        subtitle: `${lastWeekActivities?.length} of 7 days`,
+        subtitle: `${activeDaysCount} of 7 days`,
         icon: 'Target',
-        trend: { direction: completionRate > 70 ? 'up' : 'down', value: '+12%' },
+        trend: { direction: completionRate > 70 ? 'up' : 'down', value: completionRate > 70 ? '+12%' : '-5%' },
         status: completionRate > 70 ? 'success' : 'warning'
       },
       {
@@ -205,14 +206,15 @@ const HabitConsistencyHub = () => {
   const calculateStabilityScore = (activitiesData) => {
     if (!activitiesData?.length) return 0;
 
-    const last30Days = activitiesData?.filter(a => {
+    const uniqueDaysLast30 = new Set(activitiesData?.filter(a => {
       const activityDate = new Date(a?.activityDate);
       const thirtyDaysAgo = new Date();
-      thirtyDaysAgo?.setDate(thirtyDaysAgo?.getDate() - 30);
+      thirtyDaysAgo.setHours(0, 0, 0, 0);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       return activityDate >= thirtyDaysAgo;
-    });
+    }).map(a => new Date(a.activityDate).toDateString()));
 
-    return Math.min(Math.round((last30Days?.length / 30) * 100), 100);
+    return Math.min(Math.round((uniqueDaysLast30.size / 30) * 100), 100);
   };
 
   const calculateRecoveryRate = (activitiesData) => {
@@ -279,8 +281,10 @@ const HabitConsistencyHub = () => {
 
     const breakdown = Object.entries(habitGroups)?.map(([name, activities], index) => {
       const currentStreak = calculateCurrentStreak(activities);
-      const totalActivities = activities?.length;
-      const consistency = Math.min(Math.round((totalActivities / 30) * 100), 100);
+
+      // Calculate consistency based on UNIQUE active days in last 30 days
+      const uniqueDaysTotal = new Set(activities.map(a => new Date(a.activityDate).toDateString())).size;
+      const consistency = Math.min(Math.round((uniqueDaysTotal / 30) * 100), 100);
 
       return {
         id: index + 1,
