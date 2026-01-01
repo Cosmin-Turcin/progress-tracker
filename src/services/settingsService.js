@@ -38,7 +38,17 @@ export const settingsService = {
               language: 'en',
               autoExport: false,
               privacyMode: false
-            }
+            },
+            quickShortcuts: [
+              { label: "Workout", category: "fitness", icon: "Dumbbell", iconColor: "var(--color-primary)" },
+              { label: "Meditation", category: "mindset", icon: "Brain", iconColor: "var(--color-secondary)" },
+              { label: "Cardio", category: "fitness", icon: "Heart", iconColor: "var(--color-error)" },
+              { label: "Strength", category: "fitness", icon: "Zap", iconColor: "var(--color-accent)" },
+              { label: "Nutrition", category: "nutrition", icon: "Apple", iconColor: "var(--color-success)" },
+              { label: "Focus Session", category: "work", icon: "Target", iconColor: "var(--color-primary)" },
+              { label: "Journalling", category: "mindset", icon: "Book", iconColor: "var(--color-secondary)" },
+              { label: "Other", category: "others", icon: "MoreHorizontal", iconColor: "var(--color-muted-foreground)" }
+            ]
           };
         }
         throw error;
@@ -54,6 +64,7 @@ export const settingsService = {
         } : null,
         notifications: data?.notifications,
         systemPreferences: data?.system_preferences,
+        quickShortcuts: data?.quick_shortcuts || [],
         createdAt: data?.created_at,
         updatedAt: data?.updated_at
       };
@@ -80,6 +91,7 @@ export const settingsService = {
       if (settings?.dailyGoals) dbSettings.daily_goals = settings?.dailyGoals;
       if (settings?.notifications) dbSettings.notifications = settings?.notifications;
       if (settings?.systemPreferences) dbSettings.system_preferences = settings?.systemPreferences;
+      if (settings?.quickShortcuts) dbSettings.quick_shortcuts = settings?.quickShortcuts;
 
       const { data, error } = await supabase
         ?.from('user_settings')
@@ -99,6 +111,7 @@ export const settingsService = {
         } : null,
         notifications: data?.notifications,
         systemPreferences: data?.system_preferences,
+        quickShortcuts: data?.quick_shortcuts || [],
         createdAt: data?.created_at,
         updatedAt: data?.updated_at
       };
@@ -142,6 +155,16 @@ export const settingsService = {
           autoExport: false,
           privacyMode: false
         },
+        quick_shortcuts: [
+          { label: "Workout", category: "fitness", icon: "Dumbbell", iconColor: "var(--color-primary)" },
+          { label: "Meditation", category: "mindset", icon: "Brain", iconColor: "var(--color-secondary)" },
+          { label: "Cardio", category: "fitness", icon: "Heart", iconColor: "var(--color-error)" },
+          { label: "Strength", category: "fitness", icon: "Zap", iconColor: "var(--color-accent)" },
+          { label: "Nutrition", category: "nutrition", icon: "Apple", iconColor: "var(--color-success)" },
+          { label: "Focus Session", category: "work", icon: "Target", iconColor: "var(--color-primary)" },
+          { label: "Journalling", category: "mindset", icon: "Book", iconColor: "var(--color-secondary)" },
+          { label: "Other", category: "others", icon: "MoreHorizontal", iconColor: "var(--color-muted-foreground)" }
+        ],
         updated_at: new Date()?.toISOString()
       };
 
@@ -159,6 +182,7 @@ export const settingsService = {
         } : null,
         notifications: data?.notifications,
         systemPreferences: data?.system_preferences,
+        quickShortcuts: data?.quick_shortcuts || [],
         createdAt: data?.created_at,
         updatedAt: data?.updated_at
       };

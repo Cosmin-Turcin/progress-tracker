@@ -13,6 +13,9 @@ import QuickIntensityModal from './components/QuickIntensityModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useStats } from '../../contexts/StatsContext';
 import { activityService } from '../../services/activityService';
+import ManageShortcutsModal from './components/ManageShortcutsModal';
+import { Settings } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { achievementService } from '../../services/achievementService';
 import { realtimeService } from '../../services/realtimeService';
 import { supabase } from '../../lib/supabase';
@@ -21,7 +24,7 @@ import Header from '../../components/Header';
 export default function DailyActivityDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { dailyPoints, weeklyAverage, dailyGoal, activityPoints, currentStreak, refreshStats } = useStats();
+  const { dailyPoints, weeklyAverage, dailyGoal, activityPoints, currentStreak, refreshStats, quickShortcuts } = useStats();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activities, setActivities] = useState([]);
   const [todayActivities, setTodayActivities] = useState([]);
@@ -38,17 +41,7 @@ export default function DailyActivityDashboard() {
   const [showAchievement, setShowAchievement] = useState(null);
   const [recentAchievements, setRecentAchievements] = useState([]);
   const [quickAddActivity, setQuickAddActivity] = useState(null);
-
-  const quickAddCategories = [
-    { label: "Workout", category: "fitness", icon: "Dumbbell", iconColor: "var(--color-primary)" },
-    { label: "Meditation", category: "mindset", icon: "Brain", iconColor: "var(--color-secondary)" },
-    { label: "Cardio", category: "fitness", icon: "Heart", iconColor: "var(--color-error)" },
-    { label: "Strength", category: "fitness", icon: "Zap", iconColor: "var(--color-accent)" },
-    { label: "Nutrition", category: "nutrition", icon: "Apple", iconColor: "var(--color-success)" },
-    { label: "Focus Session", category: "work", icon: "Target", iconColor: "var(--color-primary)" },
-    { label: "Journalling", category: "mindset", icon: "Book", iconColor: "var(--color-secondary)" },
-    { label: "Other", category: "others", icon: "MoreHorizontal", iconColor: "var(--color-muted-foreground)" }
-  ];
+  const [showManageShortcuts, setShowManageShortcuts] = useState(false);
 
 
   useEffect(() => {
@@ -360,9 +353,18 @@ export default function DailyActivityDashboard() {
 
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-card rounded-lg border border-border p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Quick Add Activity</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-foreground">Quick Add Activity</h3>
+                <button
+                  onClick={() => setShowManageShortcuts(true)}
+                  className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+                  title="Manage Shortcuts"
+                >
+                  <Settings size={16} />
+                </button>
+              </div>
               <div className="space-y-2">
-                {quickAddCategories?.map((cat, index) => (
+                {quickShortcuts?.map((cat, index) => (
                   <QuickAddButton
                     key={index}
                     label={cat?.label}
@@ -458,6 +460,17 @@ export default function DailyActivityDashboard() {
           achievement={showAchievement}
           onClose={() => setShowAchievement(null)}
         />
+
+        {/* Manage Shortcuts Modal */}
+        <AnimatePresence>
+          {showManageShortcuts && (
+            <ManageShortcutsModal
+              shortcuts={quickShortcuts}
+              onClose={() => setShowManageShortcuts(false)}
+              onUpdate={() => refreshStats(currentDate)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -11,6 +11,16 @@ export const StatsProvider = ({ children }) => {
     const [weeklyAverage, setWeeklyAverage] = useState(0);
     const [dailyGoal, setDailyGoal] = useState(200); // Default goal
     const [activityPoints, setActivityPoints] = useState(null);
+    const [quickShortcuts, setQuickShortcuts] = useState([
+        { label: "Workout", category: "fitness", icon: "Dumbbell", iconColor: "var(--color-primary)" },
+        { label: "Meditation", category: "mindset", icon: "Brain", iconColor: "var(--color-secondary)" },
+        { label: "Cardio", category: "fitness", icon: "Heart", iconColor: "var(--color-error)" },
+        { label: "Strength", category: "fitness", icon: "Zap", iconColor: "var(--color-accent)" },
+        { label: "Nutrition", category: "nutrition", icon: "Apple", iconColor: "var(--color-success)" },
+        { label: "Focus Session", category: "work", icon: "Target", iconColor: "var(--color-primary)" },
+        { label: "Journalling", category: "mindset", icon: "Book", iconColor: "var(--color-secondary)" },
+        { label: "Other", category: "others", icon: "MoreHorizontal", iconColor: "var(--color-muted-foreground)" }
+    ]);
     const [currentStreak, setCurrentStreak] = useState(0);
     const [loading, setLoading] = useState(false);
 
@@ -38,6 +48,9 @@ export const StatsProvider = ({ children }) => {
             if (settings) {
                 setDailyGoal(settings?.dailyGoals?.dailyGoal || 200);
                 setActivityPoints(settings?.activityPoints);
+                if (settings?.quickShortcuts) {
+                    setQuickShortcuts(settings?.quickShortcuts);
+                }
             }
         } catch (error) {
             console.error('Error refreshing global stats:', error);
@@ -60,6 +73,7 @@ export const StatsProvider = ({ children }) => {
             weeklyAverage,
             dailyGoal,
             activityPoints,
+            quickShortcuts,
             goalProgress,
             currentStreak,
             loading,
