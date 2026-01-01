@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Trash2, Edit2, Check, ChevronRight } from 'lucide-react';
+import { X, Plus, Trash2, Edit2, Check, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 import AppIcon from '../../../components/AppIcon';
 import { useAuth } from '../../../contexts/AuthContext';
 import { settingsService } from '../../../services/settingsService';
@@ -71,6 +71,16 @@ const ManageShortcutsModal = ({ shortcuts, onClose, onUpdate }) => {
         handleSave(updated);
     };
 
+    const moveShortcut = (index, direction) => {
+        const updated = [...localShortcuts];
+        const newIndex = direction === 'up' ? index - 1 : index + 1;
+        if (newIndex < 0 || newIndex >= updated.length) return;
+
+        [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+        setLocalShortcuts(updated);
+        handleSave(updated);
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -115,15 +125,35 @@ const ManageShortcutsModal = ({ shortcuts, onClose, onUpdate }) => {
                                         <p className="text-[10px] text-muted-foreground uppercase font-medium">{shortcut.category}</p>
                                     </div>
                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex flex-col">
+                                            <button
+                                                onClick={() => moveShortcut(index, 'up')}
+                                                disabled={index === 0}
+                                                className="p-1 rounded-md hover:bg-primary/10 text-primary transition-colors disabled:opacity-30"
+                                                title="Move Up"
+                                            >
+                                                <ChevronUp size={12} />
+                                            </button>
+                                            <button
+                                                onClick={() => moveShortcut(index, 'down')}
+                                                disabled={index === localShortcuts.length - 1}
+                                                className="p-1 rounded-md hover:bg-primary/10 text-primary transition-colors disabled:opacity-30"
+                                                title="Move Down"
+                                            >
+                                                <ChevronDown size={12} />
+                                            </button>
+                                        </div>
                                         <button
                                             onClick={() => startEdit(index)}
                                             className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors"
+                                            title="Edit"
                                         >
                                             <Edit2 size={14} />
                                         </button>
                                         <button
                                             onClick={() => removeShortcut(index)}
                                             className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                                            title="Delete"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -184,8 +214,8 @@ const ManageShortcutsModal = ({ shortcuts, onClose, onUpdate }) => {
                                                         key={cat.id}
                                                         onClick={() => setNewItem({ ...newItem, category: cat.id })}
                                                         className={`px-2 py-2 rounded-lg text-[10px] font-bold transition-all border ${newItem.category === cat.id
-                                                                ? 'bg-primary text-primary-foreground border-primary'
-                                                                : 'bg-card text-muted-foreground border-border hover:border-primary/50'
+                                                            ? 'bg-primary text-primary-foreground border-primary'
+                                                            : 'bg-card text-muted-foreground border-border hover:border-primary/50'
                                                             }`}
                                                     >
                                                         {cat.label}
