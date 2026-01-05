@@ -10,13 +10,14 @@ export const authService = {
     return data;
   },
 
-  async signUp(email, password, fullName) {
+  async signUp(email, password, fullName, username) {
     const { data, error } = await supabase?.auth?.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
+          username: username,
           avatar_url: '',
           role: 'user'
         }
@@ -56,5 +57,20 @@ export const authService = {
 
     if (error) throw error;
     return data;
+  },
+
+  async isUsernameAvailable(username) {
+    if (!username || username.length < 3) return false;
+    const { data, error } = await supabase
+      ?.from('user_profiles')
+      ?.select('username')
+      ?.ilike('username', username)
+      ?.single();
+
+    if (error && error.code === 'PGRST116') {
+      // PGRST116 means no rows found, so username is available
+      return true;
+    }
+    return false;
   }
 };

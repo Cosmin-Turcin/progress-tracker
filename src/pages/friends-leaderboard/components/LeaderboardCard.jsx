@@ -24,7 +24,11 @@ export function LeaderboardCard({ friend, currentUserId, onUpdate }) {
   };
 
   const handleViewProfile = () => {
-    navigate(`/friend-profile-view/${friend?.userId}`);
+    if (friend?.username) {
+      navigate(`/u/${friend.username}`);
+    } else {
+      navigate(`/friend-profile-view/${friend?.userId}`);
+    }
   };
 
   const handleMessage = (e) => {
@@ -33,6 +37,7 @@ export function LeaderboardCard({ friend, currentUserId, onUpdate }) {
       state: {
         friendId: friend?.userId,
         friendName: friend?.fullName || 'Friend',
+        username: friend?.username,
         friendAvatar: friend?.avatarUrl
       }
     });

@@ -17,8 +17,9 @@ import {
   removeFriend
 } from '../../services/friendService';
 
-const FriendProfileView = () => {
-  const { friendId } = useParams();
+const FriendProfileView = ({ resolvedUserId }) => {
+  const { friendId: paramId } = useParams();
+  const friendId = resolvedUserId || paramId;
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -175,7 +176,7 @@ const FriendProfileView = () => {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition whitespace-nowrap ${activeTab === tab.id
-                          ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+                        ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
                         }`}
                     >
                       <tab.icon className="w-5 h-5" />

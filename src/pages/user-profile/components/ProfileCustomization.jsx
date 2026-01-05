@@ -8,6 +8,7 @@ export default function ProfileCustomization({ onClose, onSave }) {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     fullName: profile?.full_name || '',
+    username: profile?.username || '',
     bio: profile?.bio || '',
     avatarUrl: profile?.avatar_url || '',
     coverUrl: profile?.cover_url || ''
@@ -19,15 +20,26 @@ export default function ProfileCustomization({ onClose, onSave }) {
     setError('');
 
     try {
+      // Validate username format
+      const usernameRegex = /^[a-zA-Z0-9_\.]{3,20}$/;
+      if (!usernameRegex.test(formData.username)) {
+        throw new Error('Username must be 3-20 characters and can only contain letters, numbers, underscores, and dots.');
+      }
+
       await updateProfile({
         full_name: formData?.fullName,
+        username: formData?.username?.toLowerCase(),
         bio: formData?.bio,
         avatar_url: formData?.avatarUrl,
         cover_url: formData?.coverUrl
       });
       onSave();
     } catch (err) {
-      setError(err?.message || 'Failed to update profile');
+      if (err?.message?.includes('duplicate key value violates unique constraint')) {
+        setError('This username is already taken. Please try another one.');
+      } else {
+        setError(err?.message || 'Failed to update profile');
+      }
     } finally {
       setSaving(false);
     }
@@ -65,6 +77,25 @@ export default function ProfileCustomization({ onClose, onSave }) {
               placeholder="Enter your full name"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Username
+            </label>
+            <input
+              type="text"
+              value={formData?.username}
+              onChange={(e) => setFormData({ ...formData, username: e?.target?.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              placeholder="username"
+              required
+              minLength={3}
+              maxLength={20}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              3-20 characters (letters, numbers, underscores, and dots only)
+            </p>
           </div>
 
           <div>

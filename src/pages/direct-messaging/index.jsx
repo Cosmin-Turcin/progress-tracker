@@ -22,10 +22,10 @@ const DirectMessaging = () => {
   const { friendId: routeFriendId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Get friend data from navigation state or route params
   const [selectedFriend, setSelectedFriend] = useState(null);
-  
+
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
@@ -43,6 +43,7 @@ const DirectMessaging = () => {
       setSelectedFriend({
         id: location?.state?.friendId,
         name: location?.state?.friendName || 'Friend',
+        username: location?.state?.username,
         avatar: location?.state?.friendAvatar
       });
     } else if (routeFriendId) {
@@ -63,6 +64,7 @@ const DirectMessaging = () => {
         setSelectedFriend({
           id: friendProfile?.profile?.user_id || friendId,
           name: friendProfile?.profile?.display_name || friendProfile?.profile?.full_name || 'Friend',
+          username: friendProfile?.profile?.username,
           avatar: friendProfile?.profile?.avatar_url
         });
       } else {
@@ -137,7 +139,7 @@ const DirectMessaging = () => {
           return [...prev, newMessage];
         });
         scrollToBottom();
-        
+
         // Mark as read if not own message
         if (newMessage?.sender_id !== conversation?.friendId) {
           markMessagesAsRead(conversation?.id);
@@ -161,9 +163,9 @@ const DirectMessaging = () => {
             prev?.map(msg =>
               msg?.id === update?.data?.message_id
                 ? {
-                    ...msg,
-                    reactions: [...(msg?.reactions || []), update?.data]
-                  }
+                  ...msg,
+                  reactions: [...(msg?.reactions || []), update?.data]
+                }
                 : msg
             )
           );
@@ -172,9 +174,9 @@ const DirectMessaging = () => {
             prev?.map(msg =>
               msg?.id === update?.data?.message_id
                 ? {
-                    ...msg,
-                    reactions: msg?.reactions?.filter(r => r?.id !== update?.data?.id) || []
-                  }
+                  ...msg,
+                  reactions: msg?.reactions?.filter(r => r?.id !== update?.data?.id) || []
+                }
                 : msg
             )
           );

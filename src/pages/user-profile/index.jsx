@@ -17,8 +17,9 @@ import FriendRequestPanel from './components/FriendRequestPanel';
 import ProfileCustomization from './components/ProfileCustomization';
 import ProfessionalTab from './components/ProfessionalTab';
 
-export default function UserProfile() {
+export default function UserProfile({ resolvedUserId }) {
   const { user, profile } = useAuth();
+  const userId = resolvedUserId || user?.id;
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -37,22 +38,18 @@ export default function UserProfile() {
 
   useEffect(() => {
     loadProfileData();
-  }, [user]);
+  }, [userId]);
 
   // Set up real-time subscriptions for instant updates
   useEffect(() => {
-    if (!user?.id) return;
-
-    console.log('Setting up real-time subscriptions for user profile');
-
     // Subscribe to user statistics changes (streaks)
-    const unsubStats = realtimeService?.subscribeToStatistics(user?.id, (stats) => {
+    const unsubStats = realtimeService?.subscribeToStatistics(userId, (stats) => {
       console.log('Real-time: Statistics updated', stats);
       setStatistics(stats);
     });
 
     // Subscribe to achievements
-    const unsubAchievements = realtimeService?.subscribeToAchievements(user?.id, (achievement) => {
+    const unsubAchievements = realtimeService?.subscribeToAchievements(userId, (achievement) => {
       console.log('Real-time: New achievement unlocked!', achievement);
       setAchievements(prev => [achievement, ...(prev || [])]);
       // Show notification
@@ -60,7 +57,7 @@ export default function UserProfile() {
     });
 
     // Subscribe to activities
-    const unsubActivities = realtimeService?.subscribeToActivities(user?.id, {
+    const unsubActivities = realtimeService?.subscribeToActivities(userId, {
       onInsert: (activity) => {
         console.log('Real-time: New activity logged', activity);
         setRecentActivities(prev => [activity, ...(prev || [])]?.slice(0, 10));
@@ -80,7 +77,7 @@ export default function UserProfile() {
     });
 
     // Subscribe to friendships
-    const unsubFriendships = realtimeService?.subscribeToFriendships(user?.id, (update) => {
+    const unsubFriendships = realtimeService?.subscribeToFriendships(userId, (update) => {
       console.log('Real-time: Friendships changed', update);
       loadProfileData(); // Refresh friend data
     });
@@ -92,10 +89,10 @@ export default function UserProfile() {
       if (unsubActivities) unsubActivities();
       if (unsubFriendships) unsubFriendships();
     };
-  }, [user?.id]);
+  }, [userId]);
 
   const loadProfileData = async () => {
-    if (!user?.id) {
+    if (!userId) {
       setLoading(false);
       return;
     }
@@ -105,10 +102,10 @@ export default function UserProfile() {
 
     try {
       const [stats, achievementsList, activities, requests, friendsList] = await Promise.all([
-        authService?.getStatistics(user?.id),
+        authService?.getStatistics(userId),
         achievementService?.getAll(),
         activityService?.getByDateRange(
-          user?.id,
+          userId,
           new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
           new Date()
         ),

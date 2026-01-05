@@ -7,16 +7,32 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
+  const validateUsername = (value) => {
+    const regex = /^[a-zA-Z0-9_\.]{3,20}$/;
+    if (!regex.test(value)) {
+      setUsernameError('3-20 characters, alphanumeric, underscores or dots only');
+      return false;
+    }
+    setUsernameError('');
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e?.preventDefault();
     setError('');
+
+    if (!validateUsername(username)) {
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -31,7 +47,7 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      await signUp(email, password, fullName);
+      await signUp(email, password, fullName, username);
       setSuccess(true);
       setTimeout(() => navigate('/signin'), 3000);
     } catch (err) {
@@ -81,6 +97,30 @@ export default function SignUp() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    const val = e?.target?.value?.toLowerCase()?.trim();
+                    setUsername(val);
+                    validateUsername(val);
+                  }}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${usernameError ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                  placeholder="Choose a unique username"
+                  required
+                />
+              </div>
+              {usernameError && (
+                <p className="mt-1 text-xs text-red-600 font-medium">{usernameError}</p>
+              )}
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name

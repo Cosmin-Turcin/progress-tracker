@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Mail, Lock, LogIn, AlertCircle, Copy, Check } from 'lucide-react';
+import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [copiedCredential, setCopiedCredential] = useState(null);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
@@ -26,17 +25,6 @@ export default function SignIn() {
       setLoading(false);
     }
   };
-
-  const copyToClipboard = (text, type) => {
-    navigator.clipboard?.writeText(text);
-    setCopiedCredential(type);
-    setTimeout(() => setCopiedCredential(null), 2000);
-  };
-
-  const demoCredentials = [
-    { email: 'demo@progresstracker.com', password: 'demo123', label: 'Demo User' },
-    { email: 'test@progresstracker.com', password: 'test123', label: 'Test User' }
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -114,47 +102,6 @@ export default function SignIn() {
                 Sign Up
               </Link>
             </p>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 text-center">Demo Credentials</h3>
-            <div className="space-y-2">
-              {demoCredentials?.map((cred, index) => (
-                <div key={index} className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs font-medium text-gray-600 mb-1">{cred?.label}</p>
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-sm text-gray-700 font-mono">{cred?.email}</span>
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(cred?.email, `email-${index}`)}
-                      className="p-1 hover:bg-gray-200 rounded transition"
-                      title="Copy email"
-                    >
-                      {copiedCredential === `email-${index}` ? (
-                        <Check className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-gray-500" />
-                      )}
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm text-gray-700 font-mono">{cred?.password}</span>
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(cred?.password, `password-${index}`)}
-                      className="p-1 hover:bg-gray-200 rounded transition"
-                      title="Copy password"
-                    >
-                      {copiedCredential === `password-${index}` ? (
-                        <Check className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-gray-500" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>

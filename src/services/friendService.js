@@ -38,13 +38,14 @@ export const friendService = {
       const { data: { user } } = await supabase?.auth?.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase?.from('user_profiles')?.select('id, full_name, email, avatar_url')?.ilike('full_name', `%${query}%`)?.neq('id', user?.id)?.limit(10);
+      const { data, error } = await supabase?.from('user_profiles')?.select('id, full_name, email, avatar_url, username')?.ilike('full_name', `%${query}%`)?.neq('id', user?.id)?.limit(10);
 
       if (error) throw error;
 
       return data?.map(profile => ({
         id: profile?.id,
         fullName: profile?.full_name,
+        username: profile?.username,
         email: profile?.email,
         avatarUrl: profile?.avatar_url
       })) || [];
@@ -144,6 +145,7 @@ export const friendService = {
           user_profiles!friendships_user_id_fkey (
             id,
             full_name,
+            username,
             email,
             avatar_url
           )
@@ -163,6 +165,7 @@ export const friendService = {
         requester: {
           id: request?.user_profiles?.id,
           fullName: request?.user_profiles?.full_name,
+          username: request?.user_profiles?.username,
           email: request?.user_profiles?.email,
           avatarUrl: request?.user_profiles?.avatar_url
         }
@@ -189,6 +192,7 @@ export const friendService = {
           user_profiles!friendships_friend_id_fkey (
             id,
             full_name,
+            username,
             email,
             avatar_url
           )
@@ -204,6 +208,7 @@ export const friendService = {
         friend: {
           id: friendship?.user_profiles?.id,
           fullName: friendship?.user_profiles?.full_name,
+          username: friendship?.user_profiles?.username,
           email: friendship?.user_profiles?.email,
           avatarUrl: friendship?.user_profiles?.avatar_url
         },
@@ -232,6 +237,7 @@ export const friendService = {
       return data?.map(row => ({
         userId: row?.user_id,
         fullName: row?.full_name,
+        username: row?.username,
         avatarUrl: row?.avatar_url,
         totalPoints: row?.total_points,
         currentStreak: row?.current_streak,
@@ -263,6 +269,7 @@ export const friendService = {
       return data?.map(row => ({
         userId: row?.user_id,
         fullName: row?.full_name,
+        username: row?.username,
         avatarUrl: row?.avatar_url,
         totalPoints: row?.total_points,
         currentStreak: row?.current_streak,
@@ -315,37 +322,44 @@ export const friendService = {
       if (!user) throw new Error('Not authenticated');
 
       // Get friend's profile
-      const { data: profile, error: profileError } = await supabase?.from('user_profiles')?.select('*')?.eq('user_id', friendId)?.single();
+      const { data: profile, error: profileError } = await supabase?.from('user_profiles')?.select('*')?.eq('id', friendId)?.single();
 
       if (profileError) throw profileError;
 
       // Get friendship details
-      const { data: friendship, error: friendshipError } = await supabase?.from('friendships')?.select('*')?.or(`and(user_id.eq.${user?.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user?.id})`)?.eq('status', 'accepted')?.single();
+      const { data: friendshipData, error: friendshipError } = await supabase
+        ?.from('friendships')
+        ?.select('*')
+        ?.or(`and(user_id.eq.${user?.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user?.id})`)
+        ?.eq('status', 'accepted')
+        ?.limit(1);
 
       if (friendshipError) throw friendshipError;
+      const friendship = friendshipData?.[0];
 
       // Get friend's statistics
-      const { data: activityStats } = await supabase?.rpc('get_user_leaderboard_stats', { target_user_id: friendId });
+      const { data: activityStats } = await supabase?.rpc('get_user_ranking_stats', { target_user_id: friendId });
 
       // Get friend's recent achievements
-      const { data: achievements } = await supabase?.from('user_achievements')?.select(`
-          *,
-          achievements (
-            achievement_name,
-            achievement_description,
-            achievement_icon,
-            achievement_category,
-            points_value
-          )
-        `)?.eq('user_id', friendId)?.order('unlocked_at', { ascending: false })?.limit(10);
+      const { data: achievements } = await supabase?.from('achievements')
+        ?.select('*')
+        ?.eq('user_id', friendId)
+        ?.order('achieved_at', { ascending: false })
+        ?.limit(10);
 
       // Get friend's recent activities
-      const { data: activities } = await supabase?.from('activity_logs')?.select('*')?.eq('user_id', friendId)?.order('completed_at', { ascending: false })?.limit(20);
+      const { data: activities } = await supabase?.from('activity_logs')?.select('*')?.eq('user_id', friendId)?.order('activity_date', { ascending: false })?.order('activity_time', { ascending: false })?.limit(20);
 
       // Get mutual friends count
-      const { count: mutualCount } = await supabase?.from('friendships')?.select('*', { count: 'only', head: true })?.eq('status', 'accepted')?.or(`user_id.eq.${user?.id},friend_id.eq.${user?.id}`)?.in('friend_id', [
-        supabase?.from('friendships')?.select('friend_id')?.eq('user_id', friendId)?.eq('status', 'accepted')
-      ]);
+      const { data: friendFriendships } = await supabase?.from('friendships')?.select('friend_id, user_id')?.filter('status', 'eq', 'accepted')?.or(`user_id.eq.${friendId},friend_id.eq.${friendId}`);
+
+      const friendIds = friendFriendships?.map(f => f.user_id === friendId ? f.friend_id : f.user_id) || [];
+
+      const { count: mutualCount } = await supabase?.from('friendships')
+        ?.select('*', { count: 'only', head: true })
+        ?.eq('status', 'accepted')
+        ?.or(`user_id.eq.${user?.id},friend_id.eq.${user?.id}`)
+        ?.in('friend_id', friendIds);
 
       return {
         profile,
@@ -371,18 +385,13 @@ export const friendService = {
       const { data: { user } } = await supabase?.auth?.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase?.from('user_achievements')?.select(`
-          achievement_id,
-          achievements (
-            achievement_name,
-            achievement_description,
-            achievement_icon,
-            achievement_category,
-            points_value
-          )
-        `)?.eq('user_id', user?.id)?.in('achievement_id',
-        supabase?.from('user_achievements')?.select('achievement_id')?.eq('user_id', friendId)
-      );
+      const { data: friendAchievements } = await supabase?.from('achievements')?.select('achievement_type')?.eq('user_id', friendId);
+      const achievementTypes = friendAchievements?.map(a => a.achievement_type) || [];
+
+      const { data, error } = await supabase?.from('achievements')
+        ?.select('*')
+        ?.eq('user_id', user?.id)
+        ?.in('achievement_type', achievementTypes);
 
       if (error) throw error;
       return data || [];
@@ -444,40 +453,34 @@ export const friendService = {
       console.error('Error congratulating friend:', error);
       throw error;
     }
+  },
+
+  /**
+   * Get profile by username
+   * @param {string} username - User's unique username
+   * @returns {Promise<Object>} User profile
+   */
+  async getProfileByUsername(username) {
+    try {
+      const { data, error } = await supabase
+        ?.from('user_profiles')
+        ?.select('*')
+        ?.ilike('username', username)
+        ?.single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching profile by username:', error);
+      throw error;
+    }
   }
 };
-function getFriendProfile(...args) {
-  // eslint-disable-next-line no-console
-  console.warn('Placeholder: getFriendProfile is not implemented yet.', args);
-  return null;
-}
 
-export { getFriendProfile };
-function getSharedAchievements(...args) {
-  // eslint-disable-next-line no-console
-  console.warn('Placeholder: getSharedAchievements is not implemented yet.', args);
-  return null;
-}
-
-export { getSharedAchievements };
-function sendChallenge(...args) {
-  // eslint-disable-next-line no-console
-  console.warn('Placeholder: sendChallenge is not implemented yet.', args);
-  return null;
-}
-
-export { sendChallenge };
-function congratulateFriend(...args) {
-  // eslint-disable-next-line no-console
-  console.warn('Placeholder: congratulateFriend is not implemented yet.', args);
-  return null;
-}
-
-export { congratulateFriend };
-function removeFriend(...args) {
-  // eslint-disable-next-line no-console
-  console.warn('Placeholder: removeFriend is not implemented yet.', args);
-  return null;
-}
-
-export { removeFriend };
+// Re-export methods for convenience as requested by existing codebase patterns
+export const getFriendProfile = friendService.getFriendProfile;
+export const getSharedAchievements = friendService.getSharedAchievements;
+export const sendChallenge = friendService.sendChallenge;
+export const congratulateFriend = friendService.congratulateFriend;
+export const removeFriend = friendService.removeFriend;
+export const getProfileByUsername = friendService.getProfileByUsername;

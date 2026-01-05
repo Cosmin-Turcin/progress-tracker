@@ -17,6 +17,7 @@ import UserProfile from './pages/user-profile';
 import FriendProfileView from "pages/friend-profile-view";
 import SocialActivityFeed from 'pages/social-activity-feed';
 import DirectMessaging from "pages/direct-messaging";
+import ProfileResolver from './pages/profile-resolver';
 
 function Routes() {
   return (
@@ -40,6 +41,7 @@ function Routes() {
             }
           />
           <Route path="/friend-profile-view/:friendId" element={<FriendProfileView />} />
+          <Route path="/u/:username" element={<ProfileResolver />} />
 
           <Route
             path="/social-activity-feed"

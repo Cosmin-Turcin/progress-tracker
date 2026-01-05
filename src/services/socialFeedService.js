@@ -43,6 +43,7 @@ class SocialFeedService {
           user_profiles!activity_logs_user_id_fkey (
             id,
             full_name,
+            username,
             avatar_url
           )
         `)
@@ -67,6 +68,7 @@ class SocialFeedService {
             user_profiles (
               id,
               full_name,
+              username,
               avatar_url
             )
           `)
@@ -137,6 +139,7 @@ class SocialFeedService {
           user_profiles!achievements_user_id_fkey (
             id,
             full_name,
+            username,
             avatar_url
           )
         `)
@@ -154,6 +157,7 @@ class SocialFeedService {
             user_profiles (
               id,
               full_name,
+              username,
               avatar_url
             )
           `)
@@ -200,7 +204,7 @@ class SocialFeedService {
 
       const { data: profiles, error } = await supabase
         ?.from('user_profiles')
-        ?.select('id, full_name, avatar_url, current_streak, longest_streak')
+        ?.select('id, full_name, username, avatar_url, current_streak, longest_streak')
         ?.in('id', friendIds)
         ?.order('current_streak', { ascending: false })
         ?.limit(limit);
@@ -302,6 +306,7 @@ class SocialFeedService {
           user_profiles (
             id,
             full_name,
+            username,
             avatar_url
           )
         `)?.single();
@@ -327,6 +332,7 @@ class SocialFeedService {
           user_profiles (
             id,
             full_name,
+            username,
             avatar_url
           )
         `)?.eq('activity_id', activityId)?.order('created_at', { ascending: true });

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -30,6 +31,7 @@ const ActivityCard = ({
   onComment,
   onShare
 }) => {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -91,7 +93,14 @@ const ActivityCard = ({
             <img
               src={activity?.user_profiles?.avatar_url || 'https://ui-avatars.com/api/?name=' + (activity?.user_profiles?.full_name || 'User')}
               alt={activity?.user_profiles?.full_name}
-              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm cursor-pointer"
+              onClick={() => {
+                if (activity?.user_profiles?.username) {
+                  navigate(`/u/${activity.user_profiles.username}`);
+                } else {
+                  navigate(`/friend-profile-view/${activity?.user_profiles?.id}`);
+                }
+              }}
             />
             <div className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-white shadow-subtle ${config.color}`}>
               <Icon size={12} strokeWidth={2.5} />
@@ -100,7 +109,16 @@ const ActivityCard = ({
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="font-semibold text-foreground truncate">
+              <h3
+                className="font-semibold text-foreground truncate cursor-pointer hover:text-primary transition-colors"
+                onClick={() => {
+                  if (activity?.user_profiles?.username) {
+                    navigate(`/u/${activity.user_profiles.username}`);
+                  } else {
+                    navigate(`/friend-profile-view/${activity?.user_profiles?.id}`);
+                  }
+                }}
+              >
                 {activity?.user_profiles?.full_name || 'Anonymous User'}
               </h3>
               {activity?.points > 0 && (
@@ -268,7 +286,7 @@ const ActivityCard = ({
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </motion.div >
   );
 };
 

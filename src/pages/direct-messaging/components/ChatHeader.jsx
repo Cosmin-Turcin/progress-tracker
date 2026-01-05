@@ -29,7 +29,11 @@ const ChatHeader = ({ friend, conversationId, isMuted, isArchived }) => {
   };
 
   const handleViewProfile = () => {
-    navigate(`/friend-profile-view?friendId=${friend?.user_id || friend?.id}`);
+    if (friend?.username) {
+      navigate(`/u/${friend.username}`);
+    } else {
+      navigate(`/friend-profile-view/${friend?.user_id || friend?.id}`);
+    }
     setShowMenu(false);
   };
 

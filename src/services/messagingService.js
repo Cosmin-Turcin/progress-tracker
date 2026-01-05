@@ -53,11 +53,11 @@ export const getUserConversations = async () => {
     // Get friend profiles for each conversation
     const conversationsWithProfiles = await Promise.all(
       data?.map(async (conversation) => {
-        const friendId = conversation?.user1_id === user?.id 
-          ? conversation?.user2_id 
+        const friendId = conversation?.user1_id === user?.id
+          ? conversation?.user2_id
           : conversation?.user1_id;
 
-        const { data: profile } = await supabase?.from('user_profiles')?.select('full_name, avatar_url')?.eq('id', friendId)?.single();
+        const { data: profile } = await supabase?.from('user_profiles')?.select('full_name, username, avatar_url')?.eq('id', friendId)?.single();
 
         return {
           ...conversation,
@@ -89,7 +89,7 @@ export const getConversationDetails = async (conversationId) => {
 
     // Get friend profile
     const friendId = data?.user1_id === user?.id ? data?.user2_id : data?.user1_id;
-    const { data: friend } = await supabase?.from('user_profiles')?.select('full_name, avatar_url')?.eq('id', friendId)?.single();
+    const { data: friend } = await supabase?.from('user_profiles')?.select('full_name, username, avatar_url')?.eq('id', friendId)?.single();
 
     return {
       ...data,
@@ -143,7 +143,7 @@ export const getMessages = async (conversationId, limit = 50, offset = 0) => {
   try {
     const { data, error } = await supabase?.from('messages')?.select(`
         *,
-        sender:user_profiles!sender_id(full_name, avatar_url),
+        sender:user_profiles!sender_id(full_name, username, avatar_url),
         reactions:message_reactions(emoji, user_id)
       `)?.eq('conversation_id', conversationId)?.order('created_at', { ascending: false })?.range(offset, offset + limit - 1);
 
@@ -224,11 +224,11 @@ export const deleteMessage = async (messageId) => {
  */
 export const editMessage = async (messageId, newContent) => {
   try {
-    const { data, error } = await supabase?.from('messages')?.update({ 
-        content: newContent, 
-        is_edited: true, 
-        edited_at: new Date()?.toISOString() 
-      })?.eq('id', messageId)?.select()?.single();
+    const { data, error } = await supabase?.from('messages')?.update({
+      content: newContent,
+      is_edited: true,
+      edited_at: new Date()?.toISOString()
+    })?.eq('id', messageId)?.select()?.single();
 
     if (error) throw error;
     return data;
@@ -251,10 +251,10 @@ export const addReaction = async (messageId, emoji) => {
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase?.from('message_reactions')?.insert({
-        message_id: messageId,
-        user_id: user?.id,
-        emoji
-      })?.select()?.single();
+      message_id: messageId,
+      user_id: user?.id,
+      emoji
+    })?.select()?.single();
 
     if (error) throw error;
     return data;
@@ -345,23 +345,23 @@ export const getTypingUsers = async (conversationId) => {
  */
 export const subscribeToMessages = (conversationId, callback) => {
   return supabase?.channel(`messages:${conversationId}`)?.on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${conversationId}`
-      },
-      async (payload) => {
-        // Fetch complete message with sender info
-        const { data } = await supabase?.from('messages')?.select(`
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'messages',
+      filter: `conversation_id=eq.${conversationId}`
+    },
+    async (payload) => {
+      // Fetch complete message with sender info
+      const { data } = await supabase?.from('messages')?.select(`
             *,
-            sender:user_profiles!sender_id(full_name, avatar_url)
+            sender:user_profiles!sender_id(full_name, username, avatar_url)
           `)?.eq('id', payload?.new?.id)?.single();
 
-        callback(data);
-      }
-    )?.subscribe();
+      callback(data);
+    }
+  )?.subscribe();
 };
 
 /**
@@ -369,33 +369,33 @@ export const subscribeToMessages = (conversationId, callback) => {
  */
 export const subscribeToMessageUpdates = (conversationId, callback) => {
   return supabase?.channel(`message-updates:${conversationId}`)?.on(
-      'postgres_changes',
-      {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${conversationId}`
-      },
-      (payload) => callback({ type: 'UPDATE', data: payload?.new })
-    )?.on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'message_reactions',
-        filter: `message_id=in.(SELECT id FROM messages WHERE conversation_id='${conversationId}')`
-      },
-      (payload) => callback({ type: 'REACTION_ADD', data: payload?.new })
-    )?.on(
-      'postgres_changes',
-      {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'message_reactions',
-        filter: `message_id=in.(SELECT id FROM messages WHERE conversation_id='${conversationId}')`
-      },
-      (payload) => callback({ type: 'REACTION_REMOVE', data: payload?.old })
-    )?.subscribe();
+    'postgres_changes',
+    {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'messages',
+      filter: `conversation_id=eq.${conversationId}`
+    },
+    (payload) => callback({ type: 'UPDATE', data: payload?.new })
+  )?.on(
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'message_reactions',
+      filter: `message_id=in.(SELECT id FROM messages WHERE conversation_id='${conversationId}')`
+    },
+    (payload) => callback({ type: 'REACTION_ADD', data: payload?.new })
+  )?.on(
+    'postgres_changes',
+    {
+      event: 'DELETE',
+      schema: 'public',
+      table: 'message_reactions',
+      filter: `message_id=in.(SELECT id FROM messages WHERE conversation_id='${conversationId}')`
+    },
+    (payload) => callback({ type: 'REACTION_REMOVE', data: payload?.old })
+  )?.subscribe();
 };
 
 /**
@@ -403,18 +403,18 @@ export const subscribeToMessageUpdates = (conversationId, callback) => {
  */
 export const subscribeToTyping = (conversationId, callback) => {
   return supabase?.channel(`typing:${conversationId}`)?.on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'typing_indicators',
-        filter: `conversation_id=eq.${conversationId}`
-      },
-      async () => {
-        const typingUsers = await getTypingUsers(conversationId);
-        callback(typingUsers);
-      }
-    )?.subscribe();
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'typing_indicators',
+      filter: `conversation_id=eq.${conversationId}`
+    },
+    async () => {
+      const typingUsers = await getTypingUsers(conversationId);
+      callback(typingUsers);
+    }
+  )?.subscribe();
 };
 
 /**
@@ -422,17 +422,17 @@ export const subscribeToTyping = (conversationId, callback) => {
  */
 export const subscribeToReadReceipts = (conversationId, callback) => {
   return supabase?.channel(`read-receipts:${conversationId}`)?.on(
-      'postgres_changes',
-      {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${conversationId}`
-      },
-      (payload) => {
-        if (payload?.new?.read_at && !payload?.old?.read_at) {
-          callback(payload?.new);
-        }
+    'postgres_changes',
+    {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'messages',
+      filter: `conversation_id=eq.${conversationId}`
+    },
+    (payload) => {
+      if (payload?.new?.read_at && !payload?.old?.read_at) {
+        callback(payload?.new);
       }
-    )?.subscribe();
+    }
+  )?.subscribe();
 };

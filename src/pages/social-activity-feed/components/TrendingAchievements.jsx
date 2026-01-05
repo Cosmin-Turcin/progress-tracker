@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { TrendingUp, Trophy } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -8,6 +9,7 @@ import { motion } from 'framer-motion';
  * Displays trending achievements among friends with premium styling
  */
 const TrendingAchievements = ({ achievements }) => {
+  const navigate = useNavigate();
   if (!achievements || achievements?.length === 0) {
     return (
       <div className="p-4 text-center">
@@ -53,9 +55,25 @@ const TrendingAchievements = ({ achievements }) => {
                   <img
                     src={achievement?.user_profiles?.avatar_url || 'https://ui-avatars.com/api/?name=' + (achievement?.user_profiles?.full_name || 'User')}
                     alt={achievement?.user_profiles?.full_name}
-                    className="w-4 h-4 rounded-full border border-white"
+                    className="w-4 h-4 rounded-full border border-white cursor-pointer hover:scale-110 transition-transform"
+                    onClick={() => {
+                      if (achievement?.user_profiles?.username) {
+                        navigate(`/u/${achievement.user_profiles.username}`);
+                      } else {
+                        navigate(`/friend-profile-view/${achievement?.user_profiles?.id}`);
+                      }
+                    }}
                   />
-                  <span className="text-[10px] font-bold text-foreground/70 truncate">
+                  <span
+                    className="text-[10px] font-bold text-foreground/70 truncate cursor-pointer hover:text-primary transition-colors"
+                    onClick={() => {
+                      if (achievement?.user_profiles?.username) {
+                        navigate(`/u/${achievement.user_profiles.username}`);
+                      } else {
+                        navigate(`/friend-profile-view/${achievement?.user_profiles?.id}`);
+                      }
+                    }}
+                  >
                     {achievement?.user_profiles?.full_name?.split(' ')[0]}
                   </span>
                   <span className="text-[10px] text-muted-foreground">•</span>
