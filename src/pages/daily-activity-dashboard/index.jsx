@@ -24,14 +24,25 @@ import Header from '../../components/Header';
 export default function DailyActivityDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { dailyPoints, weeklyAverage, dailyGoal, activityPoints, currentStreak, refreshStats, quickShortcuts } = useStats();
+  const {
+    dailyPoints,
+    weeklyAverage,
+    dailyGoal,
+    activityPoints,
+    currentStreak,
+    longestStreak,
+    fitnessPoints,
+    mindsetPoints,
+    activitiesCount,
+    comparison,
+    refreshStats,
+    quickShortcuts
+  } = useStats();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activities, setActivities] = useState([]);
   const [todayActivities, setTodayActivities] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
   const [timelineData, setTimelineData] = useState([]);
-  const [fitnessPoints, setFitnessPoints] = useState(0); // Still needed for local display in MetricCard
-  const [mindsetPoints, setMindsetPoints] = useState(0); // Still needed for local display in MetricCard
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -111,20 +122,6 @@ export default function DailyActivityDashboard() {
       if (unsubAchievements) unsubAchievements();
     };
   }, [user?.id, currentDate]);
-
-  // Calculate statistics from activities
-  useEffect(() => {
-    if (todayActivities?.length > 0) {
-      const fitness = todayActivities?.filter(a => a?.category === 'fitness')?.reduce((sum, a) => sum + a?.points, 0);
-      const mindset = todayActivities?.filter(a => a?.category === 'mindset')?.reduce((sum, a) => sum + a?.points, 0);
-
-      setFitnessPoints(fitness || 0);
-      setMindsetPoints(mindset || 0);
-    } else {
-      setFitnessPoints(0);
-      setMindsetPoints(0);
-    }
-  }, [todayActivities]);
 
   const loadDashboardData = async (date) => {
     if (!user?.id) return;
@@ -245,6 +242,28 @@ export default function DailyActivityDashboard() {
     }
   };
 
+  // Helper to calculate trend
+  const calculateTrend = (current, previous) => {
+    if (!previous || previous === 0) return { trend: 'up', value: current > 0 ? `+${current}` : '0' };
+    const diff = current - previous;
+    const percent = Math.round((diff / previous) * 100);
+    return {
+      trend: diff >= 0 ? 'up' : 'down',
+      value: `${diff >= 0 ? '+' : ''}${percent}%`
+    };
+  };
+
+  const fitnessTrend = calculateTrend(fitnessPoints, comparison?.prevFitnessPoints);
+  const mindsetTrend = calculateTrend(mindsetPoints, comparison?.prevMindsetPoints);
+  const activitiesTrend = {
+    trend: (activitiesCount - (comparison?.prevActivitiesCount || 0)) >= 0 ? 'up' : 'down',
+    value: `${activitiesCount - (comparison?.prevActivitiesCount || 0) >= 0 ? '+' : ''}${activitiesCount - (comparison?.prevActivitiesCount || 0)}`
+  };
+  const streakTrend = {
+    trend: 'up',
+    value: currentStreak > 0 && currentStreak === longestStreak ? 'New record' : 'Active'
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -293,8 +312,8 @@ export default function DailyActivityDashboard() {
             subtitle="Today's fitness activities"
             icon="Dumbbell"
             iconColor="var(--color-primary)"
-            trend="up"
-            trendValue="+12%"
+            trend={fitnessTrend.trend}
+            trendValue={fitnessTrend.value}
           />
           <MetricCard
             title="Mindset Points"
@@ -302,17 +321,17 @@ export default function DailyActivityDashboard() {
             subtitle="Today's mindset activities"
             icon="Brain"
             iconColor="var(--color-secondary)"
-            trend="up"
-            trendValue="+8%"
+            trend={mindsetTrend.trend}
+            trendValue={mindsetTrend.value}
           />
           <MetricCard
             title="Activities Completed"
-            value={todayActivities?.length}
+            value={activitiesCount}
             subtitle="Total logged today"
             icon="CheckCircle"
             iconColor="var(--color-success)"
-            trend="up"
-            trendValue="+2"
+            trend={activitiesTrend.trend}
+            trendValue={activitiesTrend.value}
           />
           <MetricCard
             title="Current Streak"
@@ -320,8 +339,8 @@ export default function DailyActivityDashboard() {
             subtitle="Keep it going!"
             icon="Flame"
             iconColor="var(--color-accent)"
-            trend="up"
-            trendValue="New record"
+            trend={streakTrend.trend}
+            trendValue={streakTrend.value}
             onClick={() => navigate('/achievements-badges-gallery')}
           />
         </div>
@@ -347,8 +366,31 @@ export default function DailyActivityDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mb-6 lg:mb-8">
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 space-y-6">
             <TimelineChart data={timelineData} />
+
+            <div className="bg-card rounded-lg border border-border p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-6">Today's Activity Log</h3>
+              {todayActivities?.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">No activities logged for this date. Click Quick Add to get started!</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {todayActivities?.map((activity, index) => (
+                    <ActivityLogCard
+                      key={activity?.id || index}
+                      activity={activity?.activityName}
+                      category={`${activity?.category} - ${activity?.intensity}`}
+                      time={activity?.activityTime}
+                      points={activity?.points}
+                      icon={activity?.icon}
+                      iconColor={activity?.iconColor}
+                      onEdit={() => handleEditActivity(activity)}
+                      onDelete={() => handleDeleteActivity(activity)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="lg:col-span-4 space-y-6">
@@ -423,29 +465,6 @@ export default function DailyActivityDashboard() {
               </div>
             )}
           </div>
-        </div>
-
-        <div className="bg-card rounded-lg border border-border p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-6">Today's Activity Log</h3>
-          {todayActivities?.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No activities logged for this date. Click Quick Add to get started!</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {todayActivities?.map((activity, index) => (
-                <ActivityLogCard
-                  key={activity?.id || index}
-                  activity={activity?.activityName}
-                  category={`${activity?.category} - ${activity?.intensity}`}
-                  time={activity?.activityTime}
-                  points={activity?.points}
-                  icon={activity?.icon}
-                  iconColor={activity?.iconColor}
-                  onEdit={() => handleEditActivity(activity)}
-                  onDelete={() => handleDeleteActivity(activity)}
-                />
-              ))}
-            </div>
-          )}
         </div>
         {/* Quick Intensity Modal */}
         {quickAddActivity && (

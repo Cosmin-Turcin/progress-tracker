@@ -234,15 +234,20 @@ export const activityService = {
    */
   async getStatistics(userId, date = null) {
     try {
-      // 1. Fetch points breakdown for the period (specific date or all time)
-      let query = supabase?.from('activity_logs')?.select('category, points, activity_date')?.eq('user_id', userId);
+      const targetDate = date || new Date();
+      const targetDateStr = formatDate(targetDate);
 
-      if (date) {
-        const dateStr = formatDate(date);
-        query = query?.eq('activity_date', dateStr);
-      }
+      const prevDate = new Date(targetDate);
+      prevDate.setDate(prevDate.getDate() - 1);
+      const prevDateStr = formatDate(prevDate);
 
-      const { data, error } = await query;
+      // 1. Fetch points breakdown for target date and previous date
+      const { data, error } = await supabase
+        ?.from('activity_logs')
+        ?.select('category, points, activity_date')
+        ?.eq('user_id', userId)
+        ?.in('activity_date', [targetDateStr, prevDateStr]);
+
       if (error) throw error;
 
       // 2. Fetch all unique activity dates for streak calculation
@@ -311,45 +316,43 @@ export const activityService = {
 
       const { currentStreak, longestStreak } = calculateStreaks(uniqueDates);
 
-      // Calculate statistics
-      const stats = {
+      // Process today vs yesterday
+      const targetStats = {
         totalPoints: 0,
         fitnessPoints: 0,
         mindsetPoints: 0,
-        nutritionPoints: 0,
-        workPoints: 0,
-        socialPoints: 0,
-        activitiesCount: data?.length || 0,
-        currentStreak,
-        longestStreak
+        activitiesCount: 0
       };
 
-      data?.forEach(activity => {
-        stats.totalPoints += activity?.points;
+      const prevStats = {
+        totalPoints: 0,
+        fitnessPoints: 0,
+        mindsetPoints: 0,
+        activitiesCount: 0
+      };
 
-        switch (activity?.category) {
-          case 'fitness':
-            stats.fitnessPoints += activity?.points;
-            break;
-          case 'mindset':
-            stats.mindsetPoints += activity?.points;
-            break;
-          case 'nutrition':
-            stats.nutritionPoints += activity?.points;
-            break;
-          case 'work':
-            stats.workPoints += activity?.points;
-            break;
-          case 'social':
-            stats.socialPoints += activity?.points;
-            break;
-          case 'others':
-            stats.othersPoints = (stats.othersPoints || 0) + activity?.points;
-            break;
-        }
+      data?.forEach(item => {
+        const isTarget = item.activity_date === targetDateStr;
+        const stats = isTarget ? targetStats : prevStats;
+
+        stats.totalPoints += item.points;
+        stats.activitiesCount++;
+
+        if (item.category === 'fitness') stats.fitnessPoints += item.points;
+        if (item.category === 'mindset') stats.mindsetPoints += item.points;
       });
 
-      return stats;
+      return {
+        ...targetStats,
+        currentStreak,
+        longestStreak,
+        comparison: {
+          prevTotalPoints: prevStats.totalPoints,
+          prevFitnessPoints: prevStats.fitnessPoints,
+          prevMindsetPoints: prevStats.mindsetPoints,
+          prevActivitiesCount: prevStats.activitiesCount
+        }
+      };
     } catch (error) {
       console.error('Error fetching activity statistics:', error);
       throw error;

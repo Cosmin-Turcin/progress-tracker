@@ -22,6 +22,11 @@ export const StatsProvider = ({ children }) => {
         { label: "Other", category: "others", icon: "MoreHorizontal", iconColor: "var(--color-muted-foreground)" }
     ]);
     const [currentStreak, setCurrentStreak] = useState(0);
+    const [longestStreak, setLongestStreak] = useState(0);
+    const [fitnessPoints, setFitnessPoints] = useState(0);
+    const [mindsetPoints, setMindsetPoints] = useState(0);
+    const [activitiesCount, setActivitiesCount] = useState(0);
+    const [comparison, setComparison] = useState(null);
     const [loading, setLoading] = useState(false);
 
     const refreshStats = useCallback(async (date = new Date()) => {
@@ -33,6 +38,11 @@ export const StatsProvider = ({ children }) => {
 
             setDailyPoints(stats?.totalPoints || 0);
             setCurrentStreak(stats?.currentStreak || 0);
+            setLongestStreak(stats?.longestStreak || 0);
+            setFitnessPoints(stats?.fitnessPoints || 0);
+            setMindsetPoints(stats?.mindsetPoints || 0);
+            setActivitiesCount(stats?.activitiesCount || 0);
+            setComparison(stats?.comparison || null);
 
             // Load weekly average
             const endDate = new Date(date);
@@ -76,6 +86,11 @@ export const StatsProvider = ({ children }) => {
             quickShortcuts,
             goalProgress,
             currentStreak,
+            longestStreak,
+            fitnessPoints,
+            mindsetPoints,
+            activitiesCount,
+            comparison,
             loading,
             refreshStats
         }}>
