@@ -152,7 +152,7 @@ const SettingsCustomization = () => {
             <Header />
             {/* Error Alert */}
             {error && (
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3 text-red-800 dark:text-red-200">
                         <span className="text-xl">⚠️</span>
                         <p className="text-sm font-medium">{error}</p>
@@ -166,7 +166,7 @@ const SettingsCustomization = () => {
                 </div>
             )}
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Sidebar Navigation */}
                     <div className="lg:col-span-3">

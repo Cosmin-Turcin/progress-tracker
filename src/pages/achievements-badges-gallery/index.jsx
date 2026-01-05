@@ -154,8 +154,8 @@ export default function AchievementsBadgesGallery() {
         <title>Achievements - Progress Tracker</title>
       </Helmet>
       <Header />
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="max-w-7xl mx-auto">
+      <div className="max-w-screen-2xl mx-auto p-6">
+        <div className="max-w-screen-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center space-x-3 mb-4">

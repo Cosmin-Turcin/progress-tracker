@@ -105,7 +105,7 @@ export default function FriendsLeaderboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="max-w-7xl mx-auto px-4 py-8 md:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 py-8 md:px-8">
         {/* Hub Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>

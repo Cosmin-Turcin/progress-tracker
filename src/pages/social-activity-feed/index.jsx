@@ -203,7 +203,7 @@ const SocialActivityFeed = () => {
 
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Hero */}
         <div className="relative mb-8 p-6 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/10 overflow-hidden">
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -224,8 +224,8 @@ const SocialActivityFeed = () => {
               <button
                 onClick={() => setRealtimeEnabled(!realtimeEnabled)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${realtimeEnabled
-                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-105'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}
               >
                 {realtimeEnabled ? <Bell size={16} /> : <BellOff size={16} />}
