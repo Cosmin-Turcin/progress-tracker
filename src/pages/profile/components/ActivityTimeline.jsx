@@ -1,8 +1,11 @@
-import { Activity, Calendar, Clock, Award } from 'lucide-react';
+import { useState } from 'react';
+import { Activity, Calendar, Clock, Award, ChevronDown, ChevronUp } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import Icon from '../../../components/AppIcon';
 
 export default function ActivityTimeline({ activities, compact = false }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const getIconComponent = (iconName) => {
     const Icon = LucideIcons?.[iconName];
     return Icon || Activity;
@@ -49,6 +52,10 @@ export default function ActivityTimeline({ activities, compact = false }) {
     return acc;
   }, {});
 
+  const allDates = Object.entries(groupedActivities || {});
+  const displayedActivities = isExpanded ? allDates : allDates.slice(0, 3);
+  const hasMore = allDates.length > 3;
+
   return (
     <div className={`space-y-${compact ? '4' : '6'}`}>
       {!compact && (
@@ -76,7 +83,7 @@ export default function ActivityTimeline({ activities, compact = false }) {
         </div>
       ) : (
         <div className={`space-y-${compact ? '6' : '8'}`}>
-          {Object?.entries(groupedActivities || {})?.map(([date, dateActivities]) => (
+          {displayedActivities.map(([date, dateActivities]) => (
             <div key={date} className="relative">
               <div className="sticky top-0 bg-gray-50 z-10 py-2 mb-4">
                 <div className="flex items-center gap-2">
@@ -143,6 +150,25 @@ export default function ActivityTimeline({ activities, compact = false }) {
               </div>
             </div>
           ))}
+
+          {hasMore && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="w-full py-2.5 mt-4 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              {isExpanded ? (
+                <>
+                  Show Less
+                  <ChevronUp className="w-4 h-4" />
+                </>
+              ) : (
+                <>
+                  See More Activity
+                  <ChevronDown className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          )}
         </div>
       )}
     </div>
