@@ -13,11 +13,9 @@ import SignUp from './pages/auth/SignUp';
 import ProtectedRoute from './components/ProtectedRoute';
 import AchievementsBadgesGallery from 'pages/achievements-badges-gallery';
 import FriendsLeaderboard from './pages/friends-leaderboard';
-import UserProfile from './pages/user-profile';
-import FriendProfileView from "pages/friend-profile-view";
+import Profile from './pages/profile';
 import SocialActivityFeed from 'pages/social-activity-feed';
 import DirectMessaging from "pages/direct-messaging";
-import ProfileResolver from './pages/profile-resolver';
 
 function Routes() {
   return (
@@ -30,7 +28,8 @@ function Routes() {
           <Route path="/signup" element={<SignUp />} />
 
           {/* Protected Routes */}
-          <Route path="/user-profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/user-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/achievements-badges-gallery" element={<ProtectedRoute><AchievementsBadgesGallery /></ProtectedRoute>} />
           <Route
             path="/friends-leaderboard"
@@ -40,8 +39,8 @@ function Routes() {
               </ProtectedRoute>
             }
           />
-          <Route path="/friend-profile-view/:friendId" element={<FriendProfileView />} />
-          <Route path="/u/:username" element={<ProfileResolver />} />
+          <Route path="/friend-profile-view/:userId" element={<Profile />} />
+          <Route path="/u/:username" element={<Profile />} />
 
           <Route
             path="/social-activity-feed"

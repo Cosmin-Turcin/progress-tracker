@@ -129,7 +129,7 @@ const Header = () => {
                       </div>
                       <div className="p-1">
                         <Link
-                          to="/user-profile"
+                          to="/profile"
                           onClick={() => setIsProfileOpen(false)}
                           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted transition-colors"
                         >

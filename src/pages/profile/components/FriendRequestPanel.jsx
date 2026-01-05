@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Users, User, Check, X, Search, UserPlus, Mail, AlertCircle } from 'lucide-react';
 import { friendService } from '../../../services/friendService';
 
-export default function FriendRequestPanel({ pendingRequests, friends, onAccept, onDecline }) {
-  const [activeView, setActiveView] = useState('requests');
+export default function FriendRequestPanel({ pendingRequests, friends, onAccept, onDecline, isReadOnly = false }) {
+  const [activeView, setActiveView] = useState(isReadOnly ? 'friends' : 'requests');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -12,7 +12,7 @@ export default function FriendRequestPanel({ pendingRequests, friends, onAccept,
 
   const handleSearch = async (query) => {
     setSearchQuery(query);
-    
+
     if (query?.length < 2) {
       setSearchResults([]);
       return;
@@ -41,11 +41,13 @@ export default function FriendRequestPanel({ pendingRequests, friends, onAccept,
     }
   };
 
-  const views = [
-    { id: 'requests', label: 'Requests', count: pendingRequests?.length || 0 },
-    { id: 'friends', label: 'Friends', count: friends?.length || 0 },
-    { id: 'search', label: 'Find Friends', count: 0 }
-  ];
+  const views = isReadOnly
+    ? [{ id: 'friends', label: 'Friends', count: friends?.length || 0 }]
+    : [
+      { id: 'requests', label: 'Requests', count: pendingRequests?.length || 0 },
+      { id: 'friends', label: 'Friends', count: friends?.length || 0 },
+      { id: 'search', label: 'Find Friends', count: 0 }
+    ];
 
   return (
     <div className="space-y-6">
@@ -66,17 +68,15 @@ export default function FriendRequestPanel({ pendingRequests, friends, onAccept,
           <button
             key={view?.id}
             onClick={() => setActiveView(view?.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
-              activeView === view?.id
-                ? 'bg-blue-50 text-blue-600' :'text-gray-600 hover:bg-gray-50'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${activeView === view?.id
+                ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+              }`}
           >
             {view?.label}
             {view?.count > 0 && (
-              <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                activeView === view?.id
-                  ? 'bg-blue-600 text-white' :'bg-gray-200 text-gray-700'
-              }`}>
+              <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${activeView === view?.id
+                  ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                }`}>
                 {view?.count}
               </span>
             )}

@@ -1,316 +1,388 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { achievementService } from '../../services/achievementService';
+import { activityService } from '../../services/activityService';
+import { friendService } from '../../services/friendService';
 import { authService } from '../../services/authService';
 import { realtimeService } from '../../services/realtimeService';
-import { 
-  User, Mail, Calendar, Award, TrendingUp, Target, 
-  Activity, Edit2, Save, X, LogOut, Loader, AlertCircle 
-} from 'lucide-react';
 import Header from '../../components/Header';
+import {
+  Award, TrendingUp, Activity, Target, Users,
+  Loader, AlertCircle, X, Briefcase, Layout
+} from 'lucide-react';
 
-export default function Profile() {
-  const { user, profile, signOut, updateProfile: updateAuthProfile } = useAuth();
+// Unified Components
+import ProfileHeader from './components/ProfileHeader';
+import ProfileStats from './components/ProfileStats';
+import AchievementShowcase from './components/AchievementShowcase';
+import ActivityTimeline from './components/ActivityTimeline';
+import FriendRequestPanel from './components/FriendRequestPanel';
+import ProfileCustomization from './components/ProfileCustomization';
+import ProfessionalTab from './components/ProfessionalTab';
+import FriendshipStats from './components/FriendshipStats';
+import QuickChallengePanel from './components/QuickChallengePanel';
+import AchievementOverlay from '../../components/ui/AchievementOverlay';
+
+export default function Profile({ resolvedUserId }) {
+  const { userId: paramId, username: paramUsername } = useParams();
+  const { user: currentUser, profile: currentUserProfile } = useAuth();
+
+  // Determine whose profile we are looking at
+  const [targetUserId, setTargetUserId] = useState(resolvedUserId);
+  const isOwnProfile = !targetUserId || targetUserId === currentUser?.id;
+
   const navigate = useNavigate();
-  const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({
-    fullName: '',
-    bio: ''
-  });
-  const [saveLoading, setSaveLoading] = useState(false);
 
+  // Data states
+  const [profileData, setProfileData] = useState(null);
+  const [statistics, setStatistics] = useState(null);
+  const [achievements, setAchievements] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [friends, setFriends] = useState([]);
+  const [friendship, setFriendship] = useState(null);
+  const [sharedAchievements, setSharedAchievements] = useState([]);
+  const [userStats, setUserStats] = useState(null); // Comparison stats
+
+  // UI states
+  const [showCustomization, setShowCustomization] = useState(false);
+  const [showAchievement, setShowAchievement] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // 1. Resolve targetUserId from params if not provided via props
   useEffect(() => {
-    loadUserData();
-  }, [user]);
+    const resolveTarget = async () => {
+      if (resolvedUserId) {
+        setTargetUserId(resolvedUserId);
+        return;
+      }
 
-  // Real-time subscription for statistics updates
+      if (paramUsername) {
+        try {
+          const resolved = await friendService?.getProfileByUsername(paramUsername);
+          if (resolved) {
+            setTargetUserId(resolved.id);
+          } else {
+            setError('User not found');
+            setLoading(false);
+          }
+        } catch (err) {
+          setError('Failed to resolve user');
+          setLoading(false);
+        }
+      } else if (paramId) {
+        setTargetUserId(paramId);
+      } else {
+        // Own profile
+        setTargetUserId(currentUser?.id);
+      }
+    };
+
+    resolveTarget();
+  }, [paramId, paramUsername, resolvedUserId, currentUser]);
+
+  // 2. Load data whenever targetUserId changes
   useEffect(() => {
-    if (!user?.id) return;
+    if (targetUserId) {
+      loadProfileData();
+    }
+  }, [targetUserId]);
 
-    // Subscribe to statistics changes for instant streak/points updates
-    const unsubscribe = realtimeService?.subscribeToStatistics(user?.id, (stats) => {
-      setStatistics({
-        total_activities: stats?.totalActivities,
-        current_streak: stats?.currentStreak,
-        longest_streak: stats?.longestStreak,
-        total_points: stats?.totalPoints,
-        achievements_unlocked: stats?.achievementsUnlocked
-      });
+  // 3. Real-time subscriptions
+  useEffect(() => {
+    if (!targetUserId) return;
+
+    // Subscriptions only for stats, achievements, and activities
+    const unsubStats = realtimeService?.subscribeToStatistics(targetUserId, (stats) => {
+      setStatistics(stats);
     });
 
-    // Cleanup subscription on unmount
+    const unsubAchievements = realtimeService?.subscribeToAchievements(targetUserId, (achievement) => {
+      setAchievements(prev => [achievement, ...(prev || [])]);
+      if (isOwnProfile) setShowAchievement(achievement);
+    });
+
+    const unsubActivities = realtimeService?.subscribeToActivities(targetUserId, {
+      onInsert: (activity) => {
+        setRecentActivities(prev => [activity, ...(prev || [])]?.slice(0, 10));
+      }
+    });
+
     return () => {
-      unsubscribe();
+      if (unsubStats) unsubStats();
+      if (unsubAchievements) unsubAchievements();
+      if (unsubActivities) unsubActivities();
     };
-  }, [user]);
+  }, [targetUserId, isOwnProfile]);
 
-  const loadUserData = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const stats = await authService?.getStatistics(user?.id);
-      setStatistics(stats);
-      setEditForm({
-        fullName: profile?.full_name || '',
-        bio: profile?.bio || ''
-      });
-    } catch (err) {
-      setError(err?.message || 'Failed to load user data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/signin');
-    } catch (err) {
-      setError(err?.message || 'Failed to sign out');
-    }
-  };
-
-  const handleSaveProfile = async () => {
-    setSaveLoading(true);
+  const loadProfileData = async () => {
+    setLoading(true);
     setError('');
 
     try {
-      await updateAuthProfile({
-        full_name: editForm?.fullName,
-        bio: editForm?.bio
-      });
-      setIsEditing(false);
+      if (isOwnProfile) {
+        // Load personal profile data
+        const [stats, achievementsList, activities, requests, friendsList] = await Promise.all([
+          authService?.getStatistics(targetUserId),
+          achievementService?.getAll(),
+          activityService?.getByDateRange(
+            targetUserId,
+            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days
+            new Date()
+          ),
+          friendService?.getPendingRequests(),
+          friendService?.getFriends()
+        ]);
+
+        setProfileData(currentUserProfile);
+        setStatistics(stats);
+        setAchievements(achievementsList || []);
+        setRecentActivities(activities || []);
+        setPendingRequests(requests || []);
+        setFriends(friendsList || []);
+      } else {
+        // Load public profile data
+        const [publicData, shared, currentStats] = await Promise.all([
+          friendService?.getFriendProfile(targetUserId),
+          friendService?.getSharedAchievements(targetUserId),
+          currentUser?.id ? authService?.getStatistics(currentUser.id) : null
+        ]);
+
+        setProfileData(publicData?.profile);
+        setStatistics(publicData?.stats);
+        setFriendship(publicData?.friendship);
+        setAchievements(publicData?.achievements || []);
+        setRecentActivities(publicData?.activities || []);
+        setSharedAchievements(shared || []);
+        setUserStats(currentStats);
+        setFriends(publicData?.friends || []); // Assuming friendship service provides this or just count
+      }
     } catch (err) {
-      setError(err?.message || 'Failed to update profile');
+      console.error('Error loading profile:', err);
+      setError(err?.message || 'Failed to load profile data');
     } finally {
-      setSaveLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const handleAcceptRequest = async (requestId) => {
+    try {
+      await friendService?.acceptFriendRequest(requestId);
+      await loadProfileData();
+    } catch (err) {
+      setError(err?.message || 'Failed to accept friend request');
+    }
+  };
+
+  const handleDeclineRequest = async (requestId) => {
+    try {
+      await friendService?.declineFriendRequest(requestId);
+      await loadProfileData();
+    } catch (err) {
+      setError(err?.message || 'Failed to decline friend request');
+    }
+  };
+
+  const handleUnfriend = async () => {
+    if (!window.confirm(`Are you sure you want to remove ${profileData?.full_name} from your friends?`)) {
+      return;
+    }
+    try {
+      await friendService?.removeFriend(targetUserId);
+      setSuccessMessage('Friend removed successfully');
+      setTimeout(() => navigate('/friends-leaderboard'), 2000);
+    } catch (err) {
+      setError(err?.message || 'Failed to remove friend');
+    }
+  };
+
+  const handleMessage = () => {
+    navigate('/direct-messaging', {
+      state: {
+        friendId: targetUserId,
+        friendName: profileData?.full_name,
+        friendAvatar: profileData?.avatar_url
+      }
+    });
+  };
+
+  const handleSendChallenge = async (challengeData) => {
+    try {
+      await friendService?.sendChallenge(targetUserId, challengeData);
+      setSuccessMessage(`Challenge sent to ${profileData?.full_name}!`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError(err?.message || 'Failed to send challenge');
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading profile...</p>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center p-20">
+          <div className="text-center">
+            <Loader className="w-10 h-10 text-blue-600 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600 font-medium">Loading profile...</p>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Not Authenticated</h2>
-          <p className="text-gray-600 mb-4">Please sign in to view your profile</p>
-          <button
-            onClick={() => navigate('/signin')}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Go to Sign In
-          </button>
-        </div>
-      </div>
-    );
-  }
 
-  const statCards = [
-    { 
-      icon: Activity, 
-      label: 'Total Activities', 
-      value: statistics?.total_activities || 0,
-      color: 'blue',
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-600'
-    },
-    { 
-      icon: TrendingUp, 
-      label: 'Current Streak', 
-      value: `${statistics?.current_streak || 0} days`,
-      color: 'green',
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-600'
-    },
-    { 
-      icon: Target, 
-      label: 'Total Points', 
-      value: statistics?.total_points || 0,
-      color: 'purple',
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-purple-600'
-    },
-    { 
-      icon: Award, 
-      label: 'Achievements', 
-      value: statistics?.achievements_unlocked || 0,
-      color: 'yellow',
-      bgColor: 'bg-yellow-50',
-      iconColor: 'text-yellow-600'
-    }
-  ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 shadow-sm">
             <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-            <p className="text-red-800 text-sm">{error}</p>
+            <div className="flex-1">
+              <p className="text-red-800 text-sm font-medium">{error}</p>
+            </div>
+            <button onClick={() => setError('')} className="text-red-600 hover:text-red-800">
+              <X className="w-5 h-5" />
+            </button>
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
-                  <User className="w-10 h-10 text-blue-600" />
+        {successMessage && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center justify-center shadow-sm">
+            <p className="text-green-800 font-medium">{successMessage}</p>
+          </div>
+        )}
+
+        <ProfileHeader
+          profile={profileData}
+          user={isOwnProfile ? currentUser : { email: 'hidden' }}
+          isOwnProfile={isOwnProfile}
+          friendship={friendship}
+          onCustomize={() => setShowCustomization(true)}
+          onUnfriend={handleUnfriend}
+          onMessage={handleMessage}
+          onChallenge={() => { }} // Remove tab switching logic
+          isUnlogged={!currentUser}
+          friendCount={friends?.length || 0}
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Main Content Area */}
+          <div className="lg:col-span-3 space-y-12">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 space-y-12">
+              {/* Statistics Section */}
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Performance Overview</h3>
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold">{profile?.full_name || 'User'}</h1>
-                  <p className="text-blue-100 flex items-center gap-2 mt-1">
-                    <Mail className="w-4 h-4" />
-                    {user?.email}
-                  </p>
+                <ProfileStats
+                  stats={statistics}
+                  userStats={userStats}
+                  isOwnProfile={isOwnProfile}
+                />
+              </section>
+
+              {/* Achievements Section */}
+              <section className="pt-8 border-t border-gray-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-amber-50 rounded-lg">
+                    <Award className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Achievements Showcase</h3>
                 </div>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition flex items-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </button>
+                <AchievementShowcase
+                  achievements={achievements}
+                  onCongratulate={(id) => {
+                    if (!isOwnProfile) friendService?.congratulateFriend(targetUserId, id);
+                  }}
+                />
+              </section>
+
+              {/* Professional Section */}
+              <section className="pt-8 border-t border-gray-100">
+                <ProfessionalTab targetProfile={profileData} isReadOnly={!isOwnProfile} embedded={true} />
+              </section>
+
+              {/* Social/Friends Section */}
+              <section className="pt-8 border-t border-gray-100">
+                <FriendRequestPanel
+                  pendingRequests={pendingRequests}
+                  friends={friends}
+                  onAccept={handleAcceptRequest}
+                  onDecline={handleDeclineRequest}
+                  isReadOnly={!isOwnProfile}
+                />
+              </section>
             </div>
           </div>
 
-          <div className="p-8">
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Profile Information</h2>
-                {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition flex items-center gap-2"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    Edit Profile
-                  </button>
-                ) : (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSaveProfile}
-                      disabled={saveLoading}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50"
-                    >
-                      <Save className="w-4 h-4" />
-                      Save
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsEditing(false);
-                        setEditForm({
-                          fullName: profile?.full_name || '',
-                          bio: profile?.bio || ''
-                        });
-                      }}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center gap-2"
-                    >
-                      <X className="w-4 h-4" />
-                      Cancel
-                    </button>
-                  </div>
-                )}
+          {/* Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+            {!isOwnProfile && currentUser && (
+              <QuickChallengePanel
+                onSendChallenge={handleSendChallenge}
+                friendName={profileData?.full_name}
+              />
+            )}
+
+            {!isOwnProfile && (
+              <FriendshipStats
+                stats={{
+                  mutualFriendsCount: profileData?.mutual_friends_count,
+                  friendship: friendship,
+                  challengesCompleted: statistics?.challenges_completed
+                }}
+                sharedAchievements={sharedAchievements}
+              />
+            )}
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
+                <Activity className="w-5 h-5 text-gray-400" />
               </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editForm?.fullName}
-                      onChange={(e) => setEditForm({ ...editForm, fullName: e?.target?.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile?.full_name || 'Not set'}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bio
-                  </label>
-                  {isEditing ? (
-                    <textarea
-                      value={editForm?.bio}
-                      onChange={(e) => setEditForm({ ...editForm, bio: e?.target?.value })}
-                      rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
-                      placeholder="Tell us about yourself..."
-                    />
-                  ) : (
-                    <p className="text-gray-700">{profile?.bio || 'No bio added yet'}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Member Since
-                  </label>
-                  <p className="text-gray-900 flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-500" />
-                    {profile?.created_at ? new Date(profile.created_at)?.toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    }) : 'Unknown'}
-                  </p>
-                </div>
-              </div>
+              <ActivityTimeline activities={recentActivities} compact={true} />
             </div>
 
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Statistics Summary</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {statCards?.map((stat, index) => (
-                  <div key={index} className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-                    <div className={`w-12 h-12 ${stat?.bgColor} rounded-lg flex items-center justify-center mb-3`}>
-                      <stat.icon className={`w-6 h-6 ${stat?.iconColor}`} />
-                    </div>
-                    <p className="text-sm text-gray-600 mb-1">{stat?.label}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat?.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {statistics?.longest_streak && statistics?.longest_streak > 0 && (
-              <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Award className="w-6 h-6 text-green-600" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Longest Streak</p>
-                    <p className="text-lg font-bold text-gray-900">{statistics?.longest_streak} days</p>
-                  </div>
-                </div>
+            {isOwnProfile && (
+              <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 text-white shadow-lg">
+                <h3 className="font-bold text-lg mb-2">Grow your circle</h3>
+                <p className="text-indigo-100 text-sm mb-4 leading-relaxed">
+                  Connect with more friends to compare progress and stay motivated together!
+                </p>
+                <button
+                  onClick={() => navigate('/friends-leaderboard')}
+                  className="w-full py-2.5 bg-white text-blue-600 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-md"
+                >
+                  Find Friends
+                </button>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {showCustomization && (
+        <ProfileCustomization
+          onClose={() => setShowCustomization(false)}
+          onSave={() => {
+            setShowCustomization(false);
+            loadProfileData();
+          }}
+        />
+      )}
+
+      <AchievementOverlay
+        achievement={showAchievement}
+        onClose={() => setShowAchievement(null)}
+      />
     </div>
   );
 }

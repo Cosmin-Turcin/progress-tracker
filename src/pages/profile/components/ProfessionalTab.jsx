@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Briefcase, GraduationCap, Award, Edit2, Save, X, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 
-export default function ProfessionalTab({ targetProfile, isReadOnly = false }) {
+export default function ProfessionalTab({ targetProfile, isReadOnly = false, embedded = false }) {
     const { profile: currentUserProfile, updateProfile } = useAuth();
     const effectiveProfile = targetProfile || currentUserProfile;
 
@@ -121,45 +121,67 @@ export default function ProfessionalTab({ targetProfile, isReadOnly = false }) {
     );
 
     return (
-        <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className={embedded ? "" : "max-w-4xl mx-auto py-8 px-4"}>
             {/* CV Header Controls */}
-            <div className="flex justify-between items-center mb-10 pb-6 border-b border-gray-200">
-                <div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Professional Background</h2>
-                    <p className="text-gray-500 mt-1">Manage your professional identity and accomplishments</p>
+            {!embedded && (
+                <div className="flex justify-between items-center mb-10 pb-6 border-b border-gray-200">
+                    <div>
+                        <h2 className="text-3xl font-black text-gray-900 tracking-tight">Professional Background</h2>
+                        <p className="text-gray-500 mt-1">Manage your professional identity and accomplishments</p>
+                    </div>
+                    <div className="flex gap-3">
+                        {isEditing ? (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        setProfData(effectiveProfile?.professional_data || { experience: [], education: [], skills: [], summary: "" });
+                                        setIsEditing(false);
+                                    }}
+                                    className="flex items-center gap-2 px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-bold"
+                                >
+                                    <X className="w-4 h-4" />
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                    className="flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-bold shadow-lg shadow-blue-200 disabled:opacity-50"
+                                >
+                                    {saving ? 'Saving...' : <><Save className="w-4 h-4" /> Save CV</>}
+                                </button>
+                            </>
+                        ) : !isReadOnly && (
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-bold shadow-xl"
+                            >
+                                <Edit2 className="w-4 h-4" />
+                                Edit Profile
+                            </button>
+                        )}
+                    </div>
                 </div>
-                <div className="flex gap-3">
-                    {isEditing ? (
-                        <>
-                            <button
-                                onClick={() => {
-                                    setProfData(effectiveProfile?.professional_data || { experience: [], education: [], skills: [], summary: "" });
-                                    setIsEditing(false);
-                                }}
-                                className="flex items-center gap-2 px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-bold"
-                            >
-                                <X className="w-4 h-4" />
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                disabled={saving}
-                                className="flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-bold shadow-lg shadow-blue-200 disabled:opacity-50"
-                            >
-                                {saving ? 'Saving...' : <><Save className="w-4 h-4" /> Save CV</>}
-                            </button>
-                        </>
-                    ) : !isReadOnly && (
+            )}
+
+            {embedded && !isReadOnly && (
+                <div className="flex justify-end mb-6">
+                    <button
+                        onClick={() => setIsEditing(!isEditing)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-bold text-sm shadow-md"
+                    >
+                        {isEditing ? <><X className="w-4 h-4" /> Exit Editing</> : <><Edit2 className="w-4 h-4" /> Edit CV Info</>}
+                    </button>
+                    {isEditing && (
                         <button
-                            onClick={() => setIsEditing(true)}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition font-bold shadow-xl"
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="ml-3 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold text-sm shadow-md disabled:opacity-50"
                         >
-                            <Edit2 className="w-4 h-4" />
-                            Edit Profile
+                            {saving ? 'Saving...' : <><Save className="w-4 h-4" /> Save</>}
                         </button>
                     )}
                 </div>
-            </div>
+            )}
 
             <div className="space-y-12">
                 {/* Professional Summary */}
