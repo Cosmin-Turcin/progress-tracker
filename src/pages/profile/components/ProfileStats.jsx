@@ -75,34 +75,48 @@ export default function ProfileStats({ stats, userStats, isOwnProfile }) {
 
     return (
         <div className="space-y-6">
-            {/* Primary Stats Row */}
+            {/* Primary Stats Row - Hero Redesign */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {mainStats.map((stat, index) => {
                     const comparison = getComparison(stat.value, stat.userValue);
                     return (
                         <div
                             key={index}
-                            className={`bg-gradient-to-br ${stat.gradient} rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group hover:scale-[1.02] transition-transform`}
+                            className={`relative overflow-hidden rounded-2xl p-8 text-white shadow-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl bg-gradient-to-br ${stat.gradient}`}
                         >
-                            <div className="flex items-center justify-between mb-4 relative z-10">
-                                <stat.icon className="w-8 h-8 opacity-80" />
-                                <span className="text-xs font-semibold uppercase tracking-wider opacity-80">{stat.label}</span>
-                            </div>
-                            <p className="text-4xl font-bold relative z-10">
-                                {stat.value}{stat.suffix || ''}
-                            </p>
-                            <p className="text-sm opacity-90 mt-2 relative z-10">{stat.description}</p>
+                            <div className="relative z-10 flex flex-col h-full justify-between">
+                                <div>
+                                    <div className="flex items-center gap-3 mb-2 opacity-90">
+                                        <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                            <stat.icon className="w-6 h-6" />
+                                        </div>
+                                        <span className="text-sm font-bold uppercase tracking-widest">{stat.label}</span>
+                                    </div>
 
-                            {comparison && (
-                                <div className="mt-4 pt-4 border-t border-white/20 relative z-10 flex items-center gap-2">
-                                    <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded-full backdrop-blur-sm">
-                                        {comparison.text}
-                                    </span>
+                                    <div className="mt-4">
+                                        <span className="text-6xl font-black tracking-tighter leading-none">
+                                            {stat.value}
+                                        </span>
+                                        {stat.suffix && <span className="text-2xl font-bold opacity-80 ml-1">{stat.suffix}</span>}
+                                    </div>
+                                    <p className="mt-2 font-medium opacity-80 text-sm">{stat.description}</p>
                                 </div>
-                            )}
 
-                            {/* Decorative background icon */}
-                            <stat.icon className="absolute -right-4 -bottom-4 w-32 h-32 opacity-10 transform rotate-12 group-hover:scale-110 transition-transform" />
+                                {comparison && (
+                                    <div className="mt-6 pt-4 border-t border-white/20 flex items-center gap-2">
+                                        <div className="bg-white/20 p-1.5 rounded-full backdrop-blur-sm">
+                                            {comparison.icon ? <comparison.icon className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
+                                        </div>
+                                        <span className="font-bold text-sm text-white drop-shadow-sm">
+                                            {comparison.text}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Decorative background Elements */}
+                            <div className="absolute top-0 right-0 p-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                            <stat.icon className="absolute -right-6 -bottom-6 w-48 h-48 opacity-10 transform rotate-12 group-hover:rotate-6 transition-transform pointer-events-none" />
                         </div>
                     );
                 })}
@@ -137,9 +151,14 @@ export default function ProfileStats({ stats, userStats, isOwnProfile }) {
                             </span>
                         </div>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                    <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden relative">
+                        {/* Grid markers for visual metric feeling */}
+                        <div className="absolute top-0 bottom-0 left-1/4 w-px bg-white/50 z-10"></div>
+                        <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white/50 z-10"></div>
+                        <div className="absolute top-0 bottom-0 left-3/4 w-px bg-white/50 z-10"></div>
+
                         <div
-                            className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-1000 ease-out"
+                            className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(99,102,241,0.5)]"
                             style={{
                                 width: `${Math.min(((stats?.current_streak || 0) / 30) * 100, 100)}%`
                             }}

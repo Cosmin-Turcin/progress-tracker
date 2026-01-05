@@ -10,3 +10,42 @@ body {
   font-family: inherit;
   margin: unset;
 }
+
+@media print {
+  /* Hide non-essential elements */
+  nav, aside, button, footer, .sidebar, .no-print {
+    display: none !important;
+  }
+
+  /* Reset layout for print */
+  body {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #root, .app-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Ensure colors print correctly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ensure page breaks are handled nicely */
+  section, .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Force expanded widths */
+  .lg\:col-span-3 {
+    grid-column: span 4 !important;
+    width: 100% !important;
+  }
+}

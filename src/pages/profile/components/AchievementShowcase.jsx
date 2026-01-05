@@ -53,10 +53,12 @@ export default function AchievementShowcase({ achievements }) {
             const Icon = getIconComponent(achievement?.icon);
             const colors = getTypeColor(achievement?.achievementType);
 
+            const isSpecial = achievement?.achievementType === 'special';
+
             return (
               <div
                 key={achievement?.id}
-                className={`${colors?.bg} rounded-xl p-6 border ${colors?.border} hover:shadow-lg transition group relative overflow-hidden`}
+                className={`${colors?.bg} rounded-xl p-6 border ${isSpecial ? 'border-yellow-400 ring-4 ring-yellow-100 md:col-span-2' : colors?.border} hover:shadow-lg transition group relative overflow-hidden`}
               >
                 {achievement?.isNew && (
                   <div className="absolute top-3 right-3">

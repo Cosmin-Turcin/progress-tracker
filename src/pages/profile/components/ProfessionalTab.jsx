@@ -121,8 +121,38 @@ export default function ProfessionalTab({ targetProfile, isReadOnly = false, emb
     );
 
     return (
-        <div className={embedded ? "" : "max-w-4xl mx-auto py-8 px-4"}>
-            {/* CV Header Controls */}
+        <div className={embedded ? "bg-white rounded-2xl border border-gray-200 shadow-sm p-8 max-w-5xl mx-auto" : "max-w-4xl mx-auto py-8 px-4"}>
+            {/* Resume-like Header for Embedded Mode */}
+            {embedded && !isReadOnly && (
+                <div className="flex justify-between items-start mb-8 pb-6 border-b-2 border-gray-100">
+                    <div>
+                        <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                            <Briefcase className="w-6 h-6 text-gray-900" />
+                            Professional History
+                        </h2>
+                        <p className="text-gray-500 font-medium mt-1">Digital Curriculum Vitae</p>
+                    </div>
+                    <div className="flex gap-2 print:hidden">
+                        <button
+                            onClick={() => setIsEditing(!isEditing)}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-bold text-sm shadow-md"
+                        >
+                            {isEditing ? <><X className="w-4 h-4" /> Exit Editing</> : <><Edit2 className="w-4 h-4" /> Edit CV Info</>}
+                        </button>
+                        {isEditing && (
+                            <button
+                                onClick={handleSave}
+                                disabled={saving}
+                                className="ml-3 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold text-sm shadow-md disabled:opacity-50"
+                            >
+                                {saving ? 'Saving...' : <><Save className="w-4 h-4" /> Save</>}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Only show standard header if NOT embedded */}
             {!embedded && (
                 <div className="flex justify-between items-center mb-10 pb-6 border-b border-gray-200">
                     <div>
@@ -164,23 +194,8 @@ export default function ProfessionalTab({ targetProfile, isReadOnly = false, emb
             )}
 
             {embedded && !isReadOnly && (
-                <div className="flex justify-end mb-6">
-                    <button
-                        onClick={() => setIsEditing(!isEditing)}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-bold text-sm shadow-md"
-                    >
-                        {isEditing ? <><X className="w-4 h-4" /> Exit Editing</> : <><Edit2 className="w-4 h-4" /> Edit CV Info</>}
-                    </button>
-                    {isEditing && (
-                        <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="ml-3 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold text-sm shadow-md disabled:opacity-50"
-                        >
-                            {saving ? 'Saving...' : <><Save className="w-4 h-4" /> Save</>}
-                        </button>
-                    )}
-                </div>
+                /* Hide old embedded controls since we moved them up */
+                <></>
             )}
 
             <div className="space-y-12">
@@ -203,7 +218,7 @@ export default function ProfessionalTab({ targetProfile, isReadOnly = false, emb
                 </section>
 
                 {/* Work Experience */}
-                <section>
+                <section className="print:break-inside-avoid">
                     <SectionHeader icon={Briefcase} title="Experience" onAdd={addExperience} />
                     <div className="space-y-8">
                         {(profData.experience || []).length === 0 && !isEditing && (
@@ -268,7 +283,7 @@ export default function ProfessionalTab({ targetProfile, isReadOnly = false, emb
                 </section>
 
                 {/* Education */}
-                <section>
+                <section className="print:break-inside-avoid">
                     <SectionHeader icon={GraduationCap} title="Education" onAdd={addEducation} />
                     <div className="space-y-6">
                         {(profData.education || []).length === 0 && !isEditing && (

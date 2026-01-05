@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
     User, Mail, Calendar, Settings, Share2, Users,
-    ArrowLeft, MoreVertical, MessageCircle, Trophy, UserMinus, Activity
+    ArrowLeft, MoreVertical, MessageCircle, Trophy, UserMinus, Activity,
+    CheckCircle, Shield, Copy
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../../components/ui/Button';
@@ -29,16 +30,25 @@ export default function ProfileHeader({
         })
         : 'Unknown';
 
-    const handleShare = () => {
+    const handleShare = async () => {
+        const url = window.location.href;
         if (navigator.share) {
-            navigator.share({
-                title: `${profile?.full_name}'s Profile`,
-                text: `Check out ${profile?.full_name}'s progress journey!`,
-                url: window.location.href,
-            }).catch(() => { });
+            try {
+                await navigator.share({
+                    title: `${profile?.full_name}'s Profile`,
+                    text: `Check out ${profile?.full_name}'s high-performance profile and achievements!`,
+                    url: url,
+                });
+            } catch (err) {
+                console.log('Share cancelled');
+            }
         } else {
-            navigator.clipboard.writeText(window.location.href);
-            // In a real app we'd use a toast here
+            try {
+                await navigator.clipboard.writeText(url);
+                alert('Profile link copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
         }
     };
 
@@ -69,10 +79,11 @@ export default function ProfileHeader({
                 <div className="absolute top-4 right-4 flex items-center gap-2">
                     <button
                         onClick={handleShare}
-                        className="p-2 bg-black/20 hover:bg-black/40 text-white rounded-lg backdrop-blur-md transition-all border border-white/20"
+                        className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-md transition-all border border-white/20 font-medium"
                         title="Share Profile"
                     >
                         <Share2 className="w-4 h-4" />
+                        <span className="hidden sm:inline">Share Profile</span>
                     </button>
 
                     {!isOwnProfile && !isUnlogged && (
@@ -150,8 +161,12 @@ export default function ProfileHeader({
                         </div>
 
                         <div className="mb-2">
-                            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                            <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2">
                                 {profile?.full_name || 'User'}
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider border border-blue-200">
+                                    <CheckCircle className="w-3 h-3 fill-blue-600 text-white" />
+                                    Verified
+                                </span>
                             </h1>
                             <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600 font-medium">
                                 {profile?.username && (
