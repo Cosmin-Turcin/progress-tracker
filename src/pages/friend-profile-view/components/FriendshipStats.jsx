@@ -41,7 +41,7 @@ const FriendshipStats = ({ stats, sharedAchievements }) => {
       <div className="grid grid-cols-1 gap-4">
         {friendshipMetrics?.map((metric, index) => {
           const Icon = metric?.icon;
-          
+
           return (
             <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
               <div className={`${metric?.bgColor} p-3 rounded-lg`}>
@@ -70,10 +70,10 @@ const FriendshipStats = ({ stats, sharedAchievements }) => {
                 <Trophy className="w-5 h-5 text-blue-600" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    {achievement?.achievements?.achievement_name}
+                    {achievement?.title}
                   </p>
                   <p className="text-xs text-gray-600">
-                    +{achievement?.achievements?.points_value} pts
+                    +{achievement?.points_value || achievement?.points} pts
                   </p>
                 </div>
               </div>

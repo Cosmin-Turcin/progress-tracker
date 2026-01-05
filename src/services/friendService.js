@@ -340,7 +340,7 @@ export const friendService = {
       }
 
       // Get friend's statistics
-      const { data: activityStats } = await supabase?.rpc('get_user_ranking_stats', { p_user_id: friendId });
+      const { data: activityStats } = await supabase?.rpc('get_user_comprehensive_stats', { p_user_id: friendId });
 
       // Get friend's recent achievements
       const { data: achievements } = await supabase?.from('achievements')
@@ -481,6 +481,23 @@ export const friendService = {
       console.error('Error fetching profile by username:', error);
       throw error;
     }
+  },
+
+  /**
+   * Get comprehensive stats for any user
+   * @param {string} userId - User's ID
+   * @returns {Promise<Object>} User statistics
+   */
+  async getUserStats(userId) {
+    try {
+      if (!userId) return null;
+      const { data, error } = await supabase?.rpc('get_user_comprehensive_stats', { p_user_id: userId });
+      if (error) throw error;
+      return data?.[0] || {};
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      return {};
+    }
   }
 };
 
@@ -491,3 +508,4 @@ export const sendChallenge = friendService.sendChallenge;
 export const congratulateFriend = friendService.congratulateFriend;
 export const removeFriend = friendService.removeFriend;
 export const getProfileByUsername = friendService.getProfileByUsername;
+export const getUserStats = friendService.getUserStats;

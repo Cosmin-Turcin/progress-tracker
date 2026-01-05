@@ -14,6 +14,7 @@ import ProfessionalTab from '../user-profile/components/ProfessionalTab';
 import {
   getFriendProfile,
   getSharedAchievements,
+  getUserStats,
   sendChallenge,
   congratulateFriend,
   removeFriend
@@ -57,6 +58,12 @@ const FriendProfileView = ({ resolvedUserId }) => {
       // Load shared achievements
       const shared = await getSharedAchievements(friendId);
       setSharedAchievements(shared);
+
+      // Load current user stats for comparison (if logged in)
+      if (currentUserProfile?.id) {
+        const stats = await getUserStats(currentUserProfile.id);
+        setUserStats(stats);
+      }
 
     } catch (err) {
       console.error('Error loading friend profile:', err);

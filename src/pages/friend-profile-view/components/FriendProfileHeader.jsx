@@ -11,8 +11,8 @@ const FriendProfileHeader = ({ profile, friendship, onUnfriend, onMessage, onCha
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: `${profile?.display_name}'s Profile`,
-        text: `Check out ${profile?.display_name}'s fitness journey!`,
+        title: `${profile?.full_name}'s Profile`,
+        text: `Check out ${profile?.full_name}'s fitness journey!`,
         url: window.location?.href,
       })?.catch((error) => console.log('Error sharing:', error));
     }
@@ -100,7 +100,7 @@ const FriendProfileHeader = ({ profile, friendship, onUnfriend, onMessage, onCha
         {/* Profile Photo */}
         <div className="relative">
           <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold">
-            {profile?.display_name?.charAt(0)?.toUpperCase()}
+            {profile?.full_name?.charAt(0)?.toUpperCase()}
           </div>
           {isOnline && (
             <div className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-4 border-white rounded-full flex items-center justify-center">
@@ -112,7 +112,7 @@ const FriendProfileHeader = ({ profile, friendship, onUnfriend, onMessage, onCha
         {/* Profile Details */}
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {profile?.display_name || 'Unknown User'}
+            {profile?.full_name || 'Unknown User'}
           </h1>
 
           <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
