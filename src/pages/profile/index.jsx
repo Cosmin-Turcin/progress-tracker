@@ -237,10 +237,23 @@ export default function Profile({ resolvedUserId }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 shadow-sm">
+      {/* Full Width Profile Header */}
+      <ProfileHeader
+        profile={profileData}
+        user={isOwnProfile ? currentUser : { email: 'hidden' }}
+        isOwnProfile={isOwnProfile}
+        friendship={friendship}
+        onCustomize={() => setShowCustomization(true)}
+        onUnfriend={handleUnfriend}
+        onMessage={handleMessage}
+        onChallenge={() => { }} // Remove tab switching logic
+        isUnlogged={!currentUser}
+        friendCount={friends?.length || 0}
+      />
+
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 mt-6">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 shadow-sm">
             <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
             <div className="flex-1">
               <p className="text-red-800 text-sm font-medium">{error}</p>
@@ -249,82 +262,66 @@ export default function Profile({ resolvedUserId }) {
               <X className="w-5 h-5" />
             </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center justify-center shadow-sm">
+      {successMessage && (
+        <div className="max-w-7xl mx-auto px-4 mt-6">
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl flex items-center justify-center shadow-sm">
             <p className="text-green-800 font-medium">{successMessage}</p>
           </div>
-        )}
+        </div>
+      )}
 
-        <ProfileHeader
-          profile={profileData}
-          user={isOwnProfile ? currentUser : { email: 'hidden' }}
-          isOwnProfile={isOwnProfile}
-          friendship={friendship}
-          onCustomize={() => setShowCustomization(true)}
-          onUnfriend={handleUnfriend}
-          onMessage={handleMessage}
-          onChallenge={() => { }} // Remove tab switching logic
-          isUnlogged={!currentUser}
-          friendCount={friends?.length || 0}
-        />
+      {/* Main Content Container - Centered & Constrained */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content Area */}
-          <div className="lg:col-span-3 space-y-12">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 space-y-12">
-              {/* Statistics Section */}
-              <section>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+          {/* Main Content Column (Spans 3/4) */}
+          <div className="lg:col-span-3 space-y-6">
+
+            {/* Row 1: Hero Stats */}
+            <div className="bg-white rounded-3xl p-1 shadow-sm border border-gray-100 overflow-hidden animate-enter delay-100">
+              <div className="bg-gradient-to-br from-gray-50/50 to-white p-6 rounded-[20px]">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                  <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
+                    <TrendingUp className="w-5 h-5" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Performance Overview</h3>
+                  <h3 className="text-xl font-bold text-gray-900 tracking-tight">Performance Metrics</h3>
                 </div>
-                <ProfileStats
-                  stats={statistics}
-                  userStats={userStats}
-                  isOwnProfile={isOwnProfile}
-                />
-              </section>
+                <ProfileStats stats={statistics} userStats={userStats} isOwnProfile={isOwnProfile} />
+              </div>
+            </div>
 
-              {/* Achievements Section */}
-              <section className="pt-8 border-t border-gray-100">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-amber-50 rounded-lg">
-                    <Award className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Achievements Showcase</h3>
+            {/* Row 2: Achievements Showcase (Full Width) */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow animate-enter delay-200">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-amber-100 rounded-xl text-amber-600">
+                  <Award className="w-5 h-5" />
                 </div>
-                <AchievementShowcase
-                  achievements={achievements}
-                  onCongratulate={(id) => {
-                    if (!isOwnProfile) friendService?.congratulateFriend(targetUserId, id);
-                  }}
-                />
-              </section>
+                <h3 className="text-xl font-bold text-gray-900 tracking-tight">Achievement Showcase</h3>
+              </div>
+              <AchievementShowcase
+                achievements={achievements}
+                onCongratulate={(id) => {
+                  if (!isOwnProfile) friendService?.congratulateFriend(targetUserId, id);
+                }}
+              />
+            </div>
 
-              {/* Professional Section */}
-              <section className="pt-8 border-t border-gray-100">
+            {/* Row 3: Professional Resume (Full Width) */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-lg transition-shadow animate-enter delay-400">
+              <div className="h-2 bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900"></div>
+              <div className="p-1">
                 <ProfessionalTab targetProfile={profileData} isReadOnly={!isOwnProfile} embedded={true} />
-              </section>
-
-              {/* Social/Friends Section */}
-              <section className="pt-8 border-t border-gray-100">
-                <FriendRequestPanel
-                  pendingRequests={pendingRequests}
-                  friends={friends}
-                  onAccept={handleAcceptRequest}
-                  onDecline={handleDeclineRequest}
-                  isReadOnly={!isOwnProfile}
-                />
-              </section>
+              </div>
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* Sidebar Column (Right Side - Spans 1/4) */}
+          <div className="lg:col-span-1 space-y-6 animate-enter delay-500">
+            {/* Quick Actions / Context */}
             {!isOwnProfile && currentUser && (
               <QuickChallengePanel
                 onSendChallenge={handleSendChallenge}
@@ -343,19 +340,25 @@ export default function Profile({ resolvedUserId }) {
               />
             )}
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
-                <Activity className="w-5 h-5 text-gray-400" />
+            {/* Activity Timeline Card */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-6 h-[calc(100vh-2rem)] overflow-y-auto custom-scrollbar">
+              <div className="flex items-center gap-3 mb-6 sticky top-0 bg-white z-10 py-2 border-b border-gray-50">
+                <div className="p-2 bg-purple-100 rounded-xl text-purple-600">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
+                  <p className="text-xs text-gray-500 font-medium">Live updates</p>
+                </div>
               </div>
               <ActivityTimeline activities={recentActivities} compact={true} />
             </div>
 
             {isOwnProfile && (
-              <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 text-white shadow-lg">
+              <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-6 text-white shadow-lg">
                 <h3 className="font-bold text-lg mb-2">Grow your circle</h3>
                 <p className="text-indigo-100 text-sm mb-4 leading-relaxed">
-                  Connect with more friends to compare progress and stay motivated together!
+                  Connect with more friends to compare progress!
                 </p>
                 <button
                   onClick={() => navigate('/friends-leaderboard')}

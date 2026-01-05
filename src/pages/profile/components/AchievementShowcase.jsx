@@ -51,51 +51,52 @@ export default function AchievementShowcase({ achievements }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {achievements?.map((achievement) => {
             const Icon = getIconComponent(achievement?.icon);
-            const colors = getTypeColor(achievement?.achievementType);
+            // Color mapping logic from Gallery
+            const getCardStyles = (type) => {
+              const styles = {
+                streak: 'bg-orange-50 border-orange-200',
+                milestone: 'bg-purple-50 border-purple-200',
+                goal: 'bg-blue-50 border-blue-200',
+                special: 'bg-pink-50 border-pink-200'
+              };
+              return styles?.[type] || 'bg-gray-50 border-gray-200';
+            };
+            const cardStyle = getCardStyles(achievement?.achievementType);
 
-            const isSpecial = achievement?.achievementType === 'special';
+            // Icon Background
+            const iconBg = achievement?.iconColor || 'bg-gradient-to-br from-yellow-400 to-orange-500';
 
             return (
               <div
                 key={achievement?.id}
-                className={`${colors?.bg} rounded-xl p-6 border ${isSpecial ? 'border-yellow-400 ring-4 ring-yellow-100 md:col-span-2' : colors?.border} hover:shadow-lg transition group relative overflow-hidden`}
+                className={`relative group cursor-pointer rounded-xl border-2 ${cardStyle} p-6 transition-all duration-300 hover:scale-105 hover:shadow-lg`}
               >
                 {achievement?.isNew && (
-                  <div className="absolute top-3 right-3">
-                    <span className="flex items-center gap-1 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                      <Star className="w-3 h-3" />
-                      NEW
-                    </span>
-                  </div>
+                  <span className="absolute top-3 right-3 px-3 py-1 text-xs font-semibold text-white bg-red-500 rounded-full animate-pulse z-10">
+                    New
+                  </span>
                 )}
 
-                <div className="flex items-start gap-4 mb-4">
-                  <div
-                    className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-200 group-hover:scale-110 transition"
-                    style={{ color: achievement?.iconColor || 'currentColor' }}
-                  >
-                    <Icon className="w-8 h-8" />
+                <div className="flex flex-col items-center space-y-4">
+                  <div className={`p-4 rounded-full ${iconBg} shadow-lg group-hover:animate-bounce text-white`}>
+                    <Icon className="w-12 h-12" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-900 text-lg mb-1 truncate">
-                      {achievement?.title}
-                    </h3>
-                    <span className={`inline-block px-2 py-1 ${colors?.bg} ${colors?.text} text-xs font-medium rounded-full border ${colors?.border}`}>
+
+                  <div className="text-center space-y-2">
+                    <h3 className="text-lg font-bold text-gray-800 line-clamp-1">{achievement?.title}</h3>
+                    <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px]">
+                      {achievement?.description}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between w-full pt-4 border-t border-gray-200/60">
+                    <span className="text-xs font-medium text-gray-500 capitalize">
                       {achievement?.achievementType}
                     </span>
+                    <span className="text-xs text-gray-400">
+                      {formatDate(achievement?.achievedAt)}
+                    </span>
                   </div>
-                </div>
-
-                <p className="text-gray-700 text-sm leading-relaxed mb-4">
-                  {achievement?.description}
-                </p>
-
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Trophy className="w-3 h-3" />
-                    Unlocked
-                  </span>
-                  <span>{formatDate(achievement?.achievedAt)}</span>
                 </div>
               </div>
             );

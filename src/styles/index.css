@@ -12,40 +12,73 @@ body {
 }
 
 @media print {
+
+  /* ... existing print styles ... */
   /* Hide non-essential elements */
-  nav, aside, button, footer, .sidebar, .no-print {
+  nav,
+  aside,
+  button,
+  footer,
+  .sidebar,
+  .no-print {
     display: none !important;
   }
 
-  /* Reset layout for print */
-  body {
-    background: white !important;
-    padding: 0 !important;
-    margin: 0 !important;
+  /* ... */
+}
+
+/* Premium Entrance Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
 
-  #root, .app-container {
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  /* Ensure colors print correctly */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
+.animate-enter {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
 
-  /* Ensure page breaks are handled nicely */
-  section, .card {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
+.delay-100 {
+  animation-delay: 100ms;
+}
 
-  /* Force expanded widths */
-  .lg\:col-span-3 {
-    grid-column: span 4 !important;
-    width: 100% !important;
-  }
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-400 {
+  animation-delay: 400ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Custom Scrollbar for Bento Tiles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 20px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.5);
 }

@@ -69,13 +69,13 @@ export default function FriendRequestPanel({ pendingRequests, friends, onAccept,
             key={view?.id}
             onClick={() => setActiveView(view?.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${activeView === view?.id
-                ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
+              ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
               }`}
           >
             {view?.label}
             {view?.count > 0 && (
               <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${activeView === view?.id
-                  ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
                 }`}>
                 {view?.count}
               </span>
@@ -145,18 +145,18 @@ export default function FriendRequestPanel({ pendingRequests, friends, onAccept,
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 overflow-hidden">
               {friends?.map((friendship) => (
                 <div
                   key={friendship?.id}
-                  className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition"
+                  className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg hover:bg-gray-50 transition w-full"
                 >
-                  <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center border border-blue-200">
-                    <User className="w-6 h-6 text-blue-600" />
+                  <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center border border-blue-100 shrink-0">
+                    <User className="w-5 h-5 text-blue-600" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">{friendship?.friend?.fullName}</p>
-                    <p className="text-sm text-gray-600 truncate">{friendship?.friend?.email}</p>
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <p className="font-semibold text-gray-900 truncate text-sm">{friendship?.friend?.fullName}</p>
+                    <p className="text-xs text-gray-500 truncate">{friendship?.friend?.email}</p>
                   </div>
                 </div>
               ))}

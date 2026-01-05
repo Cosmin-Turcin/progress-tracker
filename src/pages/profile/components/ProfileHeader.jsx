@@ -63,170 +63,151 @@ export default function ProfileHeader({
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-6">
-            {/* Cover Area */}
-            <div className="h-40 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative">
-                {!isOwnProfile && (
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-black/20 hover:bg-black/40 text-white rounded-lg backdrop-blur-md transition-all border border-white/20"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span className="font-medium text-sm">Back</span>
-                    </button>
-                )}
-
-                <div className="absolute top-4 right-4 flex items-center gap-2">
-                    <button
-                        onClick={handleShare}
-                        className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-md transition-all border border-white/20 font-medium"
-                        title="Share Profile"
-                    >
-                        <Share2 className="w-4 h-4" />
-                        <span className="hidden sm:inline">Share Profile</span>
-                    </button>
-
-                    {!isOwnProfile && !isUnlogged && (
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowMenu(!showMenu)}
-                                className="p-2 bg-black/20 hover:bg-black/40 text-white rounded-lg backdrop-blur-md transition-all border border-white/20"
-                            >
-                                <MoreVertical className="w-4 h-4" />
-                            </button>
-
-                            {showMenu && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-20">
-                                    <button
-                                        onClick={() => {
-                                            onMessage();
-                                            setShowMenu(false);
-                                        }}
-                                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700 transition-colors"
-                                    >
-                                        <MessageCircle className="w-4 h-4 text-blue-600" />
-                                        Send Message
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            onChallenge();
-                                            setShowMenu(false);
-                                        }}
-                                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-700 transition-colors"
-                                    >
-                                        <Trophy className="w-4 h-4 text-orange-600" />
-                                        Send Challenge
-                                    </button>
-                                    <div className="h-px bg-gray-100 my-1 mx-2"></div>
-                                    <button
-                                        onClick={() => {
-                                            onUnfriend();
-                                            setShowMenu(false);
-                                        }}
-                                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-red-600 transition-colors"
-                                    >
-                                        <UserMinus className="w-4 h-4" />
-                                        Unfriend
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+        <div className="relative w-full overflow-hidden bg-white mb-8 group">
+            {/* Back Button Overlay */}
+            <div className="absolute top-6 left-6 z-30">
+                <button
+                    onClick={() => navigate('/dashboard')}
+                    className="flex items-center gap-2 px-4 py-2 bg-black/30 hover:bg-black/50 text-white rounded-full backdrop-blur-md transition-all border border-white/20 font-medium group/back"
+                >
+                    <ArrowLeft className="w-4 h-4 group-hover/back:-translate-x-1 transition-transform" />
+                    Back to Dashboard
+                </button>
             </div>
 
-            {/* Profile Info Section */}
-            <div className="px-8 pb-8">
-                <div className="flex flex-col md:flex-row md:items-end justify-between -mt-16 mb-4 gap-4">
-                    <div className="flex items-end gap-5">
-                        <div className="relative group">
-                            <div className="w-32 h-32 bg-white rounded-full border-4 border-white shadow-lg overflow-hidden flex items-center justify-center">
-                                {profile?.avatar_url ? (
-                                    <img
-                                        src={profile?.avatar_url}
-                                        alt={profile?.full_name || 'User'}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-4xl font-bold">
-                                        {(profile?.full_name || 'U').charAt(0).toUpperCase()}
-                                    </div>
-                                )}
-                            </div>
-                            {isOnline && !isOwnProfile && (
-                                <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 border-4 border-white rounded-full flex items-center justify-center shadow-sm">
-                                    <Activity className="w-3 h-3 text-white" />
+            {/* Immersive Cover Background - Full Width Screen */}
+            <div className="absolute inset-0 h-full w-full">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 z-10" />
+                <div className="absolute inset-0 bg-blue-900/20 mix-blend-multiply z-10" />
+                {/* Fallback pattern or image */}
+                <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2670&auto=format&fit=crop')] bg-cover bg-center" />
+            </div>
+
+            {/* Glass Content Container */}
+            <div className="relative z-20 pt-32 md:pt-48 pb-10 px-6 md:px-10 max-w-7xl mx-auto">
+                <div className="flex flex-col md:flex-row items-end gap-6">
+                    {/* Avatar with Ring */}
+                    <div className="relative shrink-0">
+                        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white/20 shadow-2xl backdrop-blur-sm overflow-hidden ring-4 ring-black/5">
+                            {profile?.avatar_url ? (
+                                <img
+                                    src={profile?.avatar_url}
+                                    alt={profile?.full_name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-5xl font-bold">
+                                    {(profile?.full_name || 'U').charAt(0).toUpperCase()}
                                 </div>
                             )}
                         </div>
-
-                        <div className="mb-2">
-                            <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-                                {profile?.full_name || 'User'}
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider border border-blue-200">
-                                    <CheckCircle className="w-3 h-3 fill-blue-600 text-white" />
-                                    Verified
-                                </span>
-                            </h1>
-                            <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600 font-medium">
-                                {profile?.username && (
-                                    <span className="text-blue-600">@{profile.username}</span>
-                                )}
-                                <span className="flex items-center gap-1.5">
-                                    <Calendar className="w-4 h-4 text-gray-400" />
-                                    Member since {memberSince}
-                                </span>
-                                <span className="flex items-center gap-1.5">
-                                    <Users className="w-4 h-4 text-gray-400" />
-                                    {friendCount} {friendCount === 1 ? 'friend' : 'friends'}
-                                </span>
-                                {!isOwnProfile && friendship && (
-                                    <span className="text-gray-500 font-normal">
-                                        {formatFriendshipDuration(friendship.created_at)}
-                                    </span>
-                                )}
-                            </div>
+                        {isOnline && !isOwnProfile && (
+                            <div className="absolute bottom-4 right-4 w-6 h-6 bg-green-500 border-4 border-white rounded-full shadow-lg" />
+                        )}
+                        {/* Verified Badge Absolute */}
+                        <div className="absolute -bottom-2 -right-2 bg-blue-500 text-white p-1.5 rounded-full border-4 border-white shadow-lg">
+                            <CheckCircle className="w-4 h-4" />
                         </div>
                     </div>
 
-                    <div className="flex gap-3 mb-2">
-                        {isOwnProfile ? (
-                            <button
-                                onClick={onCustomize}
-                                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition shadow-md shadow-blue-100 active:scale-95 font-semibold"
-                            >
-                                <Settings className="w-4 h-4" />
-                                Edit Profile
-                            </button>
-                        ) : !isUnlogged && (
-                            <>
-                                <Button
-                                    onClick={onMessage}
-                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100 active:scale-95 transition-all"
-                                >
-                                    <MessageCircle className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Message</span>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={onChallenge}
-                                    className="flex items-center gap-2 border-gray-200 hover:bg-gray-50 active:scale-95 transition-all text-gray-700"
-                                >
-                                    <Trophy className="w-4 h-4 text-orange-500" />
-                                    <span className="hidden sm:inline">Challenge</span>
-                                </Button>
-                            </>
+                    {/* Info Block */}
+                    <div className="flex-1 text-white pb-2 w-full">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-2 drop-shadow-lg">
+                                    {profile?.full_name || 'User'}
+                                </h1>
+                                <div className="flex flex-wrap items-center gap-4 text-sm md:text-base font-medium text-white/90">
+                                    {profile?.username && (
+                                        <span className="bg-white/10 px-3 py-1 rounded-full backdrop-blur-md border border-white/10 shadow-sm flex items-center gap-2">
+                                            @{profile.username}
+                                        </span>
+                                    )}
+                                    <span className="flex items-center gap-1.5 drop-shadow-md">
+                                        <Users className="w-4 h-4 text-white/80" />
+                                        {friendCount} connections
+                                    </span>
+                                    <span className="flex items-center gap-1.5 drop-shadow-md">
+                                        <Calendar className="w-4 h-4 text-white/80" />
+                                        Joined {memberSince}
+                                    </span>
+                                    {!isOwnProfile && friendship && (
+                                        <span className="text-white/80 italic">
+                                            {formatFriendshipDuration(friendship.created_at)}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Actions Group */}
+                            <div className="flex items-center gap-3">
+                                {isOwnProfile ? (
+                                    <>
+                                        <button
+                                            onClick={handleShare}
+                                            className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all active:scale-95 group/btn"
+                                            title="Share Profile"
+                                        >
+                                            <Share2 className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
+                                        </button>
+                                        <button
+                                            onClick={onCustomize}
+                                            className="px-6 py-3 bg-white text-black rounded-xl hover:bg-gray-50 transition shadow-xl font-bold active:scale-95 flex items-center gap-2"
+                                        >
+                                            <Settings className="w-4 h-4" />
+                                            Edit Profile
+                                        </button>
+                                    </>
+                                ) : !isUnlogged && (
+                                    <>
+                                        <button
+                                            onClick={handleShare}
+                                            className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all active:scale-95"
+                                        >
+                                            <Share2 className="w-5 h-5" />
+                                        </button>
+                                        <Button
+                                            onClick={onMessage}
+                                            className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md"
+                                        >
+                                            Message
+                                        </Button>
+                                        <Button
+                                            onClick={onChallenge}
+                                            className="bg-white text-black hover:bg-gray-100 border-none shadow-lg"
+                                        >
+                                            Challenge
+                                        </Button>
+                                        {/* Dropdown for other actions */}
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setShowMenu(!showMenu)}
+                                                className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/20 transition-all"
+                                            >
+                                                <MoreVertical className="w-5 h-5" />
+                                            </button>
+                                            {showMenu && (
+                                                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 text-gray-800">
+                                                    <button onClick={onUnfriend} className="w-full px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center gap-2 font-medium">
+                                                        <UserMinus className="w-4 h-4" /> Unfriend
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {profile?.bio && (
+                            <div className="mt-6">
+                                <p className="text-white/90 text-lg leading-relaxed max-w-2xl font-light tracking-wide drop-shadow-md border-l-2 border-white/30 pl-4">
+                                    "{profile.bio}"
+                                </p>
+                            </div>
                         )}
                     </div>
                 </div>
-
-                {profile?.bio && (
-                    <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <p className="text-gray-700 leading-relaxed italic">
-                            "{profile.bio}"
-                        </p>
-                    </div>
-                )}
             </div>
         </div>
     );

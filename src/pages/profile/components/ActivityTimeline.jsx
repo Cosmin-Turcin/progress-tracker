@@ -85,14 +85,13 @@ export default function ActivityTimeline({ activities, compact = false }) {
         <div className={`space-y-${compact ? '6' : '8'}`}>
           {displayedActivities.map(([date, dateActivities]) => (
             <div key={date} className="relative">
-              <div className="sticky top-0 bg-gray-50 z-10 py-2 mb-4">
+              <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-10 py-2 mb-3 border-b border-gray-50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Calendar className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-gray-600`} />
-                  <h3 className={`${compact ? 'text-base' : 'text-lg'} font-bold text-gray-900`}>{date}</h3>
-                  <span className="text-sm text-gray-500">
-                    ({dateActivities?.length})
-                  </span>
+                  <h3 className={`${compact ? 'text-sm' : 'text-base'} font-bold text-gray-900 uppercase tracking-wider`}>{date}</h3>
                 </div>
+                <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
+                  {dateActivities?.length}
+                </span>
               </div>
 
               <div className={`relative ${compact ? 'pl-4' : 'pl-8'} space-y-4`}>
