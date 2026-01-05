@@ -4,7 +4,7 @@ import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 
 
-const QuickChallengePanel = ({ onSendChallenge, friendName }) => {
+const QuickChallengePanel = ({ onSendChallenge, friendName, isLoggedOut }) => {
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [showCustom, setShowCustom] = useState(false);
   const [customChallenge, setCustomChallenge] = useState({ type: '', details: '' });
@@ -49,6 +49,10 @@ const QuickChallengePanel = ({ onSendChallenge, friendName }) => {
   ];
 
   const handleSendChallenge = () => {
+    if (isLoggedOut) {
+      onSendChallenge();
+      return;
+    }
     if (selectedChallenge) {
       onSendChallenge(selectedChallenge);
       setSelectedChallenge(null);
@@ -73,15 +77,14 @@ const QuickChallengePanel = ({ onSendChallenge, friendName }) => {
         {quickChallenges?.map((challenge, index) => {
           const Icon = challenge?.icon;
           const isSelected = selectedChallenge?.type === challenge?.type;
-          
+
           return (
             <button
               key={index}
               onClick={() => setSelectedChallenge(challenge)}
-              className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                isSelected
-                  ? 'border-blue-500 bg-blue-50' :'border-gray-200 hover:border-gray-300 bg-white'
-              }`}
+              className={`w-full p-4 rounded-lg border-2 transition-all text-left ${isSelected
+                ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
             >
               <div className="flex items-start gap-3">
                 <div className={`${challenge?.bgColor} p-2 rounded-lg`}>
@@ -127,11 +130,12 @@ const QuickChallengePanel = ({ onSendChallenge, friendName }) => {
       {/* Send Challenge Button */}
       <Button
         onClick={handleSendChallenge}
-        disabled={!selectedChallenge && (!customChallenge?.type || !customChallenge?.details)}
+        // If logged out, enable button so user can click to go to login. Otherwise, check selection.
+        disabled={!isLoggedOut && !selectedChallenge && (!customChallenge?.type || !customChallenge?.details)}
         className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
       >
         <Send className="w-4 h-4" />
-        Send Challenge
+        {isLoggedOut ? 'Login to Challenge' : 'Send Challenge'}
       </Button>
     </div>
   );

@@ -210,6 +210,12 @@ export default function Profile({ resolvedUserId }) {
   };
 
   const handleSendChallenge = async (challengeData) => {
+    if (!currentUser) {
+      // Redirect to login if user is not logged in
+      navigate('/login', { state: { from: window.location.pathname } });
+      return;
+    }
+
     try {
       await friendService?.sendChallenge(targetUserId, challengeData);
       setSuccessMessage(`Challenge sent to ${profileData?.full_name}!`);
@@ -322,10 +328,11 @@ export default function Profile({ resolvedUserId }) {
           {/* Sidebar Column (Right Side - Spans 1/4) */}
           <div className="lg:col-span-1 space-y-6 animate-enter delay-500">
             {/* Quick Actions / Context */}
-            {!isOwnProfile && currentUser && (
+            {!isOwnProfile && (
               <QuickChallengePanel
                 onSendChallenge={handleSendChallenge}
                 friendName={profileData?.full_name}
+                isLoggedOut={!currentUser}
               />
             )}
 
