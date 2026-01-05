@@ -189,7 +189,7 @@ export default function DailyActivityDashboard() {
       if (!quickAddActivity) return;
 
       const activityData = {
-        activityName: `Quick ${quickAddActivity?.label}`,
+        activityName: quickAddActivity?.label,
         category: quickAddActivity?.category,
         intensity: intensity,
         activityDate: formatDate(new Date()),
