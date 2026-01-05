@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { Loader2, TrendingUp, Award, Activity, Users, Briefcase } from 'lucide-react';
+import Button from '../../components/ui/Button';
 import Header from '../../components/Header';
 import FriendProfileHeader from './components/FriendProfileHeader';
 import FriendStatsCard from './components/FriendStatsCard';
@@ -21,6 +23,8 @@ const FriendProfileView = ({ resolvedUserId }) => {
   const { friendId: paramId } = useParams();
   const friendId = resolvedUserId || paramId;
   const navigate = useNavigate();
+  const { profile: currentUserProfile } = useAuth();
+  const isUnlogged = !currentUserProfile;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -163,6 +167,7 @@ const FriendProfileView = ({ resolvedUserId }) => {
           onUnfriend={handleUnfriend}
           onMessage={handleMessage}
           onChallenge={() => handleSendChallenge({ type: 'quick', details: 'Quick challenge' })}
+          isUnlogged={isUnlogged}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -216,10 +221,27 @@ const FriendProfileView = ({ resolvedUserId }) => {
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            <QuickChallengePanel
-              onSendChallenge={handleSendChallenge}
-              friendName={friendData?.profile?.display_name || friendData?.profile?.full_name}
-            />
+            {!isUnlogged && (
+              <QuickChallengePanel
+                onSendChallenge={handleSendChallenge}
+                friendName={friendData?.profile?.display_name || friendData?.profile?.full_name}
+              />
+            )}
+
+            {isUnlogged && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Connect to Interact</h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  Log in to challenge {friendData?.profile?.display_name}, send messages, and track your own progress!
+                </p>
+                <Button
+                  onClick={() => navigate('/signin')}
+                  className="w-full bg-blue-600 text-white"
+                >
+                  Sign In
+                </Button>
+              </div>
+            )}
 
             <FriendshipStats
               stats={friendData}

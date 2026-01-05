@@ -3,7 +3,7 @@ import { ArrowLeft, MoreVertical, MessageCircle, Trophy, UserMinus, Share2, Acti
 import { useNavigate } from 'react-router-dom';
 import Button from '../../../components/ui/Button';
 
-const FriendProfileHeader = ({ profile, friendship, onUnfriend, onMessage, onChallenge }) => {
+const FriendProfileHeader = ({ profile, friendship, onUnfriend, onMessage, onChallenge, isUnlogged }) => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
@@ -21,7 +21,7 @@ const FriendProfileHeader = ({ profile, friendship, onUnfriend, onMessage, onCha
   const formatFriendshipDuration = (createdAt) => {
     const duration = new Date() - new Date(createdAt);
     const days = Math.floor(duration / (1000 * 60 * 60 * 24));
-    
+
     if (days < 30) return `Friends for ${days} days`;
     if (days < 365) return `Friends for ${Math.floor(days / 30)} months`;
     return `Friends for ${Math.floor(days / 365)} years`;
@@ -58,7 +58,7 @@ const FriendProfileHeader = ({ profile, friendship, onUnfriend, onMessage, onCha
               <MoreVertical className="w-5 h-5 text-gray-600" />
             </button>
 
-            {showMenu && (
+            {showMenu && !isUnlogged && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
                 <button
                   onClick={() => {
@@ -114,38 +114,44 @@ const FriendProfileHeader = ({ profile, friendship, onUnfriend, onMessage, onCha
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             {profile?.display_name || 'Unknown User'}
           </h1>
-          
+
           <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-            <div className="flex items-center gap-1">
-              <span className="font-medium">{profile?.mutual_friends_count || 0}</span>
-              <span>mutual friends</span>
-            </div>
-            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-            <span>{formatFriendshipDuration(friendship?.created_at)}</span>
-            <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+            {!isUnlogged && (
+              <>
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">{profile?.mutual_friends_count || 0}</span>
+                  <span>mutual friends</span>
+                </div>
+                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                <span>{formatFriendshipDuration(friendship?.created_at)}</span>
+                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+              </>
+            )}
             <span className={isOnline ? 'text-green-600' : 'text-gray-500'}>
               {isOnline ? 'Active now' : 'Offline'}
             </span>
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={onMessage}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Message
-            </Button>
-            <Button
-              variant="outline"
-              onClick={onChallenge}
-              className="flex items-center gap-2"
-            >
-              <Trophy className="w-4 h-4" />
-              Challenge
-            </Button>
-          </div>
+          {!isUnlogged && (
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={onMessage}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Message
+              </Button>
+              <Button
+                variant="outline"
+                onClick={onChallenge}
+                className="flex items-center gap-2"
+              >
+                <Trophy className="w-4 h-4" />
+                Challenge
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

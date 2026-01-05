@@ -319,7 +319,6 @@ export const friendService = {
   async getFriendProfile(friendId) {
     try {
       const { data: { user } } = await supabase?.auth?.getUser();
-      if (!user) throw new Error('Not authenticated');
 
       // Get friend's profile
       const { data: profile, error: profileError } = await supabase?.from('user_profiles')?.select('*')?.eq('id', friendId)?.single();
@@ -327,18 +326,21 @@ export const friendService = {
       if (profileError) throw profileError;
 
       // Get friendship details
-      const { data: friendshipData, error: friendshipError } = await supabase
-        ?.from('friendships')
-        ?.select('*')
-        ?.or(`and(user_id.eq.${user?.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user?.id})`)
-        ?.eq('status', 'accepted')
-        ?.limit(1);
+      let friendship = null;
+      if (user) {
+        const { data: friendshipData, error: friendshipError } = await supabase
+          ?.from('friendships')
+          ?.select('*')
+          ?.or(`and(user_id.eq.${user?.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user?.id})`)
+          ?.eq('status', 'accepted')
+          ?.limit(1);
 
-      if (friendshipError) throw friendshipError;
-      const friendship = friendshipData?.[0];
+        if (friendshipError) throw friendshipError;
+        friendship = friendshipData?.[0];
+      }
 
       // Get friend's statistics
-      const { data: activityStats } = await supabase?.rpc('get_user_ranking_stats', { target_user_id: friendId });
+      const { data: activityStats } = await supabase?.rpc('get_user_ranking_stats', { p_user_id: friendId });
 
       // Get friend's recent achievements
       const { data: achievements } = await supabase?.from('achievements')
@@ -355,11 +357,15 @@ export const friendService = {
 
       const friendIds = friendFriendships?.map(f => f.user_id === friendId ? f.friend_id : f.user_id) || [];
 
-      const { count: mutualCount } = await supabase?.from('friendships')
-        ?.select('*', { count: 'only', head: true })
-        ?.eq('status', 'accepted')
-        ?.or(`user_id.eq.${user?.id},friend_id.eq.${user?.id}`)
-        ?.in('friend_id', friendIds);
+      let mutualCount = 0;
+      if (user && friendIds.length > 0) {
+        const { count: mutualCountData } = await supabase?.from('friendships')
+          ?.select('*', { count: 'only', head: true })
+          ?.eq('status', 'accepted')
+          ?.or(`user_id.eq.${user?.id},friend_id.eq.${user?.id}`)
+          ?.in('friend_id', friendIds);
+        mutualCount = mutualCountData || 0;
+      }
 
       return {
         profile,
@@ -383,7 +389,8 @@ export const friendService = {
   async getSharedAchievements(friendId) {
     try {
       const { data: { user } } = await supabase?.auth?.getUser();
-      if (!user) throw new Error('Not authenticated');
+      // If not logged in, no shared achievements possible
+      if (!user) return [];
 
       const { data: friendAchievements } = await supabase?.from('achievements')?.select('achievement_type')?.eq('user_id', friendId);
       const achievementTypes = friendAchievements?.map(a => a.achievement_type) || [];
