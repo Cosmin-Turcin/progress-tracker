@@ -16,6 +16,7 @@ import FriendsLeaderboard from './pages/friends-leaderboard';
 import Profile from './pages/profile';
 import SocialActivityFeed from 'pages/social-activity-feed';
 import DirectMessaging from "pages/direct-messaging";
+import LandingPage from "pages/landing/LandingPage";
 
 function Routes() {
   return (
@@ -55,7 +56,7 @@ function Routes() {
           <Route path="/direct-messaging/:friendId" element={<ProtectedRoute><DirectMessaging /></ProtectedRoute>} />
 
           {/* Define your route here */}
-          <Route path="/" element={<DailyActivityDashboard />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/habit-consistency-hub" element={<HabitConsistencyHub />} />
           <Route path="/daily-activity-dashboard" element={<DailyActivityDashboard />} />
           <Route path="/progress-analytics" element={<ProgressAnalytics />} />
