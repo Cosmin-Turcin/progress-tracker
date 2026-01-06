@@ -18,6 +18,7 @@ import SocialActivityFeed from 'pages/social-activity-feed';
 import DirectMessaging from "pages/direct-messaging";
 import LandingPage from "pages/landing/LandingPage";
 import SearchProfessionals from "pages/search-professionals";
+import CVBuilder from "pages/cv-builder";
 
 function Routes() {
   return (
@@ -56,6 +57,7 @@ function Routes() {
           <Route path="/direct-messaging" element={<ProtectedRoute><DirectMessaging /></ProtectedRoute>} />
           <Route path="/direct-messaging/:friendId" element={<ProtectedRoute><DirectMessaging /></ProtectedRoute>} />
           <Route path="/search-professionals" element={<ProtectedRoute><SearchProfessionals /></ProtectedRoute>} />
+          <Route path="/cv-builder" element={<ProtectedRoute><CVBuilder /></ProtectedRoute>} />
 
           {/* Define your route here */}
           <Route path="/" element={<LandingPage />} />

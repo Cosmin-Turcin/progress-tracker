@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Users, Briefcase, Brain, Utensils, Dumbbell, X, Code, TrendingUp, Building2, Palette, Stethoscope, GraduationCap } from 'lucide-react';
+import { Search, Filter, Users, Briefcase, Brain, Utensils, Dumbbell, X, Code, TrendingUp, Building2, Palette, Stethoscope, GraduationCap, MapPin, CheckCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import ProfessionalCard from './components/ProfessionalCard';
 
@@ -9,6 +9,9 @@ const SearchProfessionals = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedLevel, setSelectedLevel] = useState('all');
     const [selectedRole, setSelectedRole] = useState('all');
+    const [selectedAvailability, setSelectedAvailability] = useState('all');
+    const [selectedRemote, setSelectedRemote] = useState('all');
+    const [skillSearch, setSkillSearch] = useState('');
     const [professionals, setProfessionals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
@@ -37,9 +40,22 @@ const SearchProfessionals = () => {
         { id: 'education', label: 'Education', icon: GraduationCap, keywords: ['teacher', 'professor', 'educator', 'tutor', 'instructor', 'coach'] },
     ];
 
+    const availabilityOptions = [
+        { id: 'all', label: 'Any Availability' },
+        { id: 'looking', label: 'Actively Looking', color: 'text-green-600' },
+        { id: 'open', label: 'Open to Opportunities', color: 'text-blue-600' },
+    ];
+
+    const remoteOptions = [
+        { id: 'all', label: 'Any Location' },
+        { id: 'remote', label: 'Remote Only' },
+        { id: 'hybrid', label: 'Hybrid' },
+        { id: 'onsite', label: 'On-site' },
+    ];
+
     useEffect(() => {
         fetchProfessionals();
-    }, [selectedCategory, selectedLevel, selectedRole, searchQuery]);
+    }, [selectedCategory, selectedLevel, selectedRole, selectedAvailability, selectedRemote, searchQuery, skillSearch]);
 
     const fetchProfessionals = async () => {
         setLoading(true);
@@ -129,6 +145,36 @@ const SearchProfessionals = () => {
                         return roleConfig.keywords.some(keyword => searchText.includes(keyword));
                     });
                 }
+            }
+
+            // Availability filtering
+            if (selectedAvailability !== 'all') {
+                filteredData = filteredData.filter(user => {
+                    const profData = user?.professional_data || {};
+                    return profData?.availability === selectedAvailability;
+                });
+            }
+
+            // Remote preference filtering
+            if (selectedRemote !== 'all') {
+                filteredData = filteredData.filter(user => {
+                    const profData = user?.professional_data || {};
+                    return profData?.remotePreference === selectedRemote;
+                });
+            }
+
+            // Skill search filtering
+            if (skillSearch.trim()) {
+                const searchTerms = skillSearch.toLowerCase().split(',').map(s => s.trim()).filter(s => s);
+                filteredData = filteredData.filter(user => {
+                    const profData = user?.professional_data || {};
+                    const userSkills = (profData?.skills || []).map(s =>
+                        typeof s === 'string' ? s.toLowerCase() : (s?.name || '').toLowerCase()
+                    );
+                    return searchTerms.some(term =>
+                        userSkills.some(skill => skill.includes(term))
+                    );
+                });
             }
 
             // Sort by consistency score
@@ -245,6 +291,52 @@ const SearchProfessionals = () => {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Availability Filter */}
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Availability</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {availabilityOptions.map(opt => (
+                                        <button
+                                            key={opt.id}
+                                            onClick={() => setSelectedAvailability(opt.id)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedAvailability === opt.id ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                                        >
+                                            {opt.id !== 'all' && <CheckCircle size={16} />}
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Remote Preference Filter */}
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Location Preference</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {remoteOptions.map(opt => (
+                                        <button
+                                            key={opt.id}
+                                            onClick={() => setSelectedRemote(opt.id)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedRemote === opt.id ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                                        >
+                                            {opt.id !== 'all' && <MapPin size={16} />}
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Skill Search */}
+                            <div className="w-full">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Search by Skills</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g., React, Python, Figma (comma separated)"
+                                    value={skillSearch}
+                                    onChange={(e) => setSkillSearch(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                />
+                            </div>
                         </div>
                     </div>
                 </motion.div>
@@ -280,9 +372,16 @@ const SearchProfessionals = () => {
                             <p className="text-gray-600">
                                 <span className="font-bold text-gray-900">{professionals.length}</span> professionals found
                             </p>
-                            {(selectedCategory !== 'all' || selectedLevel !== 'all' || selectedRole !== 'all') && (
+                            {(selectedCategory !== 'all' || selectedLevel !== 'all' || selectedRole !== 'all' || selectedAvailability !== 'all' || selectedRemote !== 'all' || skillSearch) && (
                                 <button
-                                    onClick={() => { setSelectedCategory('all'); setSelectedLevel('all'); setSelectedRole('all'); }}
+                                    onClick={() => {
+                                        setSelectedCategory('all');
+                                        setSelectedLevel('all');
+                                        setSelectedRole('all');
+                                        setSelectedAvailability('all');
+                                        setSelectedRemote('all');
+                                        setSkillSearch('');
+                                    }}
                                     className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium"
                                 >
                                     <X size={14} /> Clear Filters
