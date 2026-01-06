@@ -371,8 +371,20 @@ export const friendService = {
         profile,
         friendship,
         stats: activityStats?.[0] || {},
-        achievements: achievements || [],
-        activities: activities || [],
+        achievements: achievements?.map(a => ({
+          ...a,
+          achievedAt: a.achieved_at,
+          achievementType: a.achievement_type,
+          iconColor: a.icon_color,
+          isNew: a.is_new
+        })) || [],
+        activities: activities?.map(a => ({
+          ...a,
+          activityDate: a.activity_date,
+          activityTime: a.activity_time,
+          activityName: a.activity_name,
+          iconColor: a.icon_color
+        })) || [],
         mutualFriendsCount: mutualCount || 0
       };
     } catch (error) {

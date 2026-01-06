@@ -318,8 +318,7 @@ export default function Profile({ resolvedUserId }) {
 
             {/* Row 3: Professional Resume (Full Width) */}
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-lg transition-shadow animate-enter delay-400">
-              <div className="h-2 bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900"></div>
-              <div className="p-1">
+              <div>
                 <ProfessionalTab targetProfile={profileData} isReadOnly={!isOwnProfile} embedded={true} />
               </div>
             </div>

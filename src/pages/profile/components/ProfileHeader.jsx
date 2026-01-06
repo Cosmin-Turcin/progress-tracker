@@ -67,7 +67,7 @@ export default function ProfileHeader({
             {/* Back Button Overlay */}
             <div className="absolute top-6 left-6 z-30">
                 <button
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate('/')}
                     className="flex items-center gap-2 px-4 py-2 bg-black/30 hover:bg-black/50 text-white rounded-full backdrop-blur-md transition-all border border-white/20 font-medium group/back"
                 >
                     <ArrowLeft className="w-4 h-4 group-hover/back:-translate-x-1 transition-transform" />

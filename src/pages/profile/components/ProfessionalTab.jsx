@@ -121,9 +121,9 @@ export default function ProfessionalTab({ targetProfile, isReadOnly = false, emb
     );
 
     return (
-        <div className={embedded ? "bg-white rounded-2xl border border-gray-200 shadow-sm p-8 max-w-5xl mx-auto" : "max-w-4xl mx-auto py-8 px-4"}>
+        <div className={embedded ? "w-full p-6 md:p-8" : "max-w-4xl mx-auto py-8 px-4"}>
             {/* Resume-like Header for Embedded Mode */}
-            {embedded && !isReadOnly && (
+            {embedded && (
                 <div className="flex justify-between items-start mb-8 pb-6 border-b-2 border-gray-100">
                     <div>
                         <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
@@ -132,23 +132,25 @@ export default function ProfessionalTab({ targetProfile, isReadOnly = false, emb
                         </h2>
                         <p className="text-gray-500 font-medium mt-1">Digital Curriculum Vitae</p>
                     </div>
-                    <div className="flex gap-2 print:hidden">
-                        <button
-                            onClick={() => setIsEditing(!isEditing)}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-bold text-sm shadow-md"
-                        >
-                            {isEditing ? <><X className="w-4 h-4" /> Exit Editing</> : <><Edit2 className="w-4 h-4" /> Edit CV Info</>}
-                        </button>
-                        {isEditing && (
+                    {!isReadOnly && (
+                        <div className="flex gap-2 print:hidden">
                             <button
-                                onClick={handleSave}
-                                disabled={saving}
-                                className="ml-3 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold text-sm shadow-md disabled:opacity-50"
+                                onClick={() => setIsEditing(!isEditing)}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-bold text-sm shadow-md"
                             >
-                                {saving ? 'Saving...' : <><Save className="w-4 h-4" /> Save</>}
+                                {isEditing ? <><X className="w-4 h-4" /> Exit Editing</> : <><Edit2 className="w-4 h-4" /> Edit CV Info</>}
                             </button>
-                        )}
-                    </div>
+                            {isEditing && (
+                                <button
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                    className="ml-3 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold text-sm shadow-md disabled:opacity-50"
+                                >
+                                    {saving ? 'Saving...' : <><Save className="w-4 h-4" /> Save</>}
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 

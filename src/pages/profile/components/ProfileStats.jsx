@@ -137,13 +137,13 @@ export default function ProfileStats({ stats, userStats, isOwnProfile }) {
                 ))}
             </div>
 
-            {/* Consistency Bar (Personal Only) */}
-            {isOwnProfile && stats?.current_streak > 0 && (
+            {/* Consistency Bar (Visible for all) */}
+            {stats && (
                 <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <h3 className="text-lg font-bold text-gray-900">Consistency Rating</h3>
-                            <p className="text-sm text-gray-500">Based on your 30-day activity</p>
+                            <p className="text-sm text-gray-500">Based on 30-day activity</p>
                         </div>
                         <div className="text-right">
                             <span className="text-3xl font-bold text-blue-600">
@@ -166,7 +166,16 @@ export default function ProfileStats({ stats, userStats, isOwnProfile }) {
                     </div>
                     <div className="mt-4 flex items-center gap-3 text-sm text-gray-600 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
                         <TrendingUp className="w-4 h-4 text-blue-600" />
-                        <span>Keep your streak alive to reach 100% consistency this month!</span>
+                        <span>
+                            {(stats?.current_streak || 0) > 0
+                                ? (isOwnProfile
+                                    ? "Keep your streak alive to reach 100% consistency this month!"
+                                    : "This user is maintaining a strong activity streak!")
+                                : (isOwnProfile
+                                    ? "Start a streak today to build up your consistency rating!"
+                                    : "No active streak currently recorded.")
+                            }
+                        </span>
                     </div>
                 </div>
             )}
