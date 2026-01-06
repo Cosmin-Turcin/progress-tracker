@@ -3,6 +3,7 @@
 
 -- 1. Update user_profiles RLS to allow viewing other profiles (standard for social features)
 DROP POLICY IF EXISTS "users_view_own_profile" ON public.user_profiles;
+DROP POLICY IF EXISTS "profiles_public_read" ON public.user_profiles;
 CREATE POLICY "profiles_public_read"
 ON public.user_profiles
 FOR SELECT
@@ -11,6 +12,8 @@ USING (true);
 
 -- 2. Update user_statistics RLS to allow viewing other statistics (needed for leaderboard)
 DROP POLICY IF EXISTS "users_manage_own_statistics" ON public.user_statistics;
+DROP POLICY IF EXISTS "statistics_public_read" ON public.user_statistics;
+DROP POLICY IF EXISTS "statistics_manage_own" ON public.user_statistics;
 CREATE POLICY "statistics_public_read"
 ON public.user_statistics
 FOR SELECT
@@ -25,6 +28,7 @@ USING (user_id = auth.uid())
 WITH CHECK (user_id = auth.uid());
 
 -- 3. Redefine get_global_leaderboard with consistent naming and alias matching
+DROP FUNCTION IF EXISTS public.get_global_leaderboard(UUID, TEXT, INTEGER);
 CREATE OR REPLACE FUNCTION public.get_global_leaderboard(
     requesting_user_id UUID,
     time_period TEXT DEFAULT 'all-time',
