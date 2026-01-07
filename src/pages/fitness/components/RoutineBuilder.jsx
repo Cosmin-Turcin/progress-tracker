@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     X,
     Plus,
@@ -20,11 +20,11 @@ const RoutineBuilder = ({ onClose, onSave }) => {
     const [difficulty, setDifficulty] = useState('Intermediate');
     const [videoUrl, setVideoUrl] = useState('');
     const [exercises, setExercises] = useState([
-        { id: 1, name: '', sets: '', reps: '', notes: '' }
+        { id: 1, name: '', sets: '', reps: '', duration: '', notes: '' }
     ]);
 
     const addExercise = () => {
-        setExercises([...exercises, { id: Date.now(), name: '', sets: '', reps: '', notes: '' }]);
+        setExercises([...exercises, { id: Date.now(), name: '', sets: '', reps: '', duration: '', notes: '' }]);
     };
 
     const removeExercise = (id) => {
@@ -179,7 +179,7 @@ const RoutineBuilder = ({ onClose, onSave }) => {
                                                     className="w-full bg-white px-4 py-2 rounded-xl border border-gray-100 outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                                                 />
                                             </div>
-                                            <div className="col-span-6 md:col-span-3">
+                                            <div className="col-span-4 md:col-span-2">
                                                 <input
                                                     type="text"
                                                     placeholder="Sets"
@@ -188,12 +188,21 @@ const RoutineBuilder = ({ onClose, onSave }) => {
                                                     className="w-full bg-white px-4 py-2 rounded-xl border border-gray-100 outline-none focus:ring-2 focus:ring-blue-500 text-center font-bold"
                                                 />
                                             </div>
-                                            <div className="col-span-6 md:col-span-3">
+                                            <div className="col-span-4 md:col-span-2">
                                                 <input
                                                     type="text"
-                                                    placeholder="Reps/Time"
+                                                    placeholder="Reps"
                                                     value={ex.reps}
                                                     onChange={(e) => updateExercise(ex.id, 'reps', e.target.value)}
+                                                    className="w-full bg-white px-4 py-2 rounded-xl border border-gray-100 outline-none focus:ring-2 focus:ring-blue-500 text-center font-bold"
+                                                />
+                                            </div>
+                                            <div className="col-span-4 md:col-span-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Secs"
+                                                    value={ex.duration}
+                                                    onChange={(e) => updateExercise(ex.id, 'duration', e.target.value)}
                                                     className="w-full bg-white px-4 py-2 rounded-xl border border-gray-100 outline-none focus:ring-2 focus:ring-blue-500 text-center font-bold"
                                                 />
                                             </div>

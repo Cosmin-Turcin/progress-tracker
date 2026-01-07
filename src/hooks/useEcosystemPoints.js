@@ -18,21 +18,21 @@ export const useEcosystemPoints = () => {
 
         setLoading(true);
         try {
-            // 1. Update user total points in user_profiles
-            const { data: profile, error: profileError } = await supabase
-                .from('user_profiles')
-                .select('points')
-                .eq('id', user.id)
+            // 1. Update user total points in user_statistics
+            const { data: stats, error: statsError } = await supabase
+                .from('user_statistics')
+                .select('total_points')
+                .eq('user_id', user.id)
                 .single();
 
-            if (profileError) throw profileError;
+            if (statsError) throw statsError;
 
-            const newTotal = (profile.points || 0) + points;
+            const newTotal = (stats.total_points || 0) + points;
 
             const { error: updateError } = await supabase
-                .from('user_profiles')
-                .update({ points: newTotal })
-                .eq('id', user.id);
+                .from('user_statistics')
+                .update({ total_points: newTotal })
+                .eq('user_id', user.id);
 
             if (updateError) throw updateError;
 
@@ -68,19 +68,19 @@ export const useEcosystemPoints = () => {
 
             // 2. Award creator reward (larger reward for sharing valuable content)
             if (creatorId && creatorId !== user.id) {
-                // Award points to creator
-                const { data: creatorProfile, error: creatorProfileError } = await supabase
-                    .from('user_profiles')
-                    .select('points')
-                    .eq('id', creatorId)
+                // Award points to creator in user_statistics
+                const { data: creatorStats, error: creatorStatsError } = await supabase
+                    .from('user_statistics')
+                    .select('total_points')
+                    .eq('user_id', creatorId)
                     .single();
 
-                if (!creatorProfileError) {
-                    const newCreatorTotal = (creatorProfile.points || 0) + 15;
+                if (!creatorStatsError) {
+                    const newCreatorTotal = (creatorStats.total_points || 0) + 15;
                     await supabase
-                        .from('user_profiles')
-                        .update({ points: newCreatorTotal })
-                        .eq('id', creatorId);
+                        .from('user_statistics')
+                        .update({ total_points: newCreatorTotal })
+                        .eq('user_id', creatorId);
 
                     // Log activity for creator
                     await supabase.from('activity_logs').insert({

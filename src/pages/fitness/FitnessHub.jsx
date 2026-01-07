@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Header from '../../components/Header';
 import RoutineBuilder from './components/RoutineBuilder';
+import WorkoutPlayer from './components/WorkoutPlayer';
 import { useEcosystemPoints } from '../../hooks/useEcosystemPoints';
 
 const RoutineCard = ({ routine, onUse }) => (
@@ -74,33 +75,50 @@ const RoutineCard = ({ routine, onUse }) => (
 const FitnessHub = () => {
     const [activeTab, setActiveTab] = useState('explore');
     const [showBuilder, setShowBuilder] = useState(false);
+    const [activeWorkout, setActiveWorkout] = useState(null);
     const [routines, setRoutines] = useState([
         {
             title: "Explosive Morning Power",
             description: "High-intensity interval training designed to jumpstart your metabolic rate.",
             duration: 35,
-            exercises: 8,
+            exercisesCount: 8,
             difficulty: "Hard",
             author: "AlexR",
-            image: null
+            image: null,
+            exercises: [
+                { name: "Jumping Jacks", duration: "60", reps: "50" },
+                { name: "Burpees", reps: "20" },
+                { name: "Mountain Climbers", duration: "45" },
+                { name: "Push Ups", reps: "30" }
+            ]
         },
         {
             title: "Mind-Muscle Connection",
             description: "Slow, controlled movements focusing on muscle hypertrophy and isometric holds.",
             duration: 50,
-            exercises: 12,
+            exercisesCount: 12,
             difficulty: "Mid",
             author: "SarahV",
-            image: null
+            image: null,
+            exercises: [
+                { name: "Tempo Squats", reps: "15", sets: "4" },
+                { name: "Slow Pushups", reps: "12", sets: "4" },
+                { name: "Static Lunge", duration: "30", sets: "3" }
+            ]
         },
         {
             title: "Core Foundation Elite",
             description: "The ultimate core stabilization program used by professional athletes.",
             duration: 20,
-            exercises: 6,
+            exercisesCount: 6,
             difficulty: "Pro",
             author: "CoachK",
-            image: null
+            image: null,
+            exercises: [
+                { name: "Plank", duration: "120" },
+                { name: "Hollow Body Hold", duration: "60" },
+                { name: "Dragon Flags", reps: "8" }
+            ]
         }
     ]);
 
@@ -114,8 +132,20 @@ const FitnessHub = () => {
             metadata: { type: 'fitness_routine', title: newRoutine.title, category: 'fitness' }
         });
 
-        setRoutines([{ ...newRoutine, author: 'Me', exercises: (newRoutine.exercises || []).length }, ...routines]);
+        setRoutines([{ ...newRoutine, author: 'Me', exercisesCount: (newRoutine.exercises || []).length }, ...routines]);
         setShowBuilder(false);
+    };
+
+    const handleWorkoutComplete = async (workoutData) => {
+        // trackUsage awards points to both user and creator
+        await trackUsage({
+            contentType: 'fitness_routine',
+            contentId: workoutData.routineTitle,
+            creatorId: activeWorkout.author === 'Me' ? null : 'other_user',
+            category: 'fitness'
+        });
+
+        setActiveWorkout(null);
     };
 
     return (
@@ -194,13 +224,8 @@ const FitnessHub = () => {
                             {routines.map((routine, i) => (
                                 <RoutineCard
                                     key={i}
-                                    routine={routine}
-                                    onUse={() => trackUsage({
-                                        contentType: 'fitness_routine',
-                                        contentId: routine.title,
-                                        creatorId: routine.author === 'Me' ? null : 'other_user',
-                                        category: 'fitness'
-                                    })}
+                                    routine={{ ...routine, exercises: routine.exercisesCount || routine.exercises?.length || 0 }}
+                                    onUse={() => setActiveWorkout(routine)}
                                 />
                             ))}
                         </div>
@@ -259,6 +284,13 @@ const FitnessHub = () => {
                     <RoutineBuilder
                         onClose={() => setShowBuilder(false)}
                         onSave={handleCreateRoutine}
+                    />
+                )}
+                {activeWorkout && (
+                    <WorkoutPlayer
+                        routine={activeWorkout}
+                        onClose={() => setActiveWorkout(null)}
+                        onComplete={handleWorkoutComplete}
                     />
                 )}
             </AnimatePresence>
