@@ -1,7 +1,7 @@
 import React from 'react';
 import { Trophy, Flame, Target, Award, Calendar, TrendingUp, Activity, Zap } from 'lucide-react';
 
-export default function ProfileStats({ stats, userStats, isOwnProfile }) {
+export default function ProfileStats({ stats, userStats, isOwnProfile, sidebar = false }) {
     const getComparison = (friendValue, userValue) => {
         if (isOwnProfile || !userStats) return null;
 
@@ -50,24 +50,24 @@ export default function ProfileStats({ stats, userStats, isOwnProfile }) {
     const detailStats = [
         {
             icon: Activity,
-            label: 'Total Sessions',
+            label: 'Sessions',
             value: stats?.total_activities || 0,
             bgColor: 'bg-blue-50',
             iconColor: 'text-blue-600'
         },
         {
             icon: Zap,
-            label: 'Longest Streak',
-            value: `${stats?.longest_streak || 0} days`,
+            label: 'Record',
+            value: `${stats?.longest_streak || 0}d`,
             bgColor: 'bg-orange-50',
             iconColor: 'text-orange-600'
         },
         {
             icon: Calendar,
-            label: 'Last Activity',
+            label: 'Last',
             value: stats?.last_activity_date
                 ? new Date(stats?.last_activity_date)?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                : 'No activity',
+                : 'None',
             bgColor: 'bg-indigo-50',
             iconColor: 'text-indigo-600'
         }
@@ -75,108 +75,103 @@ export default function ProfileStats({ stats, userStats, isOwnProfile }) {
 
     return (
         <div className="space-y-6">
-            {/* Primary Stats Row - Hero Redesign */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Primary Stats - Hero Redesign */}
+            <div className={`grid gap-4 ${sidebar ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
                 {mainStats.map((stat, index) => {
                     const comparison = getComparison(stat.value, stat.userValue);
                     return (
                         <div
                             key={index}
-                            className={`relative overflow-hidden rounded-2xl p-8 text-white shadow-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl bg-gradient-to-br ${stat.gradient}`}
+                            className={`relative overflow-hidden rounded-2xl p-6 text-white shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br ${stat.gradient}`}
                         >
                             <div className="relative z-10 flex flex-col h-full justify-between">
                                 <div>
-                                    <div className="flex items-center gap-3 mb-2 opacity-90">
-                                        <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                            <stat.icon className="w-6 h-6" />
+                                    <div className="flex items-center gap-2 mb-2 opacity-90">
+                                        <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                                            <stat.icon className="w-5 h-5" />
                                         </div>
-                                        <span className="text-sm font-bold uppercase tracking-widest">{stat.label}</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">{stat.label}</span>
                                     </div>
 
-                                    <div className="mt-4">
-                                        <span className="text-6xl font-black tracking-tighter leading-none">
+                                    <div className="mt-2">
+                                        <span className={`${sidebar ? 'text-4xl' : 'text-5xl'} font-black tracking-tighter leading-none`}>
                                             {stat.value}
                                         </span>
-                                        {stat.suffix && <span className="text-2xl font-bold opacity-80 ml-1">{stat.suffix}</span>}
+                                        {stat.suffix && <span className="text-xl font-bold opacity-80 ml-1">{stat.suffix}</span>}
                                     </div>
-                                    <p className="mt-2 font-medium opacity-80 text-sm">{stat.description}</p>
+                                    <p className="mt-1 font-medium opacity-80 text-[10px]">{stat.description}</p>
                                 </div>
 
                                 {comparison && (
-                                    <div className="mt-6 pt-4 border-t border-white/20 flex items-center gap-2">
-                                        <div className="bg-white/20 p-1.5 rounded-full backdrop-blur-sm">
-                                            {comparison.icon ? <comparison.icon className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
+                                    <div className="mt-4 pt-3 border-t border-white/20 flex items-center gap-2">
+                                        <div className="bg-white/20 p-1 rounded-full backdrop-blur-sm">
+                                            {comparison.icon ? <comparison.icon className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
                                         </div>
-                                        <span className="font-bold text-sm text-white drop-shadow-sm">
+                                        <span className="font-bold text-[10px] text-white drop-shadow-sm">
                                             {comparison.text}
                                         </span>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Decorative background Elements */}
-                            <div className="absolute top-0 right-0 p-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                            <stat.icon className="absolute -right-6 -bottom-6 w-48 h-48 opacity-10 transform rotate-12 group-hover:rotate-6 transition-transform pointer-events-none" />
+                            <stat.icon className="absolute -right-4 -bottom-4 w-32 h-32 opacity-10 transform rotate-12 pointer-events-none" />
                         </div>
                     );
                 })}
             </div>
 
-            {/* Secondary Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Secondary Stats Group */}
+            <div className={`grid gap-3 ${sidebar ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
                 {detailStats.map((stat, index) => (
-                    <div key={index} className="bg-white rounded-xl p-4 border border-gray-100 flex items-center gap-4 hover:border-blue-100 transition-colors shadow-sm">
-                        <div className={`w-12 h-12 ${stat.bgColor} rounded-xl flex items-center justify-center`}>
-                            <stat.icon className={`w-6 h-6 ${stat.iconColor}`} />
+                    <div key={index} className="bg-white rounded-xl p-3 border border-gray-100 flex items-center gap-3 hover:border-blue-100 transition-colors shadow-sm">
+                        <div className={`w-10 h-10 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
+                            <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
                         </div>
                         <div>
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{stat.label}</p>
-                            <p className="text-lg font-bold text-gray-900">{stat.value}</p>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{stat.label}</p>
+                            <p className="text-sm font-black text-gray-900 leading-none mt-0.5">{stat.value}</p>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Consistency Bar (Visible for all) */}
+            {/* Consistency Bar */}
             {stats && (
-                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
+                <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
                         <div>
-                            <h3 className="text-lg font-bold text-gray-900">Consistency Rating</h3>
-                            <p className="text-sm text-gray-500">Based on 30-day activity</p>
+                            <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Consistency</h3>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">30-day index</p>
                         </div>
                         <div className="text-right">
-                            <span className="text-3xl font-bold text-blue-600">
+                            <span className="text-2xl font-black text-blue-600">
                                 {Math.round(((stats?.current_streak || 0) / 30) * 100)}%
                             </span>
                         </div>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden relative">
-                        {/* Grid markers for visual metric feeling */}
-                        <div className="absolute top-0 bottom-0 left-1/4 w-px bg-white/50 z-10"></div>
-                        <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white/50 z-10"></div>
-                        <div className="absolute top-0 bottom-0 left-3/4 w-px bg-white/50 z-10"></div>
-
+                    <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden relative">
                         <div
-                            className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(99,102,241,0.5)]"
+                            className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 h-full rounded-full transition-all duration-1000 ease-out"
                             style={{
                                 width: `${Math.min(((stats?.current_streak || 0) / 30) * 100, 100)}%`
                             }}
                         ></div>
                     </div>
-                    <div className="mt-4 flex items-center gap-3 text-sm text-gray-600 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
-                        <TrendingUp className="w-4 h-4 text-blue-600" />
-                        <span>
-                            {(stats?.current_streak || 0) > 0
-                                ? (isOwnProfile
-                                    ? "Keep your streak alive to reach 100% consistency this month!"
-                                    : "This user is maintaining a strong activity streak!")
-                                : (isOwnProfile
-                                    ? "Start a streak today to build up your consistency rating!"
-                                    : "No active streak currently recorded.")
-                            }
-                        </span>
-                    </div>
+                    {!sidebar && (
+                        <div className="mt-4 flex items-center gap-3 text-sm text-gray-600 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                            <TrendingUp className="w-4 h-4 text-blue-600" />
+                            <span>
+                                {(stats?.current_streak || 0) > 0
+                                    ? (isOwnProfile
+                                        ? "Keep your streak alive to reach 100% consistency this month!"
+                                        : "This user is maintaining a strong activity streak!")
+                                    : (isOwnProfile
+                                        ? "Start a streak today to build up your consistency rating!"
+                                        : "No active streak currently recorded.")
+                                }
+                            </span>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

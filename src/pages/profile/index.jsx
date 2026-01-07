@@ -287,17 +287,9 @@ export default function Profile({ resolvedUserId }) {
           {/* Main Content Column (Spans 3/4) */}
           <div className="lg:col-span-3 space-y-6">
 
-            {/* Row 1: Hero Stats */}
-            <div className="bg-white rounded-3xl p-1 shadow-sm border border-gray-100 overflow-hidden animate-enter delay-100">
-              <div className="bg-gradient-to-br from-gray-50/50 to-white p-6 rounded-[20px]">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
-                    <TrendingUp className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 tracking-tight">Performance Metrics</h3>
-                </div>
-                <ProfileStats stats={statistics} userStats={userStats} isOwnProfile={isOwnProfile} />
-              </div>
+            {/* Row 1: Professional Portfolio (Full Width) */}
+            <div className="animate-enter delay-100">
+              <ProfessionalTab targetProfile={profileData} isReadOnly={!isOwnProfile} embedded={true} />
             </div>
 
             {/* Row 2: Achievements Showcase (Full Width) */}
@@ -311,21 +303,26 @@ export default function Profile({ resolvedUserId }) {
               <AchievementShowcase
                 achievements={achievements}
                 onCongratulate={(id) => {
-                  if (!isOwnProfile) friendService?.congratulateFriend(targetUserId, id);
+                  if (!isOwnProfile) achievementService?.congratulateFriend(targetUserId, id);
                 }}
               />
-            </div>
-
-            {/* Row 3: Professional Resume (Full Width) */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-lg transition-shadow animate-enter delay-400">
-              <div>
-                <ProfessionalTab targetProfile={profileData} isReadOnly={!isOwnProfile} embedded={true} />
-              </div>
             </div>
           </div>
 
           {/* Sidebar Column (Right Side - Spans 1/4) */}
-          <div className="lg:col-span-1 space-y-6 animate-enter delay-500">
+          <div className="lg:col-span-1 space-y-6 animate-enter delay-300">
+
+            {/* Performance Metrics - Moved to Sidebar Top */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 tracking-tight">Performance</h3>
+              </div>
+              <ProfileStats stats={statistics} userStats={userStats} isOwnProfile={isOwnProfile} sidebar={true} />
+            </div>
+
             {/* Quick Actions / Context */}
             {!isOwnProfile && (
               <QuickChallengePanel
@@ -345,20 +342,6 @@ export default function Profile({ resolvedUserId }) {
                 sharedAchievements={sharedAchievements}
               />
             )}
-
-            {/* Activity Timeline Card */}
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-6 h-[calc(100vh-2rem)] overflow-y-auto custom-scrollbar">
-              <div className="flex items-center gap-3 mb-6 sticky top-0 bg-white z-10 py-2 border-b border-gray-50">
-                <div className="p-2 bg-purple-100 rounded-xl text-purple-600">
-                  <Activity className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
-                  <p className="text-xs text-gray-500 font-medium">Live updates</p>
-                </div>
-              </div>
-              <ActivityTimeline activities={recentActivities} compact={true} />
-            </div>
 
             {isOwnProfile && (
               <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-6 text-white shadow-lg">
