@@ -1,28 +1,43 @@
 import React, { useState } from 'react';
-import { Briefcase, GraduationCap, Award, Edit2, Save, X, Plus, Trash2, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Briefcase, GraduationCap, Award, Edit2, Save, X, Plus, Trash2, ChevronRight, Globe, FolderOpen, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 
 export default function ProfessionalTab({ targetProfile, isReadOnly = false, embedded = false }) {
+    const navigate = useNavigate();
     const { profile: currentUserProfile, updateProfile } = useAuth();
     const effectiveProfile = targetProfile || currentUserProfile;
 
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [profData, setProfData] = useState({
+        headline: '',
+        summary: '',
         experience: [],
         education: [],
         skills: [],
-        summary: ""
+        certifications: [],
+        projects: [],
+        languages: [],
+        availability: 'not-looking',
+        remotePreference: 'flexible',
     });
 
     // Sync profData with profile when profile loads or when not editing
     React.useEffect(() => {
         if (!isEditing && effectiveProfile?.professional_data) {
+            const pd = effectiveProfile.professional_data;
             setProfData({
-                experience: effectiveProfile.professional_data.experience || [],
-                education: effectiveProfile.professional_data.education || [],
-                skills: effectiveProfile.professional_data.skills || [],
-                summary: effectiveProfile.professional_data.summary || ""
+                headline: pd.headline || '',
+                summary: pd.summary || '',
+                experience: pd.experience || [],
+                education: pd.education || [],
+                skills: pd.skills || [],
+                certifications: pd.certifications || [],
+                projects: pd.projects || [],
+                languages: pd.languages || [],
+                availability: pd.availability || 'not-looking',
+                remotePreference: pd.remotePreference || 'flexible',
             });
         }
     }, [effectiveProfile, isEditing]);
@@ -131,20 +146,29 @@ export default function ProfessionalTab({ targetProfile, isReadOnly = false, emb
                             Professional History
                         </h2>
                         <p className="text-gray-500 font-medium mt-1">Digital Curriculum Vitae</p>
+                        {profData.headline && (
+                            <p className="text-lg text-blue-600 font-bold mt-2">{profData.headline}</p>
+                        )}
                     </div>
                     {!isReadOnly && (
                         <div className="flex gap-2 print:hidden">
                             <button
+                                onClick={() => navigate('/cv-builder')}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold text-sm shadow-md"
+                            >
+                                <Edit2 className="w-4 h-4" /> Full CV Builder
+                            </button>
+                            <button
                                 onClick={() => setIsEditing(!isEditing)}
                                 className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-bold text-sm shadow-md"
                             >
-                                {isEditing ? <><X className="w-4 h-4" /> Exit Editing</> : <><Edit2 className="w-4 h-4" /> Edit CV Info</>}
+                                {isEditing ? <><X className="w-4 h-4" /> Exit Editing</> : <><Edit2 className="w-4 h-4" /> Quick Edit</>}
                             </button>
                             {isEditing && (
                                 <button
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="ml-3 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-bold text-sm shadow-md disabled:opacity-50"
+                                    className="ml-3 flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-bold text-sm shadow-md disabled:opacity-50"
                                 >
                                     {saving ? 'Saving...' : <><Save className="w-4 h-4" /> Save</>}
                                 </button>
@@ -345,22 +369,30 @@ export default function ProfessionalTab({ targetProfile, isReadOnly = false, emb
                 <section>
                     <SectionHeader icon={Award} title="Expertise & Skills" />
                     <div className="flex flex-wrap gap-3">
-                        {(profData.skills || []).map((skill, index) => (
-                            <span
-                                key={index}
-                                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition ${isEditing
-                                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                    : 'bg-gray-100 text-gray-700'
-                                    }`}
-                            >
-                                {skill}
-                                {isEditing && (
-                                    <button onClick={() => removeSkill(skill)} className="hover:text-blue-900">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                )}
-                            </span>
-                        ))}
+                        {(profData.skills || []).map((skill, index) => {
+                            // Handle both string and object skill formats
+                            const skillName = typeof skill === 'string' ? skill : (skill?.name || '');
+                            const skillKey = typeof skill === 'string' ? skill : (skill?.id || index);
+
+                            if (!skillName) return null;
+
+                            return (
+                                <span
+                                    key={skillKey}
+                                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition ${isEditing
+                                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                        : 'bg-gray-100 text-gray-700'
+                                        }`}
+                                >
+                                    {skillName}
+                                    {isEditing && (
+                                        <button onClick={() => removeSkill(skill)} className="hover:text-blue-900">
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </span>
+                            );
+                        })}
                         {isEditing && (
                             <input
                                 type="text"
@@ -376,6 +408,112 @@ export default function ProfessionalTab({ targetProfile, isReadOnly = false, emb
                         )}
                     </div>
                 </section>
+
+                {/* Certifications - Read Only Display */}
+                {profData.certifications?.length > 0 && (
+                    <section>
+                        <SectionHeader icon={Award} title="Certifications" />
+                        <div className="space-y-3">
+                            {profData.certifications.map((cert, index) => (
+                                <div key={cert.id || index} className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 rounded-xl">
+                                    <div>
+                                        <h4 className="font-bold text-gray-900">{cert.name}</h4>
+                                        <p className="text-sm text-gray-600">{cert.issuer}</p>
+                                        {cert.issueDate && (
+                                            <span className="text-xs text-gray-500">Issued: {cert.issueDate}</span>
+                                        )}
+                                    </div>
+                                    {cert.credentialUrl && (
+                                        <a
+                                            href={cert.credentialUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                        >
+                                            <ExternalLink className="w-4 h-4" /> View
+                                        </a>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {/* Projects - Read Only Display */}
+                {profData.projects?.length > 0 && (
+                    <section>
+                        <SectionHeader icon={FolderOpen} title="Projects" />
+                        <div className="grid md:grid-cols-2 gap-4">
+                            {profData.projects.map((project, index) => (
+                                <div key={project.id || index} className="p-4 bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-100 rounded-xl">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <h4 className="font-bold text-gray-900">{project.name}</h4>
+                                        {project.url && (
+                                            <a
+                                                href={project.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:text-blue-800"
+                                            >
+                                                <ExternalLink className="w-4 h-4" />
+                                            </a>
+                                        )}
+                                    </div>
+                                    {project.description && (
+                                        <p className="text-sm text-gray-600 mb-2">{project.description}</p>
+                                    )}
+                                    {project.technologies?.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                            {project.technologies.map((tech, i) => (
+                                                <span key={i} className="text-xs px-2 py-0.5 bg-white rounded-full text-purple-700 border border-purple-200">
+                                                    {tech}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {/* Languages - Read Only Display */}
+                {profData.languages?.length > 0 && (
+                    <section>
+                        <SectionHeader icon={Globe} title="Languages" />
+                        <div className="flex flex-wrap gap-3">
+                            {profData.languages.map((lang, index) => {
+                                const langName = typeof lang === 'string' ? lang : (lang?.language || '');
+                                const proficiency = typeof lang === 'object' ? lang?.proficiency : 'Professional';
+
+                                if (!langName) return null;
+
+                                return (
+                                    <div key={index} className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 border border-green-200 rounded-xl">
+                                        <Globe className="w-4 h-4" />
+                                        <span className="font-bold">{langName}</span>
+                                        {proficiency && (
+                                            <span className="text-xs opacity-70">({proficiency})</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </section>
+                )}
+
+                {/* Availability Badge */}
+                {(profData.availability && profData.availability !== 'not-looking') && (
+                    <section>
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 text-green-800 font-bold text-sm">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                            {profData.availability === 'looking' ? 'Actively Looking for Opportunities' : 'Open to Opportunities'}
+                            {profData.remotePreference && profData.remotePreference !== 'flexible' && (
+                                <span className="text-green-600 font-normal">• {profData.remotePreference}</span>
+                            )}
+                        </div>
+                    </section>
+                )}
             </div>
         </div>
     );

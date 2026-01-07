@@ -23,10 +23,13 @@ export default function SkillsEditor({ skills = [], onChange }) {
     const addSkill = () => {
         if (!newSkill.name.trim()) return;
 
-        // Check if skill already exists
-        if (skills.some(s => s.name.toLowerCase() === newSkill.name.toLowerCase())) {
-            return;
-        }
+        // Check if skill already exists (handle both string and object formats)
+        const skillExists = skills.some(s => {
+            const existingName = typeof s === 'string' ? s : (s?.name || '');
+            return existingName.toLowerCase() === newSkill.name.toLowerCase();
+        });
+
+        if (skillExists) return;
 
         onChange([...skills, {
             ...newSkill,
