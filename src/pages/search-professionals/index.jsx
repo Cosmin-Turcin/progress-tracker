@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, Filter, Users, Briefcase, Brain, Utensils, Dumbbell, X, Code, TrendingUp, Building2, Palette, Stethoscope, GraduationCap, MapPin, CheckCircle } from 'lucide-react';
+import { Search, Filter, Users, Briefcase, Brain, Utensils, Dumbbell, X, Code, TrendingUp, Building2, Palette, Stethoscope, GraduationCap, MapPin, CheckCircle, ArrowLeft } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import ProfessionalCard from './components/ProfessionalCard';
 
 const SearchProfessionals = () => {
+    const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedLevel, setSelectedLevel] = useState('all');
@@ -194,6 +196,20 @@ const SearchProfessionals = () => {
             {/* Header */}
             <div className="bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white py-16 px-6">
                 <div className="container mx-auto max-w-6xl">
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="mb-8"
+                    >
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="flex items-center gap-2 text-blue-200 hover:text-white transition-colors group"
+                        >
+                            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                            <span className="font-bold text-sm uppercase tracking-widest">Back</span>
+                        </button>
+                    </motion.div>
+
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Menu, X, Home, BarChart3, Target, Bell, Trophy, Settings,
   User, LogOut, Calendar, Activity, Users, LayoutDashboard,
-  TrendingUp, Star, MessageSquare, ChevronDown
+  TrendingUp, Star, MessageSquare, ChevronDown, Search
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useStats } from '../contexts/StatsContext';
@@ -35,6 +35,7 @@ const Header = () => {
 
   const subNav = [
     { path: '/social-activity-feed', icon: Activity, label: 'Feed' },
+    { path: '/search-professionals', icon: Search, label: 'Professionals' },
     { path: '/friends-leaderboard', icon: Users, label: 'Leaderboard' },
     { path: '/achievements-badges-gallery', icon: Trophy, label: 'Achievements' },
     { path: '/reminders-notifications', icon: Bell, label: 'Reminders' },

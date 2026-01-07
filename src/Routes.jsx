@@ -19,55 +19,59 @@ import DirectMessaging from "pages/direct-messaging";
 import LandingPage from "pages/landing/LandingPage";
 import SearchProfessionals from "pages/search-professionals";
 import CVBuilder from "pages/cv-builder";
+import GlobalFooter from "components/GlobalFooter";
 
 function Routes() {
   return (
     <BrowserRouter>
       <ErrorBoundary>
-        <ScrollToTop />
-        <RouterRoutes>
-          {/* Auth Routes */}
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
+        <div className="flex flex-col min-h-screen">
+          <ScrollToTop />
+          <RouterRoutes>
+            {/* Auth Routes */}
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
 
-          {/* Protected Routes */}
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/user-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/achievements-badges-gallery" element={<ProtectedRoute><AchievementsBadgesGallery /></ProtectedRoute>} />
-          <Route
-            path="/friends-leaderboard"
-            element={
-              <ProtectedRoute>
-                <FriendsLeaderboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/friend-profile-view/:userId" element={<Profile />} />
-          <Route path="/u/:username" element={<Profile />} />
+            {/* Protected Routes */}
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/user-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/achievements-badges-gallery" element={<ProtectedRoute><AchievementsBadgesGallery /></ProtectedRoute>} />
+            <Route
+              path="/friends-leaderboard"
+              element={
+                <ProtectedRoute>
+                  <FriendsLeaderboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/friend-profile-view/:userId" element={<Profile />} />
+            <Route path="/u/:username" element={<Profile />} />
 
-          <Route
-            path="/social-activity-feed"
-            element={
-              <ProtectedRoute>
-                <SocialActivityFeed />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/social-activity-feed"
+              element={
+                <ProtectedRoute>
+                  <SocialActivityFeed />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route path="/direct-messaging" element={<ProtectedRoute><DirectMessaging /></ProtectedRoute>} />
-          <Route path="/direct-messaging/:friendId" element={<ProtectedRoute><DirectMessaging /></ProtectedRoute>} />
-          <Route path="/search-professionals" element={<ProtectedRoute><SearchProfessionals /></ProtectedRoute>} />
-          <Route path="/cv-builder" element={<ProtectedRoute><CVBuilder /></ProtectedRoute>} />
+            <Route path="/direct-messaging" element={<ProtectedRoute><DirectMessaging /></ProtectedRoute>} />
+            <Route path="/direct-messaging/:friendId" element={<ProtectedRoute><DirectMessaging /></ProtectedRoute>} />
+            <Route path="/search-professionals" element={<ProtectedRoute><SearchProfessionals /></ProtectedRoute>} />
+            <Route path="/cv-builder" element={<ProtectedRoute><CVBuilder /></ProtectedRoute>} />
 
-          {/* Define your route here */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/habit-consistency-hub" element={<HabitConsistencyHub />} />
-          <Route path="/daily-activity-dashboard" element={<DailyActivityDashboard />} />
-          <Route path="/progress-analytics" element={<ProgressAnalytics />} />
-          <Route path="/settings-customization" element={<SettingsCustomization />} />
-          <Route path="/reminders-notifications" element={<RemindersNotifications />} />
-          <Route path="*" element={<NotFound />} />
-        </RouterRoutes>
+            {/* Define your route here */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/habit-consistency-hub" element={<HabitConsistencyHub />} />
+            <Route path="/daily-activity-dashboard" element={<DailyActivityDashboard />} />
+            <Route path="/progress-analytics" element={<ProgressAnalytics />} />
+            <Route path="/settings-customization" element={<SettingsCustomization />} />
+            <Route path="/reminders-notifications" element={<RemindersNotifications />} />
+            <Route path="*" element={<NotFound />} />
+          </RouterRoutes>
+          <GlobalFooter />
+        </div>
       </ErrorBoundary>
     </BrowserRouter>
   );
