@@ -7,6 +7,7 @@ import { ArrowRight, Activity, Brain, Utensils, Shield, Smartphone, Globe, Lock,
 import ActivityCard from '../social-activity-feed/components/ActivityCard';
 import HabitConsistencyMatrix from '../habit-consistency-hub/components/HabitConsistencyMatrix';
 import AchievementShowcase from '../profile/components/AchievementShowcase';
+import BrandLogo from '../../components/BrandLogo';
 
 const LandingPage = () => {
     // Mock Data for Showcases
@@ -69,8 +70,11 @@ const LandingPage = () => {
             <div className="relative z-10">
                 {/* Navbar */}
                 <nav className="flex justify-between items-center p-6 container mx-auto backdrop-blur-sm sticky top-0 bg-black/50 border-b border-white/10 z-50">
-                    <div className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
-                        Progress Tracker
+                    <div className="flex items-center gap-2 group">
+                        <BrandLogo className="w-8 h-8" gradient={true} />
+                        <div className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
+                            Ordomatic
+                        </div>
                     </div>
                     <div className="flex items-center gap-4">
                         <Link
@@ -399,14 +403,15 @@ const LandingPage = () => {
                 {/* Footer */}
                 <footer className="border-t border-white/10 bg-black pt-16 pb-8 text-center text-gray-500">
                     <div className="container mx-auto px-6 flex flex-col items-center">
-                        <div className="text-2xl font-bold text-white mb-8">Progress Tracker</div>
+                        <BrandLogo className="w-12 h-12 mb-4" gradient={true} />
+                        <div className="text-2xl font-bold text-white mb-8">Ordomatic</div>
                         <div className="flex gap-8 mb-8 text-sm">
                             <a href="#" className="hover:text-white transition-colors">Privacy</a>
                             <a href="#" className="hover:text-white transition-colors">Terms</a>
                             <a href="#" className="hover:text-white transition-colors">Twitter</a>
                             <a href="#" className="hover:text-white transition-colors">Discord</a>
                         </div>
-                        <p>&copy; {new Date().getFullYear()} Progress Tracker. All rights reserved.</p>
+                        <p>&copy; {new Date().getFullYear()} Ordomatic. All rights reserved.</p>
                     </div>
                 </footer>
             </div>

@@ -1,11 +1,12 @@
 {
-  "short_name": "progress-tracker",
-  "name": "progress-tracker",
+  "short_name": "Ordomatic",
+  "name": "Ordomatic - Master Your Evolution",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ],
   "start_url": ".",

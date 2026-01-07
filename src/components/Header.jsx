@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useStats } from '../contexts/StatsContext';
 import Icon from './AppIcon';
+import BrandLogo from './BrandLogo';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -50,11 +51,9 @@ const Header = () => {
           <div className="flex items-center gap-8">
             {/* Logo */}
             <Link to="/daily-activity-dashboard" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-                <Icon name="Activity" size={24} color="white" />
-              </div>
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 hidden sm:block">
-                Progress Tracker
+              <BrandLogo className="w-10 h-10 group-hover:scale-105 transition-transform" gradient={true} />
+              <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 hidden sm:block tracking-tight">
+                Ordomatic
               </span>
             </Link>
 

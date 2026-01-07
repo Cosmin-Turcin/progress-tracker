@@ -1,6 +1,7 @@
-# React
+# Ordomatic
+> Master Your Evolution
 
-A modern React-based project utilizing the latest frontend technologies and tools for building responsive web applications.
+A next-generation ecosystem to master your Fitness, Mindset, and Nutrition.
 
 ## 🚀 Features
 

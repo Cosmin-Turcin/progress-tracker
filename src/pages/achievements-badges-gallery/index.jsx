@@ -151,7 +151,7 @@ export default function AchievementsBadgesGallery() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
-        <title>Achievements - Progress Tracker</title>
+        <title>Achievements - Ordomatic</title>
       </Helmet>
       <Header />
       <div className="max-w-screen-2xl mx-auto p-6">
