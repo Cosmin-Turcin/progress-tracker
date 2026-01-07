@@ -28,17 +28,16 @@ const Header = () => {
   };
 
   const mainNav = [
-    { path: '/daily-activity-dashboard', icon: LayoutDashboard, label: 'Today' },
+    { path: '/hub', icon: LayoutDashboard, label: 'Ecosystem' },
+    { path: '/daily-activity-dashboard', icon: Calendar, label: 'Today' },
     { path: '/progress-analytics', icon: TrendingUp, label: 'Analytics' },
     { path: '/habit-consistency-hub', icon: Target, label: 'Habits' },
   ];
 
   const subNav = [
     { path: '/social-activity-feed', icon: Activity, label: 'Feed' },
-    { path: '/search-professionals', icon: Search, label: 'Professionals' },
     { path: '/friends-leaderboard', icon: Users, label: 'Leaderboard' },
     { path: '/achievements-badges-gallery', icon: Trophy, label: 'Achievements' },
-    { path: '/reminders-notifications', icon: Bell, label: 'Reminders' },
     { path: '/settings-customization', icon: Settings, label: 'Settings' },
   ];
 

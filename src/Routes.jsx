@@ -20,6 +20,11 @@ import LandingPage from "pages/landing/LandingPage";
 import SearchProfessionals from "pages/search-professionals";
 import CVBuilder from "pages/cv-builder";
 import GlobalFooter from "components/GlobalFooter";
+import HubDashboard from "pages/hub/HubDashboard";
+import FitnessHub from "pages/fitness/FitnessHub";
+import MindsetHub from "pages/mindset/MindsetHub";
+import NutritionHub from "pages/nutrition/NutritionHub";
+import WorkHub from "pages/work/WorkHub";
 
 function Routes() {
   return (
@@ -60,6 +65,11 @@ function Routes() {
             <Route path="/direct-messaging/:friendId" element={<ProtectedRoute><DirectMessaging /></ProtectedRoute>} />
             <Route path="/search-professionals" element={<ProtectedRoute><SearchProfessionals /></ProtectedRoute>} />
             <Route path="/cv-builder" element={<ProtectedRoute><CVBuilder /></ProtectedRoute>} />
+            <Route path="/hub" element={<ProtectedRoute><HubDashboard /></ProtectedRoute>} />
+            <Route path="/fitness" element={<ProtectedRoute><FitnessHub /></ProtectedRoute>} />
+            <Route path="/mindset" element={<ProtectedRoute><MindsetHub /></ProtectedRoute>} />
+            <Route path="/nutrition" element={<ProtectedRoute><NutritionHub /></ProtectedRoute>} />
+            <Route path="/work" element={<ProtectedRoute><WorkHub /></ProtectedRoute>} />
 
             {/* Define your route here */}
             <Route path="/" element={<LandingPage />} />
