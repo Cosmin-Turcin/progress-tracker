@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Brain,
@@ -13,11 +13,13 @@ import {
     Play,
     Clock,
     ChevronRight,
-    TrendingUp
+    TrendingUp,
+    Loader2
 } from 'lucide-react';
 import Header from '../../components/Header';
 import JournalEditor from './components/JournalEditor';
 import { useEcosystemPoints } from '../../hooks/useEcosystemPoints';
+import { articleService } from '../../services/articleService';
 
 const JournalCard = ({ journal, onRead }) => (
     <motion.div
@@ -60,49 +62,60 @@ const JournalCard = ({ journal, onRead }) => (
 const MindsetHub = () => {
     const [activeTab, setActiveTab] = useState('journals');
     const [showEditor, setShowEditor] = useState(false);
-    const [journals, setJournals] = useState([
-        {
-            title: "The Architecture of Discipline",
-            preview: "Discipline is not about punishment, it is about creating a structure where success becomes the path of least resistance...",
-            type: "Article",
-            date: "Oct 24, 2026",
-            readTime: 6,
-            author: "OrdomaticTeam"
-        },
-        {
-            title: "Flow State & Neural Synchronization",
-            preview: "Understanding the biological clocks that govern your peak performance windows and how to align your deep work...",
-            type: "Article",
-            date: "Oct 22, 2026",
-            readTime: 12,
-            author: "Dr. Mind"
-        },
-        {
-            title: "Morning Routine: Reflection",
-            preview: "Today I focused on the gap between intention and action. The resistance was high but the system held...",
-            type: "Journal",
-            date: "Today",
-            readTime: 3,
-            author: "Me"
-        }
-    ]);
+    const [journals, setJournals] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const { awardPoints, trackUsage } = useEcosystemPoints();
 
-    const handleCreateJournal = async (newJournal) => {
-        // Award points for creation
-        await awardPoints({
-            points: 30,
-            reason: 'Published a mindset article',
-            metadata: { type: 'mindset_article', title: newJournal.title, category: 'mindset' }
-        });
+    // Fetch articles on mount
+    useEffect(() => {
+        const loadArticles = async () => {
+            try {
+                setLoading(true);
+                const data = await articleService.getAllPublic();
+                setJournals(data);
+            } catch (error) {
+                console.error('Failed to load articles:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadArticles();
+    }, []);
 
-        setJournals([{
-            ...newJournal,
-            preview: newJournal.content.substring(0, 150) + '...',
-            readTime: Math.max(1, Math.ceil(newJournal.content.length / 500))
-        }, ...journals]);
-        setShowEditor(false);
+    const handleCreateJournal = async (newJournal) => {
+        try {
+            // Save to database
+            const savedArticle = await articleService.create(newJournal);
+
+            // Award points for creation
+            await awardPoints({
+                points: 30,
+                reason: 'Published a mindset article',
+                metadata: { type: 'mindset_article', title: newJournal.title, category: 'mindset' }
+            });
+
+            // Add to local state
+            setJournals([savedArticle, ...journals]);
+            setShowEditor(false);
+        } catch (error) {
+            console.error('Error creating article:', error);
+        }
+    };
+
+    const handleReadArticle = async (article) => {
+        // Increment read count
+        if (article?.id) {
+            await articleService.incrementReadCount(article.id);
+        }
+
+        // trackUsage awards points
+        await trackUsage({
+            contentType: 'mindset_article',
+            contentId: article?.id || article.title,
+            creatorId: article?.user_id,
+            category: 'mindset'
+        });
     };
 
     return (
@@ -178,20 +191,32 @@ const MindsetHub = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid md:grid-cols-2 gap-8">
-                                    {journals.map((journal, i) => (
-                                        <JournalCard
-                                            key={i}
-                                            journal={journal}
-                                            onRead={() => trackUsage({
-                                                contentType: 'mindset_article',
-                                                contentId: journal.title,
-                                                creatorId: journal.author === 'Me' ? null : 'other_user',
-                                                category: 'mindset'
-                                            })}
-                                        />
-                                    ))}
-                                </div>
+                                {loading ? (
+                                    <div className="flex items-center justify-center py-20">
+                                        <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+                                    </div>
+                                ) : journals.length === 0 ? (
+                                    <div className="text-center py-20">
+                                        <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                                        <p className="text-gray-400 font-bold uppercase tracking-widest">No articles yet</p>
+                                        <p className="text-gray-300 text-sm mt-2">Be the first to share your wisdom!</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid md:grid-cols-2 gap-8">
+                                        {journals.map((journal) => (
+                                            <JournalCard
+                                                key={journal.id}
+                                                journal={{
+                                                    ...journal,
+                                                    date: new Date(journal.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                                                    readTime: journal.read_time || 5,
+                                                    author: journal.user_profiles?.full_name || journal.user_profiles?.username || 'Anonymous'
+                                                }}
+                                                onRead={() => handleReadArticle(journal)}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
                             </>
                         ) : (
                             <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100 italic text-gray-400 font-medium">
