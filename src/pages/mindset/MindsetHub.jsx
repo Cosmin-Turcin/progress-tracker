@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Header from '../../components/Header';
 import JournalEditor from './components/JournalEditor';
+import ArticleReader from './components/ArticleReader';
 import { useEcosystemPoints } from '../../hooks/useEcosystemPoints';
 import { articleService } from '../../services/articleService';
 
@@ -62,6 +63,7 @@ const JournalCard = ({ journal, onRead }) => (
 const MindsetHub = () => {
     const [activeTab, setActiveTab] = useState('journals');
     const [showEditor, setShowEditor] = useState(false);
+    const [activeArticle, setActiveArticle] = useState(null);
     const [journals, setJournals] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -104,6 +106,9 @@ const MindsetHub = () => {
     };
 
     const handleReadArticle = async (article) => {
+        // Open the reader
+        setActiveArticle(article);
+
         // Increment read count
         if (article?.id) {
             await articleService.incrementReadCount(article.id);
@@ -282,6 +287,12 @@ const MindsetHub = () => {
                     <JournalEditor
                         onClose={() => setShowEditor(false)}
                         onSave={handleCreateJournal}
+                    />
+                )}
+                {activeArticle && (
+                    <ArticleReader
+                        article={activeArticle}
+                        onClose={() => setActiveArticle(null)}
                     />
                 )}
             </AnimatePresence>
