@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Utensils,
@@ -13,11 +13,14 @@ import {
     Trophy,
     ChevronRight,
     Target,
-    BarChart3
+    BarChart3,
+    Loader2
 } from 'lucide-react';
 import Header from '../../components/Header';
 import MealPlanBuilder from './components/MealPlanBuilder';
+import MealPlanViewer from './components/MealPlanViewer';
 import { useEcosystemPoints } from '../../hooks/useEcosystemPoints';
+import { mealPlanService } from '../../services/mealPlanService';
 
 const PlanCard = ({ plan, onFollow }) => (
     <motion.div
@@ -77,45 +80,64 @@ const PlanCard = ({ plan, onFollow }) => (
 const NutritionHub = () => {
     const [activeTab, setActiveTab] = useState('plans');
     const [showBuilder, setShowBuilder] = useState(false);
-    const [plans, setPlans] = useState([
-        {
-            title: "Peak Metabolic Fire",
-            description: "High-protein, moderate-fat approach optimized for steady energy and fat oxidation.",
-            goal: "Fat Loss",
-            calories: 2200,
-            macros: { p: 180, c: 120, f: 60 },
-            author: "Ordomatic"
-        },
-        {
-            title: "Performance Bulk v2",
-            description: "Surplus-driven nutrition targeting maximum muscle glycogen replenishment.",
-            goal: "Muscle Gain",
-            calories: 3100,
-            macros: { p: 200, c: 450, f: 80 },
-            author: "CoachK"
-        },
-        {
-            title: "Ketogenic Focus Plan",
-            description: "Strict ketogenic protocol designed for sustained cognitive focus and mood stability.",
-            goal: "Focus",
-            calories: 2000,
-            macros: { p: 140, c: 30, f: 160 },
-            author: "BioOptimize"
-        }
-    ]);
+    const [activePlan, setActivePlan] = useState(null);
+    const [plans, setPlans] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const { awardPoints, trackUsage } = useEcosystemPoints();
 
+    // Fetch meal plans on mount
+    useEffect(() => {
+        const loadPlans = async () => {
+            try {
+                setLoading(true);
+                const data = await mealPlanService.getAllPublic();
+                setPlans(data);
+            } catch (error) {
+                console.error('Failed to load meal plans:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadPlans();
+    }, []);
+
     const handleCreatePlan = async (newPlan) => {
-        // Award points for creation
-        await awardPoints({
-            points: 40,
-            reason: 'Created a new meal plan',
-            metadata: { type: 'nutrition_plan', title: newPlan.title, category: 'nutrition' }
+        try {
+            // Save to database
+            const savedPlan = await mealPlanService.create(newPlan);
+
+            // Award points for creation
+            await awardPoints({
+                points: 40,
+                reason: 'Created a new meal plan',
+                metadata: { type: 'nutrition_plan', title: newPlan.title, category: 'nutrition' }
+            });
+
+            // Add to local state
+            setPlans([savedPlan, ...plans]);
+            setShowBuilder(false);
+        } catch (error) {
+            console.error('Error creating meal plan:', error);
+        }
+    };
+
+    const handleFollowPlan = async (plan) => {
+        // Increment usage count
+        if (plan?.id) {
+            await mealPlanService.incrementUsage(plan.id);
+        }
+
+        // trackUsage awards points
+        await trackUsage({
+            contentType: 'nutrition_plan',
+            contentId: plan?.id || plan.title,
+            creatorId: plan?.user_id,
+            category: 'nutrition'
         });
 
-        setPlans([newPlan, ...plans]);
-        setShowBuilder(false);
+        // Open the plan viewer
+        setActivePlan(plan);
     };
 
     return (
@@ -190,20 +212,31 @@ const NutritionHub = () => {
                                 </div>
                             </div>
 
-                            <div className="grid md:grid-cols-2 gap-8">
-                                {plans.map((plan, i) => (
-                                    <PlanCard
-                                        key={i}
-                                        plan={plan}
-                                        onFollow={() => trackUsage({
-                                            contentType: 'nutrition_plan',
-                                            contentId: plan.title,
-                                            creatorId: plan.author === 'Ordomatic' ? null : 'other_user',
-                                            category: 'nutrition'
-                                        })}
-                                    />
-                                ))}
-                            </div>
+                            {loading ? (
+                                <div className="col-span-2 flex items-center justify-center py-20">
+                                    <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+                                </div>
+                            ) : plans.length === 0 ? (
+                                <div className="col-span-2 text-center py-20">
+                                    <Apple className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                                    <p className="text-gray-400 font-bold uppercase tracking-widest">No meal plans yet</p>
+                                    <p className="text-gray-300 text-sm mt-2">Be the first to share your nutrition protocol!</p>
+                                </div>
+                            ) : (
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    {plans.map((plan) => (
+                                        <PlanCard
+                                            key={plan.id}
+                                            plan={{
+                                                ...plan,
+                                                macros: { p: plan.protein, c: plan.carbs, f: plan.fats },
+                                                author: plan.user_profiles?.full_name || plan.user_profiles?.username || 'Anonymous'
+                                            }}
+                                            onFollow={() => handleFollowPlan(plan)}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -262,6 +295,12 @@ const NutritionHub = () => {
                     <MealPlanBuilder
                         onClose={() => setShowBuilder(false)}
                         onSave={handleCreatePlan}
+                    />
+                )}
+                {activePlan && (
+                    <MealPlanViewer
+                        plan={activePlan}
+                        onClose={() => setActivePlan(null)}
                     />
                 )}
             </AnimatePresence>
