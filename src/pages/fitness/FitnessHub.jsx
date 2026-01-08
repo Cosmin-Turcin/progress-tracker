@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Dumbbell,
@@ -12,12 +12,14 @@ import {
     ChevronRight,
     Filter,
     Share2,
-    Zap
+    Zap,
+    Loader2
 } from 'lucide-react';
 import Header from '../../components/Header';
 import RoutineBuilder from './components/RoutineBuilder';
 import WorkoutPlayer from './components/WorkoutPlayer';
 import { useEcosystemPoints } from '../../hooks/useEcosystemPoints';
+import { routineService } from '../../services/routineService';
 
 const RoutineCard = ({ routine, onUse }) => (
     <motion.div
@@ -76,72 +78,58 @@ const FitnessHub = () => {
     const [activeTab, setActiveTab] = useState('explore');
     const [showBuilder, setShowBuilder] = useState(false);
     const [activeWorkout, setActiveWorkout] = useState(null);
-    const [routines, setRoutines] = useState([
-        {
-            title: "Explosive Morning Power",
-            description: "High-intensity interval training designed to jumpstart your metabolic rate.",
-            duration: 35,
-            exercisesCount: 8,
-            difficulty: "Hard",
-            author: "AlexR",
-            image: null,
-            exercises: [
-                { name: "Jumping Jacks", duration: "60", reps: "50" },
-                { name: "Burpees", reps: "20" },
-                { name: "Mountain Climbers", duration: "45" },
-                { name: "Push Ups", reps: "30" }
-            ]
-        },
-        {
-            title: "Mind-Muscle Connection",
-            description: "Slow, controlled movements focusing on muscle hypertrophy and isometric holds.",
-            duration: 50,
-            exercisesCount: 12,
-            difficulty: "Mid",
-            author: "SarahV",
-            image: null,
-            exercises: [
-                { name: "Tempo Squats", reps: "15", sets: "4" },
-                { name: "Slow Pushups", reps: "12", sets: "4" },
-                { name: "Static Lunge", duration: "30", sets: "3" }
-            ]
-        },
-        {
-            title: "Core Foundation Elite",
-            description: "The ultimate core stabilization program used by professional athletes.",
-            duration: 20,
-            exercisesCount: 6,
-            difficulty: "Pro",
-            author: "CoachK",
-            image: null,
-            exercises: [
-                { name: "Plank", duration: "120" },
-                { name: "Hollow Body Hold", duration: "60" },
-                { name: "Dragon Flags", reps: "8" }
-            ]
-        }
-    ]);
+    const [routines, setRoutines] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const { awardPoints, trackUsage } = useEcosystemPoints();
 
-    const handleCreateRoutine = async (newRoutine) => {
-        // Award points for creation
-        await awardPoints({
-            points: 50,
-            reason: 'Created a new workout routine',
-            metadata: { type: 'fitness_routine', title: newRoutine.title, category: 'fitness' }
-        });
+    // Fetch routines on mount
+    useEffect(() => {
+        const loadRoutines = async () => {
+            try {
+                setLoading(true);
+                const data = await routineService.getAllPublic();
+                setRoutines(data);
+            } catch (error) {
+                console.error('Failed to load routines:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadRoutines();
+    }, []);
 
-        setRoutines([{ ...newRoutine, author: 'Me', exercisesCount: (newRoutine.exercises || []).length }, ...routines]);
-        setShowBuilder(false);
+    const handleCreateRoutine = async (newRoutine) => {
+        try {
+            // Save to database
+            const savedRoutine = await routineService.create(newRoutine);
+
+            // Award points for creation
+            await awardPoints({
+                points: 50,
+                reason: 'Created a new workout routine',
+                metadata: { type: 'fitness_routine', title: newRoutine.title, category: 'fitness' }
+            });
+
+            // Add to local state
+            setRoutines([savedRoutine, ...routines]);
+            setShowBuilder(false);
+        } catch (error) {
+            console.error('Error creating routine:', error);
+        }
     };
 
     const handleWorkoutComplete = async (workoutData) => {
+        // Increment usage count
+        if (activeWorkout?.id) {
+            await routineService.incrementUsage(activeWorkout.id);
+        }
+
         // trackUsage awards points to both user and creator
         await trackUsage({
             contentType: 'fitness_routine',
-            contentId: workoutData.routineTitle,
-            creatorId: activeWorkout.author === 'Me' ? null : 'other_user',
+            contentId: activeWorkout?.id || workoutData.routineTitle,
+            creatorId: activeWorkout?.user_id,
             category: 'fitness'
         });
 
@@ -220,15 +208,31 @@ const FitnessHub = () => {
                             </div>
                         </div>
 
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {routines.map((routine, i) => (
-                                <RoutineCard
-                                    key={i}
-                                    routine={{ ...routine, exercises: routine.exercisesCount || routine.exercises?.length || 0 }}
-                                    onUse={() => setActiveWorkout(routine)}
-                                />
-                            ))}
-                        </div>
+                        {loading ? (
+                            <div className="col-span-full flex items-center justify-center py-20">
+                                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                            </div>
+                        ) : routines.length === 0 ? (
+                            <div className="col-span-full text-center py-20">
+                                <Dumbbell className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                                <p className="text-gray-400 font-bold uppercase tracking-widest">No routines yet</p>
+                                <p className="text-gray-300 text-sm mt-2">Be the first to create one!</p>
+                            </div>
+                        ) : (
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {routines.map((routine) => (
+                                    <RoutineCard
+                                        key={routine.id}
+                                        routine={{
+                                            ...routine,
+                                            exercises: routine.exercises?.length || 0,
+                                            author: routine.user_profiles?.full_name || routine.user_profiles?.username || 'Anonymous'
+                                        }}
+                                        onUse={() => setActiveWorkout(routine)}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Sidebar */}
