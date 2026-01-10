@@ -10,10 +10,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { settingsService } from '../../services/settingsService';
 import Header from '../../components/Header';
 import { useStats } from '../../contexts/StatsContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const SettingsCustomization = () => {
     const { user } = useAuth();
     const { refreshStats } = useStats();
+    const { updateTheme } = useTheme();
     const [activeTab, setActiveTab] = useState('activity-points');
     const [searchQuery, setSearchQuery] = useState('');
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -72,6 +74,9 @@ const SettingsCustomization = () => {
                     notifications: data.notifications || prev.notifications,
                     systemPreferences: data.systemPreferences || prev.systemPreferences,
                 }));
+                if (data.systemPreferences?.theme) {
+                    updateTheme(data.systemPreferences.theme);
+                }
             }
         } catch (err) {
             console.error('Error loading settings:', err);
@@ -90,6 +95,11 @@ const SettingsCustomization = () => {
             },
         }));
         setHasUnsavedChanges(true);
+
+        // Sync theme changes immediately with ThemeContext
+        if (category === 'systemPreferences' && key === 'theme') {
+            updateTheme(value);
+        }
     };
 
     const handleSave = async () => {
