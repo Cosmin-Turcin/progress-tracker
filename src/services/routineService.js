@@ -71,6 +71,7 @@ export const routineService = {
                     description: routineData.description,
                     duration: routineData.duration,
                     difficulty: routineData.difficulty,
+                    category: routineData.category || 'General',
                     video_url: routineData.videoUrl,
                     exercises: routineData.exercises,
                     is_public: true
@@ -166,6 +167,133 @@ export const routineService = {
         } catch (error) {
             console.error('Error deleting routine:', error);
             throw error;
+        }
+    },
+
+    /**
+     * Save a routine to user bookmarks.
+     * @param {string} routineId - Routine ID
+     */
+    async saveRoutine(routineId) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { error } = await supabase
+                .from('workout_saves')
+                .insert({ user_id: user.id, routine_id: routineId });
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error saving routine:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Unsave a routine.
+     * @param {string} routineId - Routine ID
+     */
+    async unsaveRoutine(routineId) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { error } = await supabase
+                .from('workout_saves')
+                .delete()
+                .eq('user_id', user.id)
+                .eq('routine_id', routineId);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error unsaving routine:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Fetch routines saved by the current user.
+     * @returns {Promise<Array>} Array of routines
+     */
+    async getSavedRoutines() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { data, error } = await supabase
+                .from('workout_saves')
+                .select(`
+                    id,
+                    routine:routine_id (
+                        *,
+                        user_profiles:user_id (
+                            id,
+                            full_name,
+                            username,
+                            avatar_url
+                        )
+                    )
+                `)
+                .eq('user_id', user.id);
+
+            if (error) throw error;
+            return data.map(item => item.routine) || [];
+        } catch (error) {
+            console.error('Error fetching saved routines:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Fetch upcoming live sessions.
+     * @returns {Promise<Array>} Array of live sessions
+     */
+    async getLiveSessions() {
+        try {
+            const { data, error } = await supabase
+                .from('live_sessions')
+                .select(`
+                    *,
+                    creator:creator_id (
+                        id,
+                        full_name,
+                        username,
+                        avatar_url
+                    )
+                `)
+                .order('scheduled_at', { ascending: true });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching live sessions:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Update attendance count for a live session.
+     * @param {string} sessionId - Session ID
+     */
+    async joinLiveSession(sessionId) {
+        try {
+            const { data: session, error: fetchError } = await supabase
+                .from('live_sessions')
+                .select('attendees_count')
+                .eq('id', sessionId)
+                .single();
+
+            if (fetchError) throw fetchError;
+
+            const { error: updateError } = await supabase
+                .from('live_sessions')
+                .update({ attendees_count: (session.attendees_count || 0) + 1 })
+                .eq('id', sessionId);
+
+            if (updateError) throw updateError;
+        } catch (error) {
+            console.error('Error joining live session:', error);
         }
     }
 };

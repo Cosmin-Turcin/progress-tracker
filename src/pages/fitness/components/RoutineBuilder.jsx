@@ -18,6 +18,7 @@ const RoutineBuilder = ({ onClose, onSave }) => {
     const [description, setDescription] = useState('');
     const [duration, setDuration] = useState(30);
     const [difficulty, setDifficulty] = useState('Intermediate');
+    const [category, setCategory] = useState('General');
     const [videoUrl, setVideoUrl] = useState('');
     const [exercises, setExercises] = useState([
         { id: 1, name: '', sets: '', reps: '', duration: '', notes: '' }
@@ -42,6 +43,7 @@ const RoutineBuilder = ({ onClose, onSave }) => {
             description,
             duration,
             difficulty,
+            category,
             videoUrl,
             exercises
         });
@@ -100,7 +102,7 @@ const RoutineBuilder = ({ onClose, onSave }) => {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Duration (min)</label>
                                 <div className="relative">
@@ -124,6 +126,22 @@ const RoutineBuilder = ({ onClose, onSave }) => {
                                     <option>Intermediate</option>
                                     <option>Advanced</option>
                                     <option>Elite</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Category</label>
+                                <select
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold appearance-none"
+                                >
+                                    <option>General</option>
+                                    <option>Strength</option>
+                                    <option>HIIT</option>
+                                    <option>Yoga</option>
+                                    <option>Cardio</option>
+                                    <option>Mobility</option>
+                                    <option>Other</option>
                                 </select>
                             </div>
                         </div>

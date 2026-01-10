@@ -11,7 +11,12 @@ import {
     CheckCircle2,
     Loader2,
     Flag,
-    Calendar
+    Calendar,
+    Folder,
+    FolderPlus,
+    Tag,
+    Layers,
+    MoreHorizontal
 } from 'lucide-react';
 import { taskService } from '../../../services/taskService';
 import { useEcosystemPoints } from '../../../hooks/useEcosystemPoints';
@@ -30,8 +35,13 @@ const priorityLabels = {
     urgent: 'Urgent'
 };
 
-const TaskItem = ({ task, onToggle, onDelete }) => {
+const projectColors = [
+    '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#6366F1', '#EC4899', '#8B5CF6', '#14B8A6'
+];
+
+const TaskItem = ({ task, onToggle, onDelete, projects }) => {
     const isDone = task.status === 'done';
+    const project = projects.find(p => p.id === task.project_id);
 
     return (
         <motion.div
@@ -44,8 +54,8 @@ const TaskItem = ({ task, onToggle, onDelete }) => {
             <button
                 onClick={() => onToggle(task)}
                 className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDone
-                        ? 'bg-green-500 text-white'
-                        : 'border-2 border-gray-200 hover:border-green-500 hover:bg-green-50'
+                    ? 'bg-green-500 text-white'
+                    : 'border-2 border-gray-200 hover:border-green-500 hover:bg-green-50'
                     }`}
             >
                 {isDone && <Check className="w-4 h-4" />}
@@ -57,6 +67,15 @@ const TaskItem = ({ task, onToggle, onDelete }) => {
                 </p>
                 {task.description && (
                     <p className="text-sm text-gray-400 mt-1 line-clamp-1">{task.description}</p>
+                )}
+                {project && (
+                    <div className="flex items-center gap-1.5 mt-2">
+                        <div
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ backgroundColor: project.color }}
+                        />
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{project.title}</span>
+                    </div>
                 )}
             </div>
 
@@ -77,28 +96,44 @@ const TaskItem = ({ task, onToggle, onDelete }) => {
 
 const TaskManager = () => {
     const [tasks, setTasks] = useState([]);
+    const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newTask, setNewTask] = useState('');
+    const [newProjectTitle, setNewProjectTitle] = useState('');
+    const [selectedProjectId, setSelectedProjectId] = useState('all');
+    const [targetProjectId, setTargetProjectId] = useState('none');
     const [priority, setPriority] = useState('medium');
     const [filter, setFilter] = useState('all');
+    const [showProjectModal, setShowProjectModal] = useState(false);
     const [stats, setStats] = useState({ total: 0, todo: 0, inProgress: 0, done: 0 });
 
     const { awardPoints } = useEcosystemPoints();
 
     useEffect(() => {
-        loadTasks();
-        loadStats();
+        loadData();
     }, []);
+
+    const loadData = async () => {
+        setLoading(true);
+        await Promise.all([loadTasks(), loadProjects(), loadStats()]);
+        setLoading(false);
+    };
 
     const loadTasks = async () => {
         try {
-            setLoading(true);
             const data = await taskService.getAll();
             setTasks(data);
         } catch (error) {
             console.error('Failed to load tasks:', error);
-        } finally {
-            setLoading(false);
+        }
+    };
+
+    const loadProjects = async () => {
+        try {
+            const data = await taskService.getAllProjects();
+            setProjects(data);
+        } catch (error) {
+            console.error('Failed to load projects:', error);
         }
     };
 
@@ -114,7 +149,8 @@ const TaskManager = () => {
         try {
             const task = await taskService.create({
                 title: newTask,
-                priority: priority
+                priority: priority,
+                projectId: targetProjectId === 'none' ? null : targetProjectId
             });
             setTasks([task, ...tasks]);
             setNewTask('');
@@ -122,6 +158,24 @@ const TaskManager = () => {
             loadStats();
         } catch (error) {
             console.error('Failed to create task:', error);
+        }
+    };
+
+    const handleCreateProject = async (e) => {
+        e.preventDefault();
+        if (!newProjectTitle.trim()) return;
+
+        try {
+            const project = await taskService.createProject({
+                title: newProjectTitle,
+                color: projectColors[projects.length % projectColors.length]
+            });
+            setProjects([project, ...projects]);
+            setNewProjectTitle('');
+            setShowProjectModal(false);
+            setTargetProjectId(project.id);
+        } catch (error) {
+            console.error('Failed to create project:', error);
         }
     };
 
@@ -156,11 +210,36 @@ const TaskManager = () => {
         }
     };
 
+    const handleDeleteProject = async (e, projectId) => {
+        e.stopPropagation();
+        if (!window.confirm('Are you sure you want to delete this project? Tasks will be unassigned but not deleted.')) return;
+
+        try {
+            await taskService.deleteProject(projectId);
+            setProjects(projects.filter(p => p.id !== projectId));
+            if (selectedProjectId === projectId) setSelectedProjectId('all');
+            if (targetProjectId === projectId) setTargetProjectId('none');
+            // Reload tasks to reflect unassignment (or local update)
+            setTasks(tasks.map(t => t.project_id === projectId ? { ...t, project_id: null } : t));
+        } catch (error) {
+            console.error('Failed to delete project:', error);
+        }
+    };
+
     const filteredTasks = tasks.filter(task => {
-        if (filter === 'all') return task.status !== 'archived';
-        if (filter === 'active') return task.status === 'todo' || task.status === 'in_progress';
-        if (filter === 'done') return task.status === 'done';
-        return true;
+        // Status filter
+        let statusMatch = true;
+        if (filter === 'all') statusMatch = task.status !== 'archived';
+        else if (filter === 'active') statusMatch = task.status === 'todo' || task.status === 'in_progress';
+        else if (filter === 'done') statusMatch = task.status === 'done';
+
+        // Project filter
+        let projectMatch = true;
+        if (selectedProjectId !== 'all') {
+            projectMatch = task.project_id === selectedProjectId;
+        }
+
+        return statusMatch && projectMatch;
     });
 
     return (
@@ -190,49 +269,118 @@ const TaskManager = () => {
                 </div>
 
                 {/* Add Task Form */}
-                <form onSubmit={handleAddTask} className="flex gap-3">
-                    <input
-                        type="text"
-                        value={newTask}
-                        onChange={(e) => setNewTask(e.target.value)}
-                        placeholder="Add a new task..."
-                        className="flex-grow px-4 py-3 bg-gray-50 rounded-xl border-none outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-                    />
-                    <select
-                        value={priority}
-                        onChange={(e) => setPriority(e.target.value)}
-                        className="px-4 py-3 bg-gray-50 rounded-xl border-none outline-none font-bold text-sm appearance-none"
-                    >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
-                    </select>
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        type="submit"
-                        className="px-6 py-3 bg-gray-900 text-white rounded-xl font-black flex items-center gap-2 hover:bg-gray-800 transition-colors"
-                    >
-                        <Plus className="w-4 h-4" /> ADD
-                    </motion.button>
+                <form onSubmit={handleAddTask} className="space-y-4">
+                    <div className="flex gap-3">
+                        <input
+                            type="text"
+                            value={newTask}
+                            onChange={(e) => setNewTask(e.target.value)}
+                            placeholder="Add a new task..."
+                            className="flex-grow px-4 py-3 bg-gray-50 rounded-xl border-none outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                        />
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            type="submit"
+                            className="px-8 py-3 bg-gray-900 text-white rounded-xl font-black flex items-center gap-2 hover:bg-gray-800 transition-colors"
+                        >
+                            <Plus className="w-5 h-5" /> ADD
+                        </motion.button>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-xl">
+                            <Flag className="w-4 h-4 text-gray-400" />
+                            <select
+                                value={priority}
+                                onChange={(e) => setPriority(e.target.value)}
+                                className="bg-transparent border-none outline-none font-bold text-xs appearance-none cursor-pointer"
+                            >
+                                <option value="low">Low Priority</option>
+                                <option value="medium">Medium Priority</option>
+                                <option value="high">High Priority</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+
+                        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-xl flex-grow max-w-[200px]">
+                            <Folder className="w-4 h-4 text-gray-400" />
+                            <select
+                                value={targetProjectId}
+                                onChange={(e) => {
+                                    if (e.target.value === 'new') {
+                                        setShowProjectModal(true);
+                                    } else {
+                                        setTargetProjectId(e.target.value);
+                                    }
+                                }}
+                                className="bg-transparent border-none outline-none font-bold text-xs appearance-none flex-grow cursor-pointer"
+                            >
+                                <option value="none">No Project</option>
+                                {projects.map(p => (
+                                    <option key={p.id} value={p.id}>{p.title}</option>
+                                ))}
+                                <option value="new">+ New Project...</option>
+                            </select>
+                        </div>
+                    </div>
                 </form>
             </div>
 
-            {/* Filter Tabs */}
-            <div className="px-6 py-4 border-b border-gray-100 flex gap-4">
-                {['all', 'active', 'done'].map((f) => (
-                    <button
-                        key={f}
-                        onClick={() => setFilter(f)}
-                        className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-widest transition-colors ${filter === f
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                            }`}
-                    >
-                        {f}
-                    </button>
-                ))}
+            {/* Project Tabs / Filter */}
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/30 overflow-x-auto">
+                <div className="flex items-center gap-6 min-w-max">
+                    <div className="flex gap-2 pr-4 border-r border-gray-100">
+                        {['all', 'active', 'done'].map((f) => (
+                            <button
+                                key={f}
+                                onClick={() => setFilter(f)}
+                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${filter === f
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-400 hover:text-gray-600'
+                                    }`}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setSelectedProjectId('all')}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedProjectId === 'all'
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-400 hover:text-gray-600'
+                                }`}
+                        >
+                            <Layers className="w-3.5 h-3.5" /> All Projects
+                        </button>
+                        {projects.map(project => (
+                            <button
+                                key={project.id}
+                                onClick={() => setSelectedProjectId(project.id)}
+                                className={`group flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${selectedProjectId === project.id
+                                    ? 'text-white'
+                                    : 'text-gray-400 hover:text-gray-600'
+                                    }`}
+                                style={{
+                                    backgroundColor: selectedProjectId === project.id ? project.color : 'transparent',
+                                    border: `1px solid ${selectedProjectId === project.id ? project.color : 'transparent'}`
+                                }}
+                            >
+                                <div
+                                    className="w-2 h-2 rounded-full"
+                                    style={{ backgroundColor: selectedProjectId === project.id ? 'white' : project.color }}
+                                />
+                                {project.title}
+                                <Trash2
+                                    className="w-3 h-3 ml-1 opacity-0 group-hover:opacity-100 hover:text-red-300 transition-opacity"
+                                    onClick={(e) => handleDeleteProject(e, project.id)}
+                                />
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Task List */}
@@ -257,6 +405,7 @@ const TaskManager = () => {
                             <TaskItem
                                 key={task.id}
                                 task={task}
+                                projects={projects}
                                 onToggle={handleToggleTask}
                                 onDelete={handleDeleteTask}
                             />
@@ -264,6 +413,57 @@ const TaskManager = () => {
                     </AnimatePresence>
                 )}
             </div>
+
+            {/* Project Modal */}
+            <AnimatePresence>
+                {showProjectModal && (
+                    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                            onClick={() => setShowProjectModal(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-8"
+                        >
+                            <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-6">Initialize Project</h3>
+                            <form onSubmit={handleCreateProject} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Project Title</label>
+                                    <input
+                                        type="text"
+                                        autoFocus
+                                        value={newProjectTitle}
+                                        onChange={(e) => setNewProjectTitle(e.target.value)}
+                                        placeholder="e.g. Apollo Mission"
+                                        className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold"
+                                    />
+                                </div>
+                                <div className="flex gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowProjectModal(false)}
+                                        className="flex-grow px-6 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black uppercase tracking-widest text-xs"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-grow px-6 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100 uppercase tracking-widest text-xs"
+                                    >
+                                        Create
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

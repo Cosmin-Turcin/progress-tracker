@@ -176,5 +176,124 @@ export const taskService = {
             console.error('Error fetching task stats:', error);
             return { total: 0, todo: 0, inProgress: 0, done: 0 };
         }
+    },
+
+    /**
+     * Fetch all projects for the current user.
+     * @returns {Promise<Array>} Array of projects
+     */
+    async getAllProjects() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { data, error } = await supabase
+                .from('work_projects')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching projects:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Create a new project.
+     * @param {Object} projectData - Project data
+     * @returns {Promise<Object>} Created project
+     */
+    async createProject(projectData) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { data, error } = await supabase
+                .from('work_projects')
+                .insert({
+                    user_id: user.id,
+                    title: projectData.title,
+                    description: projectData.description,
+                    color: projectData.color || '#3B82F6',
+                    is_public: projectData.isPublic || false
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error creating project:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Update a project.
+     * @param {string} projectId - Project ID
+     * @param {Object} updates - Fields to update
+     * @returns {Promise<Object>} Updated project
+     */
+    async updateProject(projectId, updates) {
+        try {
+            const { data, error } = await supabase
+                .from('work_projects')
+                .update({
+                    ...updates,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', projectId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error updating project:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Delete a project.
+     * @param {string} projectId - Project ID
+     * @returns {Promise<void>}
+     */
+    async deleteProject(projectId) {
+        try {
+            const { error } = await supabase
+                .from('work_projects')
+                .delete()
+                .eq('id', projectId);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error deleting project:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Fetch tasks for a specific project.
+     * @param {string} projectId - Project ID
+     * @returns {Promise<Array>} Array of tasks
+     */
+    async getTasksByProject(projectId) {
+        try {
+            const { data, error } = await supabase
+                .from('work_tasks')
+                .select('*')
+                .eq('project_id', projectId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching tasks by project:', error);
+            throw error;
+        }
     }
 };
