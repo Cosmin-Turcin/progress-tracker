@@ -160,8 +160,14 @@ const FitnessHub = () => {
     const [liveCategory, setLiveCategory] = useState('All');
     const [routineCategory, setRoutineCategory] = useState('All');
     const [loading, setLoading] = useState(true);
+    const [creatorStats, setCreatorStats] = useState({ totalEarnings: 0, todayUses: 0 });
 
     const { awardPoints, trackUsage } = useEcosystemPoints();
+
+    const loadStats = async () => {
+        const stats = await routineService.getCreatorStats();
+        setCreatorStats(stats);
+    };
 
     // Fetch content based on active tab
     useEffect(() => {
@@ -204,6 +210,7 @@ const FitnessHub = () => {
             }
         };
         loadContent();
+        loadStats();
     }, [activeTab]);
 
     const handleCreateRoutine = async (newRoutine) => {
@@ -239,6 +246,9 @@ const FitnessHub = () => {
             creatorId: activeWorkout?.user_id,
             category: 'fitness'
         });
+
+        // Refresh stats to show new earnings
+        await loadStats();
 
         setActiveWorkout(null);
     };
@@ -338,47 +348,36 @@ const FitnessHub = () => {
                                     activeTab === 'my_routines' ? 'My Arsenal' :
                                         activeTab === 'saved' ? 'Saved Protocols' : 'Live Ecosystem'}
                             </h2>
-                            <div className="flex gap-2">
-                                {activeTab === 'live_sessions' ? (
-                                    <div className="flex gap-2">
-                                        {['All', 'HIIT', 'Strength', 'Yoga', 'Mindfulness'].map(cat => (
-                                            <button
-                                                key={cat}
-                                                onClick={() => setLiveCategory(cat)}
-                                                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${liveCategory === cat ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-100 text-gray-400 hover:text-gray-600'
-                                                    }`}
-                                            >
-                                                {cat}
-                                            </button>
+                            <div className="flex gap-4">
+                                <div className="relative">
+                                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                    <select
+                                        value={activeTab === 'live_sessions' ? liveCategory : routineCategory}
+                                        onChange={(e) => activeTab === 'live_sessions' ? setLiveCategory(e.target.value) : setRoutineCategory(e.target.value)}
+                                        className="appearance-none pl-10 pr-10 py-2.5 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:border-blue-200 transition-all shadow-sm"
+                                    >
+                                        {(activeTab === 'live_sessions'
+                                            ? ['All', 'HIIT', 'Strength', 'Yoga', 'Mindfulness']
+                                            : ['All', 'Strength', 'HIIT', 'Yoga', 'Cardio', 'Mobility']
+                                        ).map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
                                         ))}
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                        <ChevronRight className="w-4 h-4 text-gray-400 rotate-90" />
                                     </div>
-                                ) : (
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex gap-2 overflow-x-auto pb-1 max-w-[400px]">
-                                            {['All', 'Strength', 'HIIT', 'Yoga', 'Cardio', 'Mobility'].map(cat => (
-                                                <button
-                                                    key={cat}
-                                                    onClick={() => setRoutineCategory(cat)}
-                                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${routineCategory === cat
-                                                            ? 'bg-blue-600 text-white'
-                                                            : 'bg-white border border-gray-100 text-gray-400 hover:text-gray-600'
-                                                        }`}
-                                                >
-                                                    {cat}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <div className="h-6 w-px bg-gray-100" />
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                            <input
-                                                type="text"
-                                                placeholder="Search power..."
-                                                className="pl-10 pr-4 py-2 bg-white border border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none w-32 transition-all focus:w-48"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+                                </div>
+
+                                <div className="h-10 w-px bg-gray-100 hidden md:block" />
+
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search..."
+                                        className="pl-10 pr-4 py-2.5 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500 outline-none w-32 md:w-48 transition-all"
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -452,12 +451,12 @@ const FitnessHub = () => {
                             </h3>
                             <div className="space-y-6">
                                 <div>
-                                    <p className="text-3xl font-black tracking-tight">1,240 <span className="text-xs">pts</span></p>
+                                    <p className="text-3xl font-black tracking-tight">{creatorStats.totalEarnings.toLocaleString()} <span className="text-xs">pts</span></p>
                                     <p className="text-[10px] uppercase font-bold opacity-60">Total usage points</p>
                                 </div>
                                 <div className="pt-6 border-t border-white/10 flex justify-between items-center">
                                     <div>
-                                        <p className="text-xl font-black">45</p>
+                                        <p className="text-xl font-black">{creatorStats.todayUses}</p>
                                         <p className="text-[10px] uppercase font-bold opacity-60">Uses today</p>
                                     </div>
                                     <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">

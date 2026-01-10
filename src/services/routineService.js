@@ -295,5 +295,45 @@ export const routineService = {
         } catch (error) {
             console.error('Error joining live session:', error);
         }
+    },
+
+    /**
+     * Fetch creator earnings and usage statistics.
+     * @returns {Promise<Object>} Statistics object
+     */
+    async getCreatorStats() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            // 1. Get total earnings from activity_logs
+            const { data: earningsData, error: earningsError } = await supabase
+                .from('activity_logs')
+                .select('points')
+                .eq('user_id', user.id)
+                .ilike('activity_name', 'Content Usage Reward: %');
+
+            if (earningsError) throw earningsError;
+            const totalEarnings = earningsData.reduce((sum, log) => sum + (log.points || 0), 0);
+
+            // 2. Get today's usage count
+            const today = new Date().toISOString().split('T')[0];
+            const { count: todayUses, error: usageError } = await supabase
+                .from('activity_logs')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .ilike('activity_name', 'Content Usage Reward: %')
+                .gte('created_at', today);
+
+            if (usageError) throw usageError;
+
+            return {
+                totalEarnings,
+                todayUses: todayUses || 0
+            };
+        } catch (error) {
+            console.error('Error fetching creator stats:', error);
+            return { totalEarnings: 0, todayUses: 0 };
+        }
     }
 };

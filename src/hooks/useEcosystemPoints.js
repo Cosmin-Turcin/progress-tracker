@@ -57,50 +57,29 @@ export const useEcosystemPoints = () => {
     const trackUsage = useCallback(async ({ creatorId, contentId, contentType, category }) => {
         if (!user) return;
 
+        console.log('Tracking usage via RPC:', { creatorId, contentId, contentType, category });
+
         setLoading(true);
         try {
-            // 1. Award usage points to the active user (small reward for being active)
-            await awardPoints({
-                points: 5,
-                reason: `Used ${contentType}`,
-                metadata: { contentId, contentType, action: 'usage', category }
+            // Call the secure RPC to award points to both user and creator
+            const { data, error } = await supabase.rpc('handle_content_usage_reward', {
+                p_content_type: contentType,
+                p_content_id: contentId,
+                p_creator_id: creatorId,
+                p_category: category || 'social'
             });
 
-            // 2. Award creator reward (larger reward for sharing valuable content)
-            if (creatorId && creatorId !== user.id) {
-                // Award points to creator in user_statistics
-                const { data: creatorStats, error: creatorStatsError } = await supabase
-                    .from('user_statistics')
-                    .select('total_points')
-                    .eq('user_id', creatorId)
-                    .single();
+            if (error) throw error;
 
-                if (!creatorStatsError) {
-                    const newCreatorTotal = (creatorStats.total_points || 0) + 15;
-                    await supabase
-                        .from('user_statistics')
-                        .update({ total_points: newCreatorTotal })
-                        .eq('user_id', creatorId);
-
-                    // Log activity for creator
-                    await supabase.from('activity_logs').insert({
-                        user_id: creatorId,
-                        category: category || 'social',
-                        activity_name: `Content Usage Reward: ${contentType}`,
-                        points: 15,
-                        notes: JSON.stringify({ usedBy: user.id, contentId, contentType })
-                    });
-                }
-            }
-
-            return { success: true };
+            console.log('Usage tracked successfully via RPC:', data);
+            return { success: true, data };
         } catch (err) {
-            console.error('Error tracking usage:', err);
+            console.error('Error tracking usage via RPC:', err);
             return { success: false, error: err };
         } finally {
             setLoading(false);
         }
-    }, [user, awardPoints]);
+    }, [user]);
 
     return { awardPoints, trackUsage, loading };
 };
