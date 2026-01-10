@@ -21,6 +21,7 @@ import JournalEditor from './components/JournalEditor';
 import ArticleReader from './components/ArticleReader';
 import { useEcosystemPoints } from '../../hooks/useEcosystemPoints';
 import { articleService } from '../../services/articleService';
+import { supabase } from '../../lib/supabase';
 
 const JournalCard = ({ journal, onRead }) => (
     <motion.div
@@ -65,25 +66,53 @@ const MindsetHub = () => {
     const [showEditor, setShowEditor] = useState(false);
     const [activeArticle, setActiveArticle] = useState(null);
     const [journals, setJournals] = useState([]);
+    const [savedIds, setSavedIds] = useState([]);
+    const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const { awardPoints, trackUsage } = useEcosystemPoints();
 
-    // Fetch articles on mount
+    // Fetch content based on active tab
     useEffect(() => {
-        const loadArticles = async () => {
+        const loadContent = async () => {
             try {
                 setLoading(true);
-                const data = await articleService.getAllPublic();
-                setJournals(data);
+                const { data: { user } } = await supabase.auth.getUser();
+
+                if (activeTab === 'journals') {
+                    const data = await articleService.getAllPublic();
+                    setJournals(data);
+                    if (user) {
+                        const saved = await articleService.getSavedArticles();
+                        setSavedIds(saved.map(s => s.id));
+                    }
+                } else if (activeTab === 'saved_wisdom') {
+                    if (user) {
+                        const data = await articleService.getSavedArticles();
+                        setJournals(data);
+                        setSavedIds(data.map(s => s.id));
+                    } else {
+                        setJournals([]);
+                    }
+                } else if (activeTab === 'private_notes') {
+                    if (user) {
+                        const data = await articleService.getMyArticles();
+                        setJournals(data);
+                    } else {
+                        setJournals([]);
+                    }
+                } else if (activeTab === 'videos') {
+                    const data = await articleService.getMindsetVideos();
+                    setVideos(data);
+                }
             } catch (error) {
-                console.error('Failed to load articles:', error);
+                console.error('Failed to load content:', error);
             } finally {
                 setLoading(false);
             }
         };
-        loadArticles();
-    }, []);
+        loadContent();
+    }, [activeTab]);
 
     const handleCreateJournal = async (newJournal) => {
         try {
@@ -121,6 +150,23 @@ const MindsetHub = () => {
             creatorId: article?.user_id,
             category: 'mindset'
         });
+    };
+
+    const handleSaveArticle = async (articleId) => {
+        try {
+            if (savedIds.includes(articleId)) {
+                await articleService.unsaveArticle(articleId);
+                setSavedIds(savedIds.filter(id => id !== articleId));
+                if (activeTab === 'saved_wisdom') {
+                    setJournals(journals.filter(j => j.id !== articleId));
+                }
+            } else {
+                await articleService.saveArticle(articleId);
+                setSavedIds([...savedIds, articleId]);
+            }
+        } catch (error) {
+            console.error('Error toggling save:', error);
+        }
     };
 
     return (
@@ -180,10 +226,62 @@ const MindsetHub = () => {
                 <div className="grid lg:grid-cols-12 gap-12">
                     {/* Main Content Column */}
                     <div className="lg:col-span-8 space-y-12">
-                        {activeTab === 'journals' ? (
+                        {loading ? (
+                            <div className="flex items-center justify-center py-20">
+                                <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+                            </div>
+                        ) : activeTab === 'videos' ? (
+                            <div className="grid md:grid-cols-2 gap-8">
+                                {videos.length === 0 ? (
+                                    <div className="col-span-full text-center py-20">
+                                        <Video className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                                        <p className="text-gray-400 font-bold uppercase tracking-widest">No focus streams yet</p>
+                                    </div>
+                                ) : (
+                                    videos.map(video => (
+                                        <div key={video.id} className="bg-white rounded-3xl overflow-hidden border border-gray-100 hover:border-purple-200 hover:shadow-xl transition-all group">
+                                            <div className="aspect-video bg-gray-100 relative group cursor-pointer">
+                                                {video.thumbnail_url ? (
+                                                    <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-purple-50">
+                                                        <Video className="w-12 h-12 text-purple-200" />
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
+                                                        <Play className="w-5 h-5 text-purple-600 fill-current ml-1" />
+                                                    </div>
+                                                </div>
+                                                <div className="absolute bottom-4 right-4 px-2 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-bold text-white uppercase tracking-widest">
+                                                    {video.duration_minutes}m
+                                                </div>
+                                            </div>
+                                            <div className="p-6">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest block mb-1">
+                                                        {video.category}
+                                                    </span>
+                                                    <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                                        <Users className="w-3 h-3" /> {video.views_count}
+                                                    </div>
+                                                </div>
+                                                <h3 className="font-black text-gray-900 leading-tight group-hover:text-purple-600 transition-colors uppercase tracking-tight">
+                                                    {video.title}
+                                                </h3>
+                                                <p className="text-sm text-gray-500 mt-2 line-clamp-2">{video.description}</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        ) : (
                             <>
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Recent Insights</h2>
+                                    <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">
+                                        {activeTab === 'journals' ? 'Recent Insights' :
+                                            activeTab === 'saved_wisdom' ? 'Bookmarked Wisdom' : 'Personal Arsenal'}
+                                    </h2>
                                     <div className="flex gap-4">
                                         <div className="relative">
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -196,15 +294,13 @@ const MindsetHub = () => {
                                     </div>
                                 </div>
 
-                                {loading ? (
-                                    <div className="flex items-center justify-center py-20">
-                                        <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
-                                    </div>
-                                ) : journals.length === 0 ? (
+                                {journals.length === 0 ? (
                                     <div className="text-center py-20">
                                         <BookOpen className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                                        <p className="text-gray-400 font-bold uppercase tracking-widest">No articles yet</p>
-                                        <p className="text-gray-300 text-sm mt-2">Be the first to share your wisdom!</p>
+                                        <p className="text-gray-400 font-bold uppercase tracking-widest">
+                                            {activeTab === 'saved_wisdom' ? 'No saved wisdom' :
+                                                activeTab === 'private_notes' ? 'Your arsenal is empty' : 'No articles yet'}
+                                        </p>
                                     </div>
                                 ) : (
                                     <div className="grid md:grid-cols-2 gap-8">
@@ -223,10 +319,6 @@ const MindsetHub = () => {
                                     </div>
                                 )}
                             </>
-                        ) : (
-                            <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100 italic text-gray-400 font-medium">
-                                Content for {activeTab} is being prepared for your focus.
-                            </div>
                         )}
                     </div>
 

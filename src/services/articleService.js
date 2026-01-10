@@ -147,5 +147,122 @@ export const articleService = {
             console.error('Error deleting article:', error);
             throw error;
         }
+    },
+
+    /**
+     * Fetch mindset videos for focus stream.
+     * @returns {Promise<Array>} Array of videos
+     */
+    async getMindsetVideos() {
+        try {
+            const { data, error } = await supabase
+                .from('mindset_videos')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching mindset videos:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Save an article to user bookmarks.
+     * @param {string} articleId - Article ID
+     */
+    async saveArticle(articleId) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { error } = await supabase
+                .from('mindset_saves')
+                .insert({ user_id: user.id, article_id: articleId });
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error saving article:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Unsave an article.
+     * @param {string} articleId - Article ID
+     */
+    async unsaveArticle(articleId) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { error } = await supabase
+                .from('mindset_saves')
+                .delete()
+                .eq('user_id', user.id)
+                .eq('article_id', articleId);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error unsaving article:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Fetch articles saved by the current user.
+     * @returns {Promise<Array>} Array of articles
+     */
+    async getSavedArticles() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { data, error } = await supabase
+                .from('mindset_saves')
+                .select(`
+                    id,
+                    article:article_id (
+                        *,
+                        user_profiles:user_id (
+                            id,
+                            full_name,
+                            username,
+                            avatar_url
+                        )
+                    )
+                `)
+                .eq('user_id', user.id);
+
+            if (error) throw error;
+            return data.map(item => item.article) || [];
+        } catch (error) {
+            console.error('Error fetching saved articles:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Fetch articles created by the current user (all privacy levels).
+     * @returns {Promise<Array>} Array of articles
+     */
+    async getMyArticles() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { data, error } = await supabase
+                .from('mindset_articles')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching my articles:', error);
+            throw error;
+        }
     }
 };
