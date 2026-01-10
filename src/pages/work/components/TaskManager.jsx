@@ -22,10 +22,10 @@ import { taskService } from '../../../services/taskService';
 import { useEcosystemPoints } from '../../../hooks/useEcosystemPoints';
 
 const priorityColors = {
-    low: 'text-gray-400 bg-gray-50',
-    medium: 'text-blue-600 bg-blue-50',
-    high: 'text-orange-600 bg-orange-50',
-    urgent: 'text-red-600 bg-red-50'
+    low: 'text-muted-foreground bg-muted',
+    medium: 'text-blue-600 bg-blue-500/10',
+    high: 'text-orange-600 bg-orange-500/10',
+    urgent: 'text-red-600 bg-red-500/10'
 };
 
 const priorityLabels = {
@@ -48,25 +48,25 @@ const TaskItem = ({ task, onToggle, onDelete, projects }) => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, x: -100 }}
-            className={`flex items-center gap-4 p-4 bg-white rounded-2xl border transition-all group ${isDone ? 'border-green-100 bg-green-50/50' : 'border-gray-100 hover:border-gray-200'
+            className={`flex items-center gap-4 p-4 bg-card rounded-2xl border transition-all group ${isDone ? 'border-green-500/20 bg-green-500/5' : 'border-border hover:border-border/80 shadow-sm'
                 }`}
         >
             <button
                 onClick={() => onToggle(task)}
                 className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isDone
                     ? 'bg-green-500 text-white'
-                    : 'border-2 border-gray-200 hover:border-green-500 hover:bg-green-50'
+                    : 'border-2 border-border hover:border-green-500 hover:bg-green-500/10'
                     }`}
             >
                 {isDone && <Check className="w-4 h-4" />}
             </button>
 
             <div className="flex-grow">
-                <p className={`font-bold ${isDone ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                <p className={`font-bold ${isDone ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
                     {task.title}
                 </p>
                 {task.description && (
-                    <p className="text-sm text-gray-400 mt-1 line-clamp-1">{task.description}</p>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{task.description}</p>
                 )}
                 {project && (
                     <div className="flex items-center gap-1.5 mt-2">
@@ -74,7 +74,7 @@ const TaskItem = ({ task, onToggle, onDelete, projects }) => {
                             className="w-1.5 h-1.5 rounded-full"
                             style={{ backgroundColor: project.color }}
                         />
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{project.title}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{project.title}</span>
                     </div>
                 )}
             </div>
@@ -85,7 +85,7 @@ const TaskItem = ({ task, onToggle, onDelete, projects }) => {
                 </span>
                 <button
                     onClick={() => onDelete(task.id)}
-                    className="p-2 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                    className="p-2 text-muted-foreground/30 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>
@@ -243,28 +243,28 @@ const TaskManager = () => {
     });
 
     return (
-        <div className="bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden">
+        <div className="bg-card rounded-[2.5rem] border border-border overflow-hidden shadow-sm">
             {/* Header */}
-            <div className="p-6 border-b border-gray-100">
-                <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight mb-6">Task Command Center</h3>
+            <div className="p-6 border-b border-border">
+                <h3 className="text-xl font-black text-foreground uppercase tracking-tight mb-6">Task Command Center</h3>
 
                 {/* Stats */}
                 <div className="grid grid-cols-4 gap-4 mb-6">
-                    <div className="text-center p-3 bg-gray-50 rounded-xl">
-                        <p className="text-2xl font-black text-gray-900">{stats.total}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</p>
+                    <div className="text-center p-3 bg-muted rounded-xl border border-border">
+                        <p className="text-2xl font-black text-foreground">{stats.total}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total</p>
                     </div>
-                    <div className="text-center p-3 bg-blue-50 rounded-xl">
+                    <div className="text-center p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
                         <p className="text-2xl font-black text-blue-600">{stats.todo}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">To Do</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">To Do</p>
                     </div>
-                    <div className="text-center p-3 bg-orange-50 rounded-xl">
+                    <div className="text-center p-3 bg-orange-500/10 rounded-xl border border-orange-500/20">
                         <p className="text-2xl font-black text-orange-600">{stats.inProgress}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Active</p>
                     </div>
-                    <div className="text-center p-3 bg-green-50 rounded-xl">
+                    <div className="text-center p-3 bg-green-500/10 rounded-xl border border-green-500/20">
                         <p className="text-2xl font-black text-green-600">{stats.done}</p>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Done</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Done</p>
                     </div>
                 </div>
 
@@ -276,25 +276,25 @@ const TaskManager = () => {
                             value={newTask}
                             onChange={(e) => setNewTask(e.target.value)}
                             placeholder="Add a new task..."
-                            className="flex-grow px-4 py-3 bg-gray-50 rounded-xl border-none outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                            className="flex-grow px-4 py-3 bg-muted rounded-xl border border-border outline-none focus:ring-2 focus:ring-blue-500 font-medium text-foreground placeholder:text-muted-foreground"
                         />
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             type="submit"
-                            className="px-8 py-3 bg-gray-900 text-white rounded-xl font-black flex items-center gap-2 hover:bg-gray-800 transition-colors"
+                            className="px-8 py-3 bg-primary text-primary-foreground rounded-xl font-black flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                         >
                             <Plus className="w-5 h-5" /> ADD
                         </motion.button>
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-xl">
-                            <Flag className="w-4 h-4 text-gray-400" />
+                        <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-xl border border-border">
+                            <Flag className="w-4 h-4 text-muted-foreground" />
                             <select
                                 value={priority}
                                 onChange={(e) => setPriority(e.target.value)}
-                                className="bg-transparent border-none outline-none font-bold text-xs appearance-none cursor-pointer"
+                                className="bg-transparent border-none outline-none font-bold text-xs appearance-none cursor-pointer text-foreground"
                             >
                                 <option value="low">Low Priority</option>
                                 <option value="medium">Medium Priority</option>
@@ -303,8 +303,8 @@ const TaskManager = () => {
                             </select>
                         </div>
 
-                        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-xl flex-grow max-w-[200px]">
-                            <Folder className="w-4 h-4 text-gray-400" />
+                        <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-xl flex-grow max-w-[200px] border border-border">
+                            <Folder className="w-4 h-4 text-muted-foreground" />
                             <select
                                 value={targetProjectId}
                                 onChange={(e) => {
@@ -314,7 +314,7 @@ const TaskManager = () => {
                                         setTargetProjectId(e.target.value);
                                     }
                                 }}
-                                className="bg-transparent border-none outline-none font-bold text-xs appearance-none flex-grow cursor-pointer"
+                                className="bg-transparent border-none outline-none font-bold text-xs appearance-none flex-grow cursor-pointer text-foreground"
                             >
                                 <option value="none">No Project</option>
                                 {projects.map(p => (
@@ -328,16 +328,16 @@ const TaskManager = () => {
             </div>
 
             {/* Project Tabs / Filter */}
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/30 overflow-x-auto">
+            <div className="px-6 py-4 border-b border-border bg-muted/30 overflow-x-auto">
                 <div className="flex items-center gap-6 min-w-max">
-                    <div className="flex gap-2 pr-4 border-r border-gray-100">
+                    <div className="flex gap-2 pr-4 border-r border-border">
                         {['all', 'active', 'done'].map((f) => (
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
                                 className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${filter === f
-                                    ? 'bg-gray-900 text-white'
-                                    : 'text-gray-400 hover:text-gray-600'
+                                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                     }`}
                             >
                                 {f}
@@ -429,32 +429,32 @@ const TaskManager = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-8"
+                            className="relative w-full max-w-md bg-card rounded-3xl shadow-2xl p-8 border border-border"
                         >
-                            <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-6">Initialize Project</h3>
+                            <h3 className="text-2xl font-black text-foreground uppercase tracking-tight mb-6">Initialize Project</h3>
                             <form onSubmit={handleCreateProject} className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Project Title</label>
+                                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Project Title</label>
                                     <input
                                         type="text"
                                         autoFocus
                                         value={newProjectTitle}
                                         onChange={(e) => setNewProjectTitle(e.target.value)}
                                         placeholder="e.g. Apollo Mission"
-                                        className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold"
+                                        className="w-full px-5 py-4 bg-muted border border-border rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold text-foreground placeholder:text-muted-foreground"
                                     />
                                 </div>
                                 <div className="flex gap-4">
                                     <button
                                         type="button"
                                         onClick={() => setShowProjectModal(false)}
-                                        className="flex-grow px-6 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black uppercase tracking-widest text-xs"
+                                        className="flex-grow px-6 py-4 bg-muted text-muted-foreground rounded-2xl font-black uppercase tracking-widest text-xs border border-border hover:bg-muted/80 transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-grow px-6 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100 uppercase tracking-widest text-xs"
+                                        className="flex-grow px-6 py-4 bg-primary text-primary-foreground rounded-2xl font-black shadow-xl shadow-primary/20 uppercase tracking-widest text-xs hover:bg-primary/90 transition-all"
                                     >
                                         Create
                                     </button>

@@ -139,10 +139,10 @@ export default function AchievementsBadgesGallery() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading achievements...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">Loading achievements...</p>
         </div>
       </div>
     );
@@ -159,11 +159,11 @@ export default function AchievementsBadgesGallery() {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center space-x-3 mb-4">
-              <Trophy className="w-12 h-12 text-yellow-500" />
-              <h1 className="text-4xl font-bold text-gray-800">Achievements Gallery</h1>
-              <Sparkles className="w-12 h-12 text-purple-500" />
+              <Trophy className="w-12 h-12 text-warning" />
+              <h1 className="text-4xl font-black text-foreground uppercase tracking-tighter">Achievements Gallery</h1>
+              <Sparkles className="w-12 h-12 text-primary" />
             </div>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg font-medium text-muted-foreground">
               Celebrate your progress and milestones
             </p>
           </div>
@@ -190,12 +190,12 @@ export default function AchievementsBadgesGallery() {
 
           {/* Achievements Grid */}
           {filteredAchievements?.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-xl shadow-md">
-              <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                {searchQuery || selectedType !== 'all' ? 'No achievements match your filters' : 'No achievements yet'}
+            <div className="text-center py-16 bg-card border border-border rounded-xl shadow-subtle">
+              <Trophy className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+              <h3 className="text-xl font-black text-foreground uppercase mb-2">
+                {searchQuery || selectedType !== 'all' ? 'No matches found' : 'No achievements yet'}
               </h3>
-              <p className="text-gray-500">
+              <p className="text-muted-foreground font-medium text-sm">
                 {searchQuery || selectedType !== 'all' ? 'Try adjusting your search or filters' : 'Keep logging activities to unlock achievements!'}
               </p>
             </div>

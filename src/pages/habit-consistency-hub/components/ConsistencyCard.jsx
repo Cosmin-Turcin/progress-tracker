@@ -23,11 +23,11 @@ const ConsistencyCard = ({ title, value, subtitle, icon, trend, status = 'neutra
       className={`rounded-2xl border-2 p-6 transition-all duration-300 shadow-sm ${statusStyles[status]}`}
     >
       <div className="flex items-start justify-between mb-6">
-        <div className="w-12 h-12 rounded-2xl bg-white/50 backdrop-blur-sm flex items-center justify-center border border-current/10 shadow-inner">
+        <div className="w-12 h-12 rounded-2xl bg-background/50 backdrop-blur-sm flex items-center justify-center border border-current/10 shadow-inner">
           <Icon name={icon} size={28} color={getStatusIconColor()} />
         </div>
         {trend && (
-          <div className={`p-2 rounded-xl bg-white/50 backdrop-blur-sm border border-current/10 flex items-center gap-1 text-[10px] font-black uppercase tracking-widest`}>
+          <div className={`p-2 rounded-xl bg-background/50 backdrop-blur-sm border border-current/10 flex items-center gap-1 text-[10px] font-black uppercase tracking-widest`}>
             {trend?.direction === 'up' && <Icon name="TrendingUp" size={12} />}
             {trend?.direction === 'down' && <Icon name="TrendingDown" size={12} />}
             <span>{trend?.value}</span>

@@ -63,17 +63,17 @@ const ActivityCard = ({
   const getActivityConfig = () => {
     switch (activity?.category) {
       case 'fitness':
-        return { icon: Dumbbell, color: 'text-blue-500', bg: 'bg-blue-50/50', border: 'border-blue-200' };
+        return { icon: Dumbbell, color: 'text-blue-500', bg: 'bg-blue-50/50 dark:bg-blue-900/20', border: 'border-blue-200 dark:border-blue-800' };
       case 'mindset':
-        return { icon: Brain, color: 'text-purple-500', bg: 'bg-purple-50/50', border: 'border-purple-200' };
+        return { icon: Brain, color: 'text-purple-500', bg: 'bg-purple-50/50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800' };
       case 'nutrition':
-        return { icon: Utensils, color: 'text-emerald-500', bg: 'bg-emerald-50/50', border: 'border-emerald-200' };
+        return { icon: Utensils, color: 'text-emerald-500', bg: 'bg-emerald-50/50 dark:bg-emerald-900/20', border: 'border-emerald-200 dark:border-emerald-800' };
       case 'sleep':
-        return { icon: Moon, color: 'text-indigo-500', bg: 'bg-indigo-50/50', border: 'border-indigo-200' };
+        return { icon: Moon, color: 'text-indigo-500', bg: 'bg-indigo-50/50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800' };
       case 'hydration':
-        return { icon: Droplets, color: 'text-cyan-500', bg: 'bg-cyan-50/50', border: 'border-cyan-200' };
+        return { icon: Droplets, color: 'text-cyan-500', bg: 'bg-cyan-50/50 dark:bg-cyan-900/20', border: 'border-cyan-200 dark:border-cyan-800' };
       default:
-        return { icon: Activity, color: 'text-gray-500', bg: 'bg-gray-50/50', border: 'border-gray-200' };
+        return { icon: Activity, color: 'text-gray-500', bg: 'bg-gray-50/50 dark:bg-gray-800/20', border: 'border-gray-200 dark:border-gray-700' };
     }
   };
 
@@ -84,7 +84,7 @@ const ActivityCard = ({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-sm border border-border rounded-xl shadow-subtle overflow-hidden transition-all hover:shadow-moderate"
+      className="bg-card/80 backdrop-blur-sm border border-border rounded-xl shadow-subtle overflow-hidden transition-all hover:shadow-moderate"
     >
       <div className="p-5">
         {/* Header */}
@@ -93,7 +93,7 @@ const ActivityCard = ({
             <img
               src={activity?.user_profiles?.avatar_url || 'https://ui-avatars.com/api/?name=' + (activity?.user_profiles?.full_name || 'User')}
               alt={activity?.user_profiles?.full_name}
-              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm cursor-pointer"
+              className="w-12 h-12 rounded-full object-cover border-2 border-background shadow-sm cursor-pointer"
               onClick={() => {
                 if (activity?.user_profiles?.username) {
                   navigate(`/u/${activity.user_profiles.username}`);
@@ -102,7 +102,7 @@ const ActivityCard = ({
                 }
               }}
             />
-            <div className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-white shadow-subtle ${config.color}`}>
+            <div className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-background shadow-subtle ${config.color}`}>
               <Icon size={12} strokeWidth={2.5} />
             </div>
           </div>
@@ -122,7 +122,7 @@ const ActivityCard = ({
                 {activity?.user_profiles?.full_name || 'Anonymous User'}
               </h3>
               {activity?.points > 0 && (
-                <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full text-xs font-bold border border-amber-100">
+                <div className="flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-500 px-2 py-0.5 rounded-full text-xs font-bold border border-amber-500/20">
                   <Trophy size={10} />
                   +{activity?.points}
                 </div>
@@ -169,7 +169,7 @@ const ActivityCard = ({
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="mb-4 p-3 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-200/50"
+              className="mb-4 p-3 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl border border-amber-500/20"
             >
               <div className="flex items-center gap-2 mb-2">
                 <div className="p-1 rounded-full bg-amber-200 text-amber-700">
@@ -195,9 +195,9 @@ const ActivityCard = ({
           <div className="flex items-center gap-1.5 p-1 bg-muted/50 rounded-full">
             <button
               onClick={() => handleReactionClick('congrats')}
-              className={`p-2 rounded-full transition-all ${userReaction?.reaction_type === 'congrats'
-                ? 'bg-white shadow-sm text-rose-500 scale-110'
-                : 'text-muted-foreground hover:text-rose-500 hover:bg-white/50'}`}
+              className={`p-2 rounded-full transition-all relative ${userReaction?.reaction_type === 'congrats'
+                ? 'bg-card shadow-sm text-rose-500 scale-110'
+                : 'text-muted-foreground hover:text-rose-500 hover:bg-muted'}`}
               title="Congrats"
             >
               <Heart size={18} fill={userReaction?.reaction_type === 'congrats' ? "currentColor" : "none"} />
@@ -209,9 +209,9 @@ const ActivityCard = ({
             </button>
             <button
               onClick={() => handleReactionClick('inspire')}
-              className={`p-2 rounded-full transition-all ${userReaction?.reaction_type === 'inspire'
-                ? 'bg-white shadow-sm text-amber-500 scale-110'
-                : 'text-muted-foreground hover:text-amber-500 hover:bg-white/50'}`}
+              className={`p-2 rounded-full transition-all relative ${userReaction?.reaction_type === 'inspire'
+                ? 'bg-card shadow-sm text-amber-500 scale-110'
+                : 'text-muted-foreground hover:text-amber-500 hover:bg-muted'}`}
               title="Inspiring"
             >
               <Flame size={18} fill={userReaction?.reaction_type === 'inspire' ? "currentColor" : "none"} />
@@ -223,9 +223,9 @@ const ActivityCard = ({
             </button>
             <button
               onClick={() => handleReactionClick('challenge')}
-              className={`p-2 rounded-full transition-all ${userReaction?.reaction_type === 'challenge'
-                ? 'bg-white shadow-sm text-blue-500 scale-110'
-                : 'text-muted-foreground hover:text-blue-500 hover:bg-white/50'}`}
+              className={`p-2 rounded-full transition-all relative ${userReaction?.reaction_type === 'challenge'
+                ? 'bg-card shadow-sm text-blue-500 scale-110'
+                : 'text-muted-foreground hover:text-blue-500 hover:bg-muted'}`}
               title="Challenging"
             >
               <Zap size={18} fill={userReaction?.reaction_type === 'challenge' ? "currentColor" : "none"} />
@@ -270,7 +270,7 @@ const ActivityCard = ({
                   value={commentText}
                   onChange={(e) => setCommentText(e?.target?.value)}
                   placeholder="Share your thoughts..."
-                  className="flex-1 bg-muted/30 border border-border px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="flex-1 bg-muted/30 border border-border px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground placeholder:text-muted-foreground"
                 />
                 <button
                   type="submit"

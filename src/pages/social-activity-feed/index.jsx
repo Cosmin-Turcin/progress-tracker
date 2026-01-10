@@ -235,7 +235,7 @@ const SocialActivityFeed = () => {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="p-2.5 rounded-xl bg-white border border-border text-foreground hover:bg-muted transition-all active-press"
+                className="p-2.5 rounded-xl bg-card border border-border text-foreground hover:bg-muted transition-all active-press"
               >
                 <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
               </button>

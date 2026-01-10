@@ -28,7 +28,7 @@ import { supabase } from '../../lib/supabase';
 const LiveSessionCard = ({ session, onJoin }) => (
     <motion.div
         whileHover={{ y: -5 }}
-        className="bg-white rounded-3xl p-6 border border-gray-100 hover:border-indigo-200 hover:shadow-xl transition-all group"
+        className="bg-card rounded-3xl p-6 border border-border hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-xl transition-all group"
     >
         <div className="relative aspect-video rounded-2xl bg-gray-100 mb-4 overflow-hidden">
             <div className="absolute top-4 left-4 z-10">
@@ -40,12 +40,12 @@ const LiveSessionCard = ({ session, onJoin }) => (
             {session.thumbnail_url ? (
                 <img src={session.thumbnail_url} alt={session.title} className="w-full h-full object-cover" />
             ) : (
-                <div className="w-full h-full flex items-center justify-center bg-indigo-50">
-                    <Video className="w-12 h-12 text-indigo-200" />
+                <div className="w-full h-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/20">
+                    <Video className="w-12 h-12 text-indigo-200 dark:text-indigo-800" />
                 </div>
             )}
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center shadow-lg">
                     <Play className="w-5 h-5 text-indigo-600 fill-current ml-1" />
                 </div>
             </div>
@@ -56,7 +56,7 @@ const LiveSessionCard = ({ session, onJoin }) => (
                 <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-1">
                     {session.category}
                 </span>
-                <h3 className="font-black text-gray-900 leading-tight group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
+                <h3 className="font-black text-foreground leading-tight group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
                     {session.title}
                 </h3>
             </div>
@@ -65,11 +65,11 @@ const LiveSessionCard = ({ session, onJoin }) => (
             </div>
         </div>
 
-        <p className="text-sm text-gray-500 mb-6 line-clamp-2">
+        <p className="text-sm text-muted-foreground mb-6 line-clamp-2">
             {session.description}
         </p>
 
-        <div className="flex items-center justify-between pt-4 border-t border-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        <div className="flex items-center justify-between pt-4 border-t border-border text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
             <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(session.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(session.scheduled_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
@@ -90,7 +90,7 @@ const LiveSessionCard = ({ session, onJoin }) => (
 const RoutineCard = ({ routine, onUse, onSave, isSaved }) => (
     <motion.div
         whileHover={{ y: -5 }}
-        className="bg-white rounded-3xl p-6 border border-gray-100 hover:border-blue-200 hover:shadow-xl transition-all group"
+        className="bg-card rounded-3xl p-6 border border-border hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-xl transition-all group"
     >
         <div className="relative aspect-video rounded-2xl bg-gray-100 mb-4 overflow-hidden">
             <button
@@ -98,7 +98,7 @@ const RoutineCard = ({ routine, onUse, onSave, isSaved }) => (
                     e.stopPropagation();
                     onSave(routine.id);
                 }}
-                className={`absolute top-4 right-4 z-10 p-2 rounded-xl backdrop-blur-md transition-all ${isSaved ? 'bg-blue-600 text-white' : 'bg-white/80 text-gray-400 hover:text-blue-600'
+                className={`absolute top-4 right-4 z-10 p-2 rounded-xl backdrop-blur-md transition-all ${isSaved ? 'bg-blue-600 text-white' : 'bg-card/80 text-muted-foreground hover:text-blue-600'
                     }`}
             >
                 <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
@@ -106,31 +106,31 @@ const RoutineCard = ({ routine, onUse, onSave, isSaved }) => (
             {routine.image ? (
                 <img src={routine.image} alt={routine.title} className="w-full h-full object-cover" />
             ) : (
-                <div className="w-full h-full flex items-center justify-center bg-blue-50">
-                    <Dumbbell className="w-12 h-12 text-blue-200" />
+                <div className="w-full h-full flex items-center justify-center bg-blue-50 dark:bg-blue-950/20">
+                    <Dumbbell className="w-12 h-12 text-blue-200 dark:text-blue-800" />
                 </div>
             )}
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center shadow-lg">
                     <Play className="w-5 h-5 text-blue-600 fill-current ml-1" />
                 </div>
             </div>
         </div>
 
         <div className="flex justify-between items-start mb-2">
-            <h3 className="font-black text-gray-900 leading-tight group-hover:text-blue-600 transition-colors uppercase tracking-tight">
+            <h3 className="font-black text-foreground leading-tight group-hover:text-blue-600 transition-colors uppercase tracking-tight">
                 {routine.title}
             </h3>
-            <div className="flex items-center gap-1 text-xs font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-lg">
+            <div className="flex items-center gap-1 text-xs font-bold text-orange-500 bg-orange-50 dark:bg-orange-950/20 px-2 py-1 rounded-lg border border-orange-500/20">
                 <Flame className="w-3 h-3" /> {routine.difficulty}
             </div>
         </div>
 
-        <p className="text-sm text-gray-500 mb-6 line-clamp-2">
+        <p className="text-sm text-muted-foreground mb-6 line-clamp-2">
             {routine.description}
         </p>
 
-        <div className="flex items-center justify-between pt-4 border-t border-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        <div className="flex items-center justify-between pt-4 border-t border-border text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
             <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {routine.duration}m</span>
                 <span className="flex items-center gap-1"><Dumbbell className="w-3 h-3" /> {routine.exercises} Ex</span>
@@ -288,7 +288,7 @@ const FitnessHub = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-background transition-colors">
             <Header />
 
             <main className="container mx-auto max-w-7xl px-6 py-12">
@@ -299,14 +299,14 @@ const FitnessHub = () => {
                         animate={{ opacity: 1, x: 0 }}
                     >
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-200 text-white">
+                            <div className="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-500/20 text-white">
                                 <Dumbbell className="w-8 h-8" />
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter uppercase font-outline-2">
+                            <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tighter uppercase font-outline-2 text-glow-primary">
                                 Fitness <span className="text-blue-600">Hub</span>
                             </h1>
                         </div>
-                        <p className="text-lg text-gray-500 font-medium">
+                        <p className="text-lg text-muted-foreground font-medium">
                             Create world-class routines and get rewarded when the community uses them.
                         </p>
                     </motion.div>
@@ -315,7 +315,7 @@ const FitnessHub = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setShowBuilder(true)}
-                        className="flex items-center gap-3 px-8 py-4 bg-gray-900 text-white rounded-3xl font-black shadow-xl shadow-gray-200 group"
+                        className="flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-3xl font-black shadow-xl shadow-primary/20 group"
                     >
                         <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
                         CREATE ROUTINE
@@ -328,11 +328,11 @@ const FitnessHub = () => {
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`pb-4 text-sm font-black uppercase tracking-widest relative ${activeTab === tab ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                            className={`pb-4 text-sm font-black uppercase tracking-widest relative ${activeTab === tab ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                             {tab.replace('_', ' ')}
                             {activeTab === tab && (
-                                <motion.div layoutId="tabLine" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-full" />
+                                <motion.div layoutId="tabLine" className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />
                             )}
                         </button>
                     ))}
@@ -343,7 +343,7 @@ const FitnessHub = () => {
                     {/* Main Content */}
                     <div className="lg:col-span-3">
                         <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">
+                            <h2 className="text-2xl font-black text-foreground uppercase tracking-tight">
                                 {activeTab === 'explore' ? 'Featured Routines' :
                                     activeTab === 'my_routines' ? 'My Arsenal' :
                                         activeTab === 'saved' ? 'Saved Protocols' : 'Live Ecosystem'}
@@ -354,7 +354,7 @@ const FitnessHub = () => {
                                     <select
                                         value={activeTab === 'live_sessions' ? liveCategory : routineCategory}
                                         onChange={(e) => activeTab === 'live_sessions' ? setLiveCategory(e.target.value) : setRoutineCategory(e.target.value)}
-                                        className="appearance-none pl-10 pr-10 py-2.5 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer hover:border-blue-200 transition-all shadow-sm"
+                                        className="appearance-none pl-10 pr-10 py-2.5 bg-card border border-border rounded-2xl text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-primary outline-none cursor-pointer hover:border-primary/50 transition-all shadow-sm"
                                     >
                                         {(activeTab === 'live_sessions'
                                             ? ['All', 'HIIT', 'Strength', 'Yoga', 'Mindfulness']
@@ -364,18 +364,18 @@ const FitnessHub = () => {
                                         ))}
                                     </select>
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                        <ChevronRight className="w-4 h-4 text-gray-400 rotate-90" />
+                                        <ChevronRight className="w-4 h-4 text-muted-foreground rotate-90" />
                                     </div>
                                 </div>
 
-                                <div className="h-10 w-px bg-gray-100 hidden md:block" />
+                                <div className="h-10 w-px bg-border hidden md:block" />
 
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                     <input
                                         type="text"
                                         placeholder="Search..."
-                                        className="pl-10 pr-4 py-2.5 bg-white border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500 outline-none w-32 md:w-48 transition-all"
+                                        className="pl-10 pr-4 py-2.5 bg-card border border-border rounded-2xl text-xs font-black uppercase tracking-widest focus:ring-2 focus:ring-primary outline-none w-32 md:w-48 transition-all text-foreground placeholder:text-muted-foreground"
                                     />
                                 </div>
                             </div>

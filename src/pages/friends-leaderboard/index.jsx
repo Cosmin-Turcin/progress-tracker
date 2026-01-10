@@ -111,7 +111,7 @@ export default function FriendsLeaderboard() {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
-                <Users className="w-7 h-7 text-white" />
+                <Users className="w-7 h-7 text-primary-foreground" />
               </div>
               <h1 className="text-4xl font-black text-foreground tracking-tighter uppercase">Social Hub</h1>
             </div>
@@ -121,7 +121,7 @@ export default function FriendsLeaderboard() {
           <div className="flex items-center gap-3">
             <Link
               to="/social-activity-feed"
-              className="px-6 py-3 bg-primary text-white rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2 font-black text-[10px] tracking-widest uppercase"
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2 font-black text-[10px] tracking-widest uppercase"
             >
               <ActivityIcon className="w-4 h-4" />
               Activity Feed
@@ -166,13 +166,13 @@ export default function FriendsLeaderboard() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-6 py-3 rounded-xl flex items-center gap-2 transition-all duration-300 ${isActive ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted-foreground hover:bg-muted'
+                className={`relative px-6 py-3 rounded-xl flex items-center gap-2 transition-all duration-300 ${isActive ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground hover:bg-muted'
                   }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? 'scale-110' : ''}`} />
                 <span className="font-black text-[10px] tracking-widest uppercase">{tab.label}</span>
                 {tab.id === 'requests' && pendingCount > 0 && (
-                  <span className={`absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center text-[10px] font-black rounded-full border-2 ${isActive ? 'bg-white text-primary border-primary' : 'bg-primary text-white border-white'
+                  <span className={`absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center text-[10px] font-black rounded-full border-2 ${isActive ? 'bg-background text-primary border-primary' : 'bg-primary text-primary-foreground border-background'
                     }`}>
                     {pendingCount}
                   </span>

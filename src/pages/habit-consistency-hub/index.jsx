@@ -477,7 +477,7 @@ const HabitConsistencyHub = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
       </div>
     );
@@ -503,8 +503,8 @@ const HabitConsistencyHub = () => {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card p-6 rounded-lg border border-border">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-2">Habit Consistency Hub</h1>
-            <p className="text-muted-foreground">Track your routine patterns and build lasting habits</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-2 uppercase tracking-tighter">Habit Consistency Hub</h1>
+            <p className="text-muted-foreground font-medium">Track your routine patterns and build lasting habits</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <Select
